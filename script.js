@@ -348,11 +348,83 @@ function loadAgenda() {
      // Implementação de carregar eventos e renderizar FullCalendar
 }
 
-function loadPersonalArea() {
-     // Implementação de carregar a área pessoal (projects/notes)
+async function loadPersonalArea() {
+     // Como o usuário já está logado (currentUser), apenas preenchemos os dados.
+     if (currentUser) {
+        document.getElementById('currentUser').textContent = currentUser.nome;
+     }
+
+     // TODO: Implementar a busca de notas e projetos do usuário logado
+     document.getElementById('userProjectsList').innerHTML = `<div class="alert alert-info">Implementar busca de projetos onde ${currentUser.nome} é responsável.</div>`;
+     document.getElementById('notesList').innerHTML = `<div class="alert alert-info">Implementar busca de notas pessoais.</div>`;
 }
 
-function loadSettings() {
-     // Implementação de carregar a tela de configurações (usuários/sistema)
+async function loadSettings() {
+     // Carrega os usuários reais da tabela 'project_users' (Supabase)
+     const usersListDiv = document.getElementById('usersList');
+     if (!usersListDiv) return;
+
+     usersListDiv.innerHTML = `<div class="loading"><div class="spinner"></div>Carregando usuários do Supabase...</div>`;
+
+     try {
+        // Busca todos os usuários da tabela 'project_users'
+        const users = await supabaseRequest('project_users?select=id,name,email,role', 'GET');
+
+        if (!users || users.length === 0) {
+            usersListDiv.innerHTML = `<div class="alert alert-info">Nenhum usuário encontrado na tabela project_users.</div>`;
+            return;
+        }
+
+        let html = users.map(user => `
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border">
+                <div>
+                    <strong class="text-gray-900">${escapeHTML(user.name)}</strong>
+                    <span class="text-sm text-gray-500 ml-2">(${escapeHTML(user.email)})</span>
+                </div>
+                <span class="status-badge" style="background-color: #e0e7ff; color: #3730a3; padding: 4px 8px; font-size: 0.8rem; border-radius: 6px;">
+                    ${escapeHTML(user.role || 'N/A')}
+                </span>
+                </div>
+        `).join('');
+
+        usersListDiv.innerHTML = `<div class="space-y-3">${html}</div>`;
+
+     } catch (error) {
+        usersListDiv.innerHTML = `<div class="alert alert-error">Falha ao carregar usuários: ${escapeHTML(error.message)}</div>`;
+     }
 }
-// ... (Fim das funções do sistema) ...
+// Esta função é chamada pelo HTML antigo das Configurações
+function addUser() {
+    showNotification('Função desabilitada. Usuários devem ser criados via Supabase Auth.', 'error');
+}
+
+// Esta função é chamada pelo seletor de Responsáveis no formulário de projeto
+function toggleMultiSelect(optionsId) {
+    const options = document.getElementById(optionsId);
+    if (options) {
+        options.style.display = options.style.display === 'none' ? 'block' : 'none';
+    }
+    // TODO: Implementar a busca de usuários (project_users) para popular o seletor
+    if (optionsId === 'projectResponsibleOptions' && usersCache.length === 0) {
+         console.log('Implementar busca de usuários para multi-select');
+         options.innerHTML = '<div class="p-2 text-gray-500">Busca de usuários não implementada.</div>';
+    }
+}
+
+// Esta função é chamada ao clicar em "Adicionar Atividade"
+function addActivity() {
+    const list = document.getElementById('activitiesList');
+    if (list) {
+        const newActivityHtml = `
+            <div class="activity-item border-t pt-4 mt-4">
+                 <p class="text-sm text-gray-700">Nova Atividade (Implementar lógica de salvamento)</p>
+                 <input type="text" placeholder="Título da Atividade" class="w-full mb-2">
+                 <textarea placeholder="Descrição da Atividade" rows="2" class="w-full mb-2"></textarea>
+                 <select class="w-full"><option value="">Responsável pela Atividade</option></select>
+            </div>
+        `;
+        list.insertAdjacentHTML('beforeend', newActivityHtml);
+        if (typeof feather !== 'undefined') feather.replace();
+        showNotification('Campo de atividade adicionado. (Lógica pendente)', 'info');
+    }
+}
