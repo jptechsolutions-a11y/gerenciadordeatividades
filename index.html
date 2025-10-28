@@ -258,7 +258,7 @@
                 <div id="personalView" class="view-content">
                      <h1 class="text-3xl font-bold text-gray-800 mb-6">Área Pessoal</h1>
                     
-                    <div id="personalLogin" class="auth-card mx-auto" style="max-width: 400px; background: white; padding: 40px; border: 1px solid #ddd; display: block;">
+                    <div id="personalLogin" class="auth-card mx-auto" style="max-width: 400px; background: white; padding: 40px; border: 1px solid #ddd; display: none;">
                         <h2 class="text-2xl font-bold text-gray-800 mb-4">Acesso Restrito</h2>
                         <p class="text-sm text-gray-600 mb-6">Digite seu usuário e senha para acessar anotações e projetos pessoais.</p>
                          <div id="personalMessages"></div>
@@ -273,7 +273,7 @@
                         <button class="btn btn-primary w-full" onclick="loginPersonal()">Acessar Área Pessoal</button>
                     </div>
 
-                    <div id="personalContent" style="display: none;" class="space-y-8">
+                    <div id="personalContent" style="display: block;" class="space-y-8">
                         <div class="personal-header bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
                             <div>
                                 <h2 class="text-2xl font-bold" style="color: var(--accent);">Bem-vindo(a), <span id="currentUser"></span></h2>
@@ -307,10 +307,7 @@
                     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
                         <h3 class="text-xl font-semibold mb-4 border-b pb-2" style="color: var(--dark);">Gerenciamento de Usuários</h3>
                         
-                        <div class="p-4 border rounded-lg mb-4 bg-gray-50">
-                            <h4 class="font-semibold mb-3" style="color: var(--accent);">Adicionar Novo Usuário</h4>
-                            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                                <div class="form-group">
+                    
                                     <label for="newUsername">Usuário (Login):</label>
                                     <input type="text" id="newUsername" required class="w-full">
                                 </div>
