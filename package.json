@@ -1,0 +1,9 @@
+{
+  "name": "gerenciador-de-atividades",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.5",
+    "resend": "^3.2.0"
+  }
+}
