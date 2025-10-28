@@ -141,7 +141,7 @@ async function handleLogin(event) {
 
     } catch (error) {
         console.error("Erro detalhado no login:", error); 
-        showMessage('loginAlert', error.message, 'error'); 
+        document.getElementById('loginAlert').innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
         loginButton.disabled = false;
         loginButton.innerHTML = originalButtonText;
     }
