@@ -700,3 +700,24 @@ function escapeHTML(str) {
          .replace(/"/g, '&quot;')
          .replace(/'/g, '&#39;');
 }
+
+// ========================================
+// 11. FUNÇÃO DE ERRO (FALTANTE)
+// ========================================
+function showError(message) {
+    const alertContainer = document.getElementById('loginAlert');
+
+    // Se a mensagem for vazia, apenas limpa o alerta.
+    if (!message) {
+        if (alertContainer) alertContainer.innerHTML = '';
+        return;
+    }
+
+    // Loga o erro detalhado no console para depuração
+    console.error("Erro exibido ao usuário:", message);
+
+    if (alertContainer) {
+        // Usamos escapeHTML para garantir que a mensagem de erro seja segura
+        alertContainer.innerHTML = `<div class="alert alert-error">${escapeHTML(message)}</div>`; //
+    }
+}
