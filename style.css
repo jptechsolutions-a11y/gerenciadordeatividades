@@ -2395,3 +2395,617 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
 /* Ajustes finos */
 .loading { display: flex; justify-content: center; align-items: center; padding: 30px; color: var(--secondary); font-size: 0.9rem; }
 .spinner { width: 24px; height: 24px; margin-right: 8px; }
+
+/* ========================================
+   IDENTIDADE VISUAL (DA REFERÊNCIA)
+   ======================================== */
+:root {
+    --primary: #00D4AA;
+    --secondary: #00B4D8;
+    --accent: #0077B6;
+    --dark: #023047;
+    --darker: #011627;
+    --light: #90E0EF;
+    --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
+    --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+    background-color: var(--darker); /* Fundo escuro inicial (Login) */
+    transition: none; /* Sem transição no load */
+    color: var(--dark); /* Cor de texto padrão */
+    overflow: hidden; /* Evita scroll no body */
+}
+
+body.system-active {
+    background-color: #f7f9fc; /* Fundo ligeiramente azulado, estilo Asana */
+}
+
+/* ========================================
+   NOVO: BARRA SUPERIOR (TOPBAR)
+   ======================================== */
+#topBar {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* 16px */
+    background: var(--darker);
+    color: white;
+    padding: 0 1.5rem; /* 24px */
+    height: 64px;
+    border-bottom: 1px solid #334155; /* Cor escura (slate-700) */
+    flex-shrink: 0;
+}
+#topBar .separator {
+    width: 1px;
+    height: 24px;
+    background-color: #334155; /* slate-700 */
+}
+#topBar .btn-icon {
+    background: transparent;
+    color: var(--light);
+    padding: 0.5rem; /* 8px */
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+#topBar .btn-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+#topBarSearch {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid #334155; /* slate-700 */
+    color: white;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem; /* 8px 16px */
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+#topBarSearch::placeholder {
+    color: #94a3b8; /* slate-400 */
+}
+#topBarSearch:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.3);
+}
+
+/* NOVO: Dropdown de Perfil */
+#profileDropdownButton {
+    transition: background-color 0.2s ease;
+}
+.dropdown-menu {
+    display: none; /* Escondido por padrão */
+    position: absolute;
+    top: 120%; /* Abaixo do botão */
+    right: 0;
+    width: 240px;
+    background: #1e293b; /* slate-800 */
+    border: 1px solid #334155; /* slate-700 */
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    z-index: 1010;
+    overflow: hidden;
+}
+/* Mostra o menu quando o dropdown está 'open' */
+#profileDropdown.open .dropdown-menu {
+    display: block;
+}
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem; /* 12px 16px */
+    font-size: 0.9rem;
+    color: #e2e8f0; /* slate-200 */
+    transition: background-color 0.2s ease;
+}
+.dropdown-item:hover {
+    background-color: #334155; /* slate-700 */
+    color: white;
+}
+.dropdown-item .feather {
+    color: #94a3b8; /* slate-400 */
+    margin-right: 0.75rem;
+}
+
+/* ========================================
+   LAYOUT (ATUALIZADO)
+   ======================================== */
+#mainSystem {
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* Crucial para o scroll do main-content */
+}
+
+/* Barra Lateral (Sidebar) - ATUALIZADA */
+.sidebar {
+    width: 260px; /* Largura padrão */
+    background: var(--darker);
+    color: white;
+    flex-shrink: 0;
+    height: 100%; /* Ocupa a altura do container pai (#mainSystem) */
+    overflow-y: auto;
+    overflow-x: hidden; /* Esconde o texto ao encolher */
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #334155; /* slate-700 */
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar nav {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Estado Recolhido (Collapsed) */
+.sidebar.collapsed {
+    width: 73px; /* Largura recolhida (ícone + padding) */
+}
+.sidebar.collapsed .nav-item {
+    padding-left: 1.5rem; /* 24px */
+    padding-right: 1.5rem; /* 24px */
+    justify-content: center;
+}
+.sidebar.collapsed .nav-item .mr-3 {
+    margin-right: 0; /* Remove margem do ícone */
+}
+.sidebar.collapsed .nav-text {
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    margin-left: -10px; /* Efeito suave de desaparecimento */
+    white-space: nowrap;
+}
+.sidebar.collapsed .nav-item[title="Gerenciar Time"],
+.sidebar.collapsed .nav-item[title="Meu Perfil"] {
+    display: none; /* Esconde links de admin/perfil quando recolhido (opcional) */
+}
+
+
+/* Itens da Barra Lateral (Nav) */
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem; /* 12px 24px */
+    margin: 0.25rem 0.5rem; /* 4px 8px */
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    color: var(--light);
+    font-weight: 500;
+    border-left: 4px solid transparent;
+}
+.nav-item:hover {
+    background-color: rgba(0, 180, 216, 0.1);
+    color: white;
+}
+.nav-item.active {
+    background-color: rgba(0, 180, 216, 0.2);
+    border-left-color: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+.nav-item .nav-text {
+    opacity: 1;
+    transition: opacity 0.2s linear 0.1s, margin-left 0.3s ease, width 0.3s ease;
+    white-space: nowrap;
+}
+.nav-item .feather {
+    flex-shrink: 0;
+    transition: margin-right 0.3s ease;
+}
+
+
+/* Conteúdo Principal (Main) - ATUALIZADO */
+.main-content {
+    flex: 1;
+    overflow-auto; /* Permite scroll SÓ no conteúdo principal */
+    height: 100%; /* Ocupa a altura do container pai (#mainSystem) */
+    background-color: #f7f9fc; /* Cor de fundo Asana */
+}
+
+.view-content { display: none; }
+.view-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Títulos das Views (Asana Style) */
+.view-content h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+}
+
+
+/* ========================================
+   COMPONENTES (Estilo Asana/Jira)
+   ======================================== */
+/* Cards de Estatística (Dashboard) */
+.stat-card-dash {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: var(--dark);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border-top: 4px solid var(--primary);
+}
+.stat-card-dash .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+.stat-card-dash .stat-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #64748b; /* slate-500 */
+    display: block;
+}
+
+/* Cards Genéricos (Gráficos, etc) */
+.chart-card, .bg-white.p-6.rounded-lg.shadow-md {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.chart-card h3, .bg-white.p-6.rounded-lg.shadow-md h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 16px;
+}
+
+/* Forms */
+.form-group label { margin-bottom: 6px; font-weight: 500; color: #4b5563; font-size: 0.85rem; }
+.form-group input, .form-group select, .form-group textarea {
+    padding: 10px 14px;
+    border: 1px solid #d1d5db; /* gray-300 */
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+    background: white;
+}
+.form-group input[disabled] {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Botões */
+.btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: none; /* Sem uppercase */
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.btn-primary { background: var(--accent); color: white; border: 1px solid var(--accent); }
+.btn-success { background: var(--primary); color: white; border: 1px solid var(--primary); }
+.btn-danger { background: #dc2626; color: white; border: 1px solid #dc2626; }
+.btn-secondary, .btn-danger[onclick^="closeModal"] { background: white; color: #4b5563; border: 1px solid #d1d5db; }
+
+.btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.btn-secondary:hover { background-color: #f9fafb; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-small { padding: 6px 12px; font-size: 0.8rem; }
+
+/* Modais */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);
+    justify-content: center; align-items: center; z-index: 1001; padding: 20px; overflow-y: auto;
+}
+.modal-content {
+    background: white; padding: 28px; border-radius: 10px; max-width: 95vw; width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); animation: popIn 0.3s ease-out;
+}
+@keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* Alertas */
+.alert { padding: 12px 16px; margin: 16px 0; border-radius: 6px; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent; }
+.alert-success { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.alert-error { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.alert-info { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.alert-warning { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+
+/* Notificações (Toast) */
+#notificationContainer { position: fixed; top: 84px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 2000; }
+.notification {
+     width: 320px; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+     transform: translateX(100%); animation: slideIn 0.5s forwards; position: relative; overflow: hidden; border-left-width: 4px;
+}
+@keyframes slideIn { to { transform: translateX(0); } }
+.notification.hide { animation: slideOut 0.5s forwards; }
+@keyframes slideOut { to { transform: translateX(100%); opacity: 0; } }
+.notification.success { border-left-color: var(--primary); }
+.notification.error { border-left-color: #dc2626; }
+.notification.info { border-left-color: var(--accent); }
+.notification-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; }
+.notification.success .notification-header { color: var(--primary); }
+.notification.error .notification-header { color: #dc2626; }
+.notification.info .notification-header { color: var(--accent); }
+.notification-body { font-size: 0.9rem; color: #555; }
+
+/* Tabelas */
+.table-container { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; font-size: 0.9rem; }
+th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+tbody tr:hover { background-color: #f3f4f6; }
+th:first-child { border-top-left-radius: 10px; }
+th:last-child { border-top-right-radius: 10px; }
+tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+tr:last-child td:last-child { border-bottom-right-radius: 10px; }
+
+/* Status */
+.status-badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; }
+.status-aguardando_aprovacao { background-color: #fef9c3; color: #854d0e; }
+.status-aprovada { background-color: #dbeafe; color: #1e40af; }
+.status-negada { background-color: #fee2e2; color: #991b1b; }
+.status-executando { background-color: #e0e7ff; color: #3730a3; }
+.status-aguardando_retirada { background-color: #fef3c7; color: #92400e; }
+.status-finalizada { background-color: #d1fae5; color: #065f46; }
+
+/* ========================================
+   ESTILOS KANBAN (Asana Touch)
+   ======================================== */
+.kanban-container {
+    display: flex;
+    gap: 16px; /* Reduzido para caber mais */
+    overflow-x: auto;
+    padding-bottom: 20px;
+    min-height: calc(100vh - 220px);
+}
+.kanban-column {
+    flex: 0 0 300px;
+    background-color: #f0f2f5; /* Cinza Asana */
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 240px); /* Altura máxima para scroll interno */
+}
+.kanban-column-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--dark);
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+.kanban-column-content {
+    padding: 10px;
+    flex-grow: 1;
+    min-height: 100px;
+    transition: background-color 0.2s;
+    overflow-y: auto; /* Permite scroll *dentro* da coluna */
+}
+.kanban-column-content.drag-over { background-color: rgba(0, 180, 216, 0.1); }
+.kanban-card {
+    background: white;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    cursor: grab;
+    border: 1px solid #e5e7eb;
+    border-left-width: 4px;
+    transition: all 0.2s ease;
+}
+.kanban-card:hover {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-color: #d1d5db;
+}
+.kanban-card.dragging { opacity: 0.6; transform: rotate(2deg); }
+.kanban-card-title {
+    font-weight: 500;
+    color: var(--dark);
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    white-space: normal; /* Permite quebra de linha */
+}
+.kanban-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+/* Cores de Prioridade */
+.kanban-card.priority-urgente { border-left-color: #dc2626; }
+.kanban-card.priority-alta { border-left-color: #f59e0b; }
+.kanban-card.priority-media { border-left-color: var(--accent); }
+.kanban-card.priority-baixa { border-left-color: #6b7280; }
+.kanban-card .kanban-card-priority {
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: 600;
+}
+.kanban-card .priority-urgente { color: #dc2626; }
+.kanban-card .priority-alta { color: #f59e0b; }
+.kanban-card .priority-media { color: var(--accent); }
+.kanban-card .priority-baixa { color: #6b7280; }
+.kanban-card-footer img {
+    width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;
+}
+.kanban-column .btn-small {
+    width: 100%;
+    padding: 6px;
+    background: transparent;
+    color: #6b7280;
+    border: 1px dashed #d1d5db;
+    box-shadow: none;
+    margin-top: auto;
+}
+.kanban-column .btn-small:hover {
+    background: #e5e7eb;
+    color: var(--dark);
+    border-style: solid;
+    border-color: #9ca3af;
+}
+
+/* ========================================
+   ESTILOS BLOCO DE NOTAS (Asana Touch)
+   ======================================== */
+.note-container {
+    display: flex;
+    height: calc(100vh - 200px);
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+.note-list {
+    flex: 0 0 260px;
+    border-right: 1px solid #e5e7eb;
+    padding: 12px;
+    overflow-y: auto;
+    background: #f9fafb;
+}
+.note-list .btn { margin-bottom: 12px; }
+.note-list-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 4px;
+}
+.note-list-item:hover { background: #f0f2f5; }
+.note-list-item.active { background: #e0f2fe; color: var(--accent); }
+.note-list-item.active .note-list-title { color: var(--accent); font-weight: 600; }
+.note-list-item.active .note-list-excerpt { color: #075985; }
+.note-list-title {
+    font-weight: 500; color: var(--dark); font-size: 0.9rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.note-list-excerpt {
+    font-size: 0.8rem; color: #6b7280;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.note-editor { flex-grow: 1; display: flex; flex-direction: column; }
+#noteTitle {
+    border: none; padding: 16px 20px; font-size: 1.25rem; font-weight: 600; color: var(--dark); border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+#noteTitle:focus { outline: none; box-shadow: none; border-color: var(--accent); background: white; }
+#noteBody { flex-grow: 1; border: none; padding: 20px; font-size: 0.95rem; line-height: 1.6; resize: none; }
+#noteBody:focus { outline: none; box-shadow: none; }
+.note-editor .btn { margin: 16px 20px; align-self: flex-end; }
+
+/* ========================================
+   ESTILOS TIMELINE (Asana Touch)
+   ======================================== */
+.timeline-item {
+    padding: 12px 16px; background-color: white; border-left: 3px solid #9ca3af;
+    border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px;
+    border-top: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6;
+}
+.timeline-item-icon { flex-shrink: 0; color: #6b7280; }
+.timeline-item-content p { margin: 0; line-height: 1.4; font-size: 0.9rem; }
+.timeline-item-content .task-title { font-weight: 500; color: var(--dark); }
+.timeline-item-content .user-name { font-weight: 500; color: var(--accent); }
+.timeline-item-timestamp { font-size: 0.75rem; color: #9ca3af; margin-left: auto; white-space: nowrap; }
+.timeline-item.created { border-left-color: var(--accent); }
+.timeline-item.updated { border-left-color: #f59e0b; }
+.timeline-item.completed { border-left-color: var(--primary); }
+.timeline-item.created .timeline-item-icon { color: var(--accent); }
+.timeline-item.updated .timeline-item-icon { color: #f59e0b; }
+.timeline-item.completed .timeline-item-icon { color: var(--primary); }
+
+/* ========================================
+   ESTILOS PERFIL (Asana Touch)
+   ======================================== */
+ #perfilPicturePreview {
+    border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+ }
+ #perfilView .form-group input[disabled] { border: 1px solid #e5e7eb; }
+
+/* ========================================
+   RESPONSIVIDADE (Ajustes Finais)
+   ======================================== */
+@media (max-width: 768px) {
+    /* TopBar Mobile */
+    #topBar { padding: 0 1rem; height: 60px; }
+    #topBarSearch { display: none; } /* Esconde busca no mobile */
+    #topBarProjectName { display: none; } /* Esconde nome do projeto */
+    #topBar .btn-success .hidden { display: none; } /* Esconde texto "Nova Tarefa" */
+    #topBar .btn-success { padding: 0.5rem; }
+    #topBar .btn-success .mr-2 { margin-right: 0; }
+    
+    /* Sidebar Mobile (agora é um overlay) */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1020; /* Acima de tudo, exceto modais */
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 280px; /* Largura fixa no mobile */
+    }
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+    /* Overlay escuro */
+    #sidebarOverlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1019;
+    }
+    body.sidebar-open #sidebarOverlay {
+        display: block;
+    }
+    /* Esconde sidebar recolhida (não faz sentido no mobile) */
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+
+    /* Conteúdo Principal */
+    .main-content { padding-left: 1rem; padding-right: 1rem; }
+    .view-content h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+
+    .kanban-container { flex-direction: column; gap: 16px; min-height: auto; max-height: none; }
+    .kanban-column { flex: 1 1 auto; max-height: 400px; } /* Altura max p/ colunas no mobile */
+
+    .note-container { flex-direction: column; height: auto; }
+    .note-list { flex: 0 0 auto; border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 200px; }
+
+    .stat-card-dash .stat-number { font-size: 1.8rem; }
+    .stat-card-dash .stat-label { font-size: 0.8rem; }
+
+    .bg-white.p-6.rounded-lg.shadow-md, .chart-card { padding: 16px; }
+    .modal-content { padding: 20px; }
+    #perfilView .flex-col.sm\:flex-row { flex-direction: column; }
+    #perfilPicturePreview { margin-right: 0; margin-bottom: 1rem; }
+    .grid.grid-cols-1.md\:grid-cols-2 { grid-template-columns: 1fr; }
+}
+
+/* Ajustes finos */
+.loading { display: flex; justify-content: center; align-items: center; padding: 30px; color: var(--secondary); font-size: 0.9rem; }
+.spinner { width: 24px; height: 24px; margin-right: 8px; border: 3px solid rgba(0, 212, 170, 0.1); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
