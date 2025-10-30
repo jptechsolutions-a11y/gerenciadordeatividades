@@ -169,10 +169,15 @@ function redirectToDashboard() {
 
 // Mostra o modal de criação de time
 function openCreateTeamModal() {
+    // ADICIONADO: Mostra o container principal (o sidebar e a área de conteúdo)
+    document.getElementById('mainSystem').style.display = 'flex';
+    // ADICIONADO: Muda o fundo para a cor do sistema (cinza claro)
+    document.body.classList.add('system-active');
+
+    // Código original:
     document.getElementById('createTeamCard').style.display = 'flex';
     feather.replace();
 }
-
 // Handler para o formulário de criação de time
 async function handleCreateTeamFormSubmit(event) {
     event.preventDefault();
