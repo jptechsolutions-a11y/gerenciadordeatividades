@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleLink.addEventListener('click', toggleMode);
 supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN') {
-            window.location.href = 'app.html';
         }
     });
     // Verifica se o usuário já está logado (ex: voltou para a pág de login)
