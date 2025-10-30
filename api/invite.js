@@ -55,9 +55,12 @@ export default async (req, res) => {
             return res.status(400).json({ error: 'Dados do convite incompletos.' });
         }
 
-        // --- NOVA VERIFICAÇÃO ---
+        // --- NOVA VERIFICAÇÃO (COM TRIM) ---
+        // Pega o email limpo (sem espaços)
+        const trimmedEmail = email.trim();
+
         // Verifica se o usuário está tentando convidar a si mesmo
-        if (user.email.toLowerCase() === email.toLowerCase()) {
+        if (user.email.toLowerCase() === trimmedEmail.toLowerCase()) {
             return res.status(400).json({
                 error: 'Convite inválido.',
                 details: 'Você não pode convidar a si mesmo para o time.'
@@ -66,7 +69,7 @@ export default async (req, res) => {
         // --- FIM DA VERIFICAÇÃO ---
 
         // 3. Lógica de Convite
-        const { data: newUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        const { data: newUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(trimmedEmail, { // <-- USA trimmedEmail
             data: { role: role } // Dados extras
         });
         
@@ -76,19 +79,19 @@ export default async (req, res) => {
         // --- CORREÇÃO PRINCIPAL AQUI ---
         // Verifica o erro de "usuário já existe" de forma mais robusta
         if (inviteError && inviteError.message && inviteError.message.toLowerCase().includes('user already registered')) {
-            console.log(`[invite] Usuário ${email} já existe no Auth. Buscando perfil...`);
+            console.log(`[invite] Usuário ${trimmedEmail} já existe no Auth. Buscando perfil...`); // <-- USA trimmedEmail
             userAlreadyExisted = true;
             
             // Usuário já existe, vamos buscar o ID dele na nossa tabela 'usuarios'
-            const { data: existingProfile, error: findProfileError } = await supabaseAdmin.from('usuarios').select('id').eq('email', email).single();
+            const { data: existingProfile, error: findProfileError } = await supabaseAdmin.from('usuarios').select('id').eq('email', trimmedEmail).single(); // <-- USA trimmedEmail
             
             if (findProfileError || !existingProfile) {
                  // Se ele existe no Auth mas não na nossa tabela 'usuarios', ele precisa logar primeiro.
-                 console.error(`[invite] Falha: ${email} existe no Auth mas não tem perfil na tabela 'usuarios'.`, findProfileError);
+                 console.error(`[invite] Falha: ${trimmedEmail} existe no Auth mas não tem perfil na tabela 'usuarios'.`, findProfileError); // <-- USA trimmedEmail
                  // Retorna um erro amigável para o front-end
                  return res.status(400).json({ 
                      error: 'Falha ao associar usuário.', 
-                     details: `O usuário ${email} já está cadastrado, mas precisa fazer login no sistema pelo menos uma vez para completar seu perfil antes de ser convidado.` 
+                     details: `O usuário ${trimmedEmail} já está cadastrado, mas precisa fazer login no sistema pelo menos uma vez para completar seu perfil antes de ser convidado.` // <-- USA trimmedEmail
                  });
             }
             
@@ -129,10 +132,10 @@ export default async (req, res) => {
         // C. (Opcional) Enviar um e-mail personalizado
         // Só envia se o usuário foi recém-convidado (não se já existia)
         if (!userAlreadyExisted && newUser?.user) {
-            console.log(`[invite] Enviando e-mail de boas-vindas para ${email}`);
+            console.log(`[invite] Enviando e-mail de boas-vindas para ${trimmedEmail}`); // <-- USA trimmedEmail
             await resend.emails.send({
                 from: emailFrom,
-                to: email,
+                to: trimmedEmail, // <-- USA trimmedEmail
                 subject: `Você foi convidado para o time ${org_name} no JProjects!`,
                 html: `<p>Olá!</p><p>Você foi convidado por ${user.email} para se juntar ao time <strong>${org_name}</strong> no JProjects.</p><p>Acesse o JProjects para começar.</p>`
             });
