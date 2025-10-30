@@ -20,11 +20,12 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+<body class="bg-gray-100"> <!-- O JS vai mudar isso, mas começamos com a cor do sistema -->
 
-
-    <!-- #mainSystem (Sem alterações) -->
+    <!-- Este é o container principal do seu sistema -->
     <div id="mainSystem" class="flex h-screen" style="display: none;">
 
+        <!-- 1. BARRA LATERAL (SIDEBAR) -->
         <aside class="sidebar">
             <div class="p-6 border-b border-gray-700">
                 <div class="flex items-center">
@@ -59,6 +60,7 @@
                 <a href="#time" class="nav-item p-3 rounded-lg mb-2 flex items-center cursor-pointer" onclick="showView('timeView', this)">
                     <i data-feather="users" class="h-5 w-5 mr-3"></i> <span>Gerenciar Time</span>
                 </a>
+                <!-- Link de Logout está no final do NAV para ficar na base -->
                 <div id="logoutLink" class="p-3 rounded-lg mt-auto flex items-center text-red-400 cursor-pointer hover:bg-gray-700" onclick="logout()">
                     <i data-feather="log-out" class="h-5 w-5 mr-3"></i>
                     <span>Sair</span>
@@ -66,40 +68,44 @@
             </nav>
         </aside>
 
+        <!-- 2. CONTEÚDO PRINCIPAL (MAIN) -->
+        <!-- Este é o container que troca o conteúdo das abas -->
         <main class="flex-1 overflow-auto bg-gray-100 main-content">
 
+            <!-- MODAL DE CRIAÇÃO DE TIME (Fica sobre a tela) -->
             <div id="createTeamCard" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
-    <div class="auth-card" style="max-width: 550px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px;">
-        <div class="auth-header" style="text-align: center;">
-            <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
-            <h2 style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Bem-vindo ao JProjects!</h2>
-            <p style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Para começar, crie seu primeiro time.</p>
-        </div>
-        <form id="createTeamForm" class="auth-form">
-            <div class="form-group mb-4">
-                <label for="teamName" class="font-semibold text-gray-700">Qual o nome do seu time?</label>
-                <input type="text" id="teamName" placeholder="Ex: Time de Marketing, Projeto Alpha" required class="w-full">
-            </div>
-            <div class="form-group mb-4">
-                <label for="teamInvites" class="font-semibold text-gray-700">Convide sua equipe (Opcional):</label>
-                <textarea id="teamInvites" rows="3" class="w-full" placeholder="Separe os e-mails por vírgula..."></textarea>
-            </div>
-            
-            <div id="createTeamAlert" class="mt-4"></div>
+                <div class="auth-card" style="max-width: 550px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px;">
+                    <div class="auth-header" style="text-align: center;">
+                        <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
+                        <h2 style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Bem-vindo ao JProjects!</h2>
+                        <p style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Para começar, crie seu primeiro time.</p>
+                    </div>
+                    <form id="createTeamForm" class="auth-form">
+                        <div class="form-group mb-4">
+                            <label for="teamName" class="font-semibold text-gray-700">Qual o nome do seu time?</label>
+                            <input type="text" id="teamName" placeholder="Ex: Time de Marketing, Projeto Alpha" required class="w-full">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="teamInvites" class="font-semibold text-gray-700">Convide sua equipe (Opcional):</label>
+                            <textarea id="teamInvites" rows="3" class="w-full" placeholder="Separe os e-mails por vírgula..."></textarea>
+                        </div>
+                        
+                        <div id="createTeamAlert" class="mt-4"></div>
 
-            <div class="flex gap-4 mt-6">
-                <button type="button" class="btn btn-danger flex-1" onclick="logout()">Sair</button>
-                <button type="submit" class="btn btn-success flex-1">
-                     <i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar
-                </button>
+                        <div class="flex gap-4 mt-6">
+                            <button type="button" class="btn btn-danger flex-1" onclick="logout()">Sair</button>
+                            <button type="submit" class="btn btn-success flex-1">
+                                 <i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
-    </div>
-</div>
 
+            <!-- Container das Views (Abas) -->
             <div class="container mx-auto px-6 py-8">
 
-                <!-- #dashboardView (Sem alterações) -->
+                <!-- #dashboardView -->
                 <div id="dashboardView" class="view-content active">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -124,7 +130,7 @@
                     </div>
                 </div>
 
-                <!-- #projetosView (Sem alterações) -->
+                <!-- #projetosView -->
                 <div id="projetosView" class="view-content">
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Quadro Kanban</h1>
@@ -136,7 +142,7 @@
                     </div>
                 </div>
 
-                <!-- #timelineView (Sem alterações) -->
+                <!-- #timelineView -->
                  <div id="timelineView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Timeline de Atividades Recentes</h1>
                      <p class="text-gray-600 mb-4">Veja as últimas criações e atualizações de tarefas.</p>
@@ -145,7 +151,7 @@
                         </div>
                 </div>
 
-                <!-- #calendarioView (Sem alterações) -->
+                <!-- #calendarioView -->
                 <div id="calendarioView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Calendário de Entregas</h1>
                     <div class="bg-white p-6 rounded-lg shadow-md">
@@ -155,7 +161,7 @@
                     </div>
                 </div>
 
-                <!-- #notasView (Sem alterações) -->
+                <!-- #notasView -->
                 <div id="notasView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Bloco de Notas</h1>
                     <div class="note-container">
@@ -171,7 +177,7 @@
                     </div>
                 </div>
 
-                <!-- #timeView (Sem alterações) -->
+                <!-- #timeView -->
                 <div id="timeView" class="view-content">
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
@@ -197,7 +203,7 @@
                     </div>
                 </div>
 
-                <!-- #perfilView (Sem alterações) -->
+                <!-- #perfilView -->
                  <div id="perfilView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
                     <div class="bg-white p-6 rounded-lg shadow-md max-w-3xl mx-auto">
@@ -255,10 +261,18 @@
 
             </div> <!-- Fim .container -->
         </main>
-  
+    </div> <!-- Fim #mainSystem -->
 
-    <!-- #taskModal (Sem alterações) -->
+    <!-- ====================================================== -->
+    <!-- MODAIS (Pop-ups) -->
+    <!-- ELES FICAM AQUI, FORA DO <main>, NO FINAL DO <body> -->
+    <!-- ELES SÃO CONTROLADOS PELO CSS (`display: none`) E JS -->
+    <!-- ====================================================== -->
   
+    <!-- #taskModal -->
+    <!-- Este é o modal "Nova Tarefa" -->
+    <!-- A classe .modal-overlay o esconde por padrão (display: none) -->
+    <div id="taskModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold text-gray-800" id="taskModalTitle">Nova Tarefa</h3>
@@ -268,7 +282,8 @@
             </div>
             <form id="taskForm">
                 <input type="hidden" id="taskId">
-                <input type="hidden" id="taskColunaId"> <div class="form-group mb-4">
+                <input type="hidden" id="taskColunaId"> 
+                <div class="form-group mb-4">
                     <label for="taskTitle">Título da Tarefa:</label>
                     <input type="text" id="taskTitle" required class="w-full">
                 </div>
@@ -298,7 +313,8 @@
 
                 <div id="taskAlert" class="mt-4"></div>
                 <div class="flex gap-4 mt-6 justify-end">
-                    <button type="button" class="btn btn-danger" onclick="closeModal('taskModal')">Cancelar</button>
+                    <!-- O botão "Cancelar" chama closeModal() -->
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('taskModal')">Cancelar</button>
                     <button type="submit" class="btn btn-success">
                          <i data-feather="save" class="h-4 w-4 mr-2"></i> Salvar Tarefa
                     </button>
@@ -307,7 +323,7 @@
         </div>
     </div>
 
-    <!-- #inviteModal (Sem alterações) -->
+    <!-- #inviteModal -->
     <div id="inviteModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
              <div class="flex justify-between items-center mb-4">
@@ -330,7 +346,7 @@
                 </div>
                 <div id="inviteAlert" class="mt-4"></div>
                 <div class="flex gap-4 mt-6 justify-end">
-                     <button type="button" class="btn btn-danger" onclick="closeModal('inviteModal')">Cancelar</button>
+                     <button type="button" class="btn btn-secondary" onclick="closeModal('inviteModal')">Cancelar</button>
                     <button type="submit" class="btn btn-success">
                          <i data-feather="send" class="h-4 w-4 mr-2"></i> Enviar Convite
                     </button>
@@ -339,16 +355,16 @@
         </div>
     </div>
 
-   
-
+    <!-- Container de Notificações (Toasts) -->
     <div id="notificationContainer"></div>
 
+    <!-- Scripts -->
     <script>
         // Configuração Inicial (Reutilizando sua API Proxy)
         const SUPABASE_PROXY_URL = '/api/proxy';
     </script>
     <script src="script.js"></script>
-   <script>
+    <script>
         // Inicializar ícones e PWA
         feather.replace();
         if ('serviceWorker' in navigator) {
