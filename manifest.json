@@ -1,21 +1,25 @@
 {
-  "name": "JProjects - JP Tech Solutions",
+  "name": "JProjects - Gerenciador de Projetos",
   "short_name": "JProjects",
   "description": "Seu hub de produtividade e gerenciamento de projetos.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#011627",
   "theme_color": "#011627",
+  "orientation": "any",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "/icon.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon.png",
+      "src": "/icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
