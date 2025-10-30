@@ -1340,4 +1340,3 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
-
