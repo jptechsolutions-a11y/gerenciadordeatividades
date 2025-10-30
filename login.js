@@ -4,8 +4,8 @@
 // CONFIGURAÇÃO: Cole suas chaves públicas do Supabase aqui
 // -----------------------------------------------------------------
 // Você encontra isso em: Painel Supabase > Settings > API
-const SUPABASE_URL = 'https://SEU-ID-PROJETO.supabase.co';
-const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-PUBLICA-AQUI';
+const SUPABASE_URL = 'https://mxtlanpjzenfghsjubzm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dGxhbnBqemVuZmdoc2p1YnptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTk0MzksImV4cCI6MjA3NzIzNTQzOX0.RFfy6orSso72v-0GtkSqwt4WJ3XWlLmZkyHoE71Dtdc';
 // -----------------------------------------------------------------
 
 const { createClient } = supabase;
