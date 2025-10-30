@@ -1,34 +1,68 @@
-// Service Worker Básico (sw.js)
-const CACHE_NAME = 'jprojects-v2'; // <-- MUDANÇA AQUI
+// Service Worker Otimizado (sw.js)
+const CACHE_NAME = 'jprojects-v2'; // Mudei para v2 para forçar a reinstalação
 const urlsToCache = [
-//...
-    '/', // Isso agora é a landing page
-    '/app.html', // O app principal
-    '/login.html', // A página de login
+    '/', 
+    '/app.html', 
+    '/login.html', 
     '/style.css',
     '/script.js',
-    '/icon.png',
-    'https://cdn.tailwindcss.com',
-    'https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js',
-    'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js'
+    '/icon.png'
+    // Não precisamos cachear CDNs (tailwindcss, chart.js), o navegador já faz isso.
 ];
 
+// 1. Instalação: Salva os arquivos base no cache
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Cache aberto');
+                console.log('SW: Cache aberto, salvando arquivos base.');
                 return cache.addAll(urlsToCache);
             })
+            .then(() => self.skipWaiting()) // Força o novo SW a ativar
     );
 });
 
+// 2. Ativação: Limpa caches antigos
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('SW: Limpando cache antigo:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim()) // Controla todas as abas abertas
+    );
+});
+
+// 3. Fetch: Estratégia "Network First" (O MAIS IMPORTANTE)
+// Tenta buscar da rede primeiro. Se falhar, usa o cache.
 self.addEventListener('fetch', event => {
+    // Ignora requisições que não são GET (ex: POST para /api/proxy)
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // Retorna do cache ou busca na rede
-                return response || fetch(event.request);
+        fetch(event.request)
+            .then(networkResponse => {
+                // Sucesso! Clona a resposta e salva no cache para a próxima vez.
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME)
+                    .then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
+                return networkResponse;
+            })
+            .catch(() => {
+                // Rede falhou (offline?). Tenta pegar do cache.
+                return caches.match(event.request)
+                    .then(cachedResponse => {
+                        return cachedResponse || Response.error(); // Retorna cache ou falha
+                    });
             })
     );
 });
