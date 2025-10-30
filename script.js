@@ -55,7 +55,8 @@ async function handleLogin(event) {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Busca Perfil + Times/Orgs (Puxando todos os campos de usuarios)
-        const endpoint = `usuarios?auth_user_id=eq.${authUser.id}&select=*,usuario_orgs(org_id,organizacoes(id,nome))`;
+        // CORREÇÃO: Pede o auth_user_id explicitamente para a verificação
+        const endpoint = `usuarios?email=eq.${authUser.email}&select=*,usuario_orgs(org_id,organizacoes(id,nome))`;
         let profileResponse = await supabaseRequest(endpoint, 'GET');
 
         if (!profileResponse || !profileResponse[0]) {
@@ -90,6 +91,32 @@ async function handleLogin(event) {
         currentUser.organizacoes = userOrgs;
         delete currentUser.usuario_orgs;
 
+        // =================================================================
+        // INÍCIO DA CORREÇÃO CRÍTICA (Adicionar este bloco)
+        // =================================================================
+        // Esta verificação corrige o "catch-22" para usuários antigos.
+        // Se o usuário existe mas não tem o auth_user_id (porque é antigo),
+        // nós o atualizamos AGORA, antes que as políticas de RLS falhem.
+        if (!currentUser.auth_user_id && authUser.id) {
+            console.log(`Corrigindo auth_user_id (NULL) para o usuário: ${currentUser.id}`);
+            try {
+                // A política de UPDATE da tabela 'usuarios' (do SQL) permite
+                // esta operação de correção.
+                await supabaseRequest(`usuarios?id=eq.${currentUser.id}`, 'PATCH', {
+                    auth_user_id: authUser.id
+                });
+                currentUser.auth_user_id = authUser.id; // Atualiza o cache local
+                console.log("auth_user_id corrigido com sucesso.");
+            } catch (updateError) {
+                console.error("Falha ao corrigir auth_user_id (RLS?):", updateError);
+                // Se isso falhar, o RLS falhará.
+                throw new Error(`Falha crítica ao vincular seu perfil à sua conta: ${updateError.message}`);
+            }
+        }
+        // =================================================================
+        // FIM DA CORREÇÃO CRÍTICA
+        // =================================================================
+
         localStorage.setItem('user', JSON.stringify(currentUser));
         redirectToDashboard(loginButton);
 
@@ -105,6 +132,7 @@ async function handleLogin(event) {
 // MODIFICADO: Lógica de Onboarding (Criação de Time)
 // ========================================
 function redirectToDashboard(loginButton) {
+// ... (O restante do arquivo script.js continua daqui para baixo) ...
     if (!currentUser || !currentUser.organizacoes) {
         showError("Erro fatal: Dados do usuário incompletos.");
         logout();
@@ -1496,3 +1524,4 @@ async function handleRequestAccess(event) {
          button.disabled = false;
     }
 }
+
