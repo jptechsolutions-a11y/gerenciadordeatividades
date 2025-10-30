@@ -17,12 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
     // NOVO: Bind para o form de perfil
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
-    
+
     // NOVO: Bind para os modais de login
-    // Os botões no HTML já têm onclick, mas os forms precisam de submit handler
     const forgotForm = document.getElementById('forgotPasswordForm');
     if (forgotForm) forgotForm.addEventListener('submit', handleForgotPassword);
-    
+
     const requestForm = document.getElementById('requestAccessForm');
     if (requestForm) requestForm.addEventListener('submit', handleRequestAccess);
 });
@@ -62,8 +61,6 @@ async function handleLogin(event) {
              await new Promise(resolve => setTimeout(resolve, 1500));
              profileResponse = await supabaseRequest(endpoint, 'GET');
              if (!profileResponse || !profileResponse[0]) {
-                 // Se ainda não houver perfil, pode ser o primeiro login.
-                 // Vamos criar um perfil básico.
                  console.log("Criando novo perfil de usuário...");
                  const newProfile = {
                      auth_user_id: authUser.id,
@@ -74,7 +71,6 @@ async function handleLogin(event) {
                  if (!createResponse || !createResponse[0]) {
                      throw new Error("Falha ao criar o perfil de usuário no banco de dados.");
                  }
-                 // Recarrega os dados do perfil recém-criado (sem orgs)
                  currentUser = createResponse[0];
                  currentUser.organizacoes = [];
                  console.log("Novo perfil criado com sucesso!");
@@ -89,7 +85,7 @@ async function handleLogin(event) {
 
         const userOrgs = (currentUser.usuario_orgs || []).map(uo => uo.organizacoes).filter(Boolean);
         currentUser.organizacoes = userOrgs;
-        delete currentUser.usuario_orgs; // Limpa o dado aninhado
+        delete currentUser.usuario_orgs;
 
         localStorage.setItem('user', JSON.stringify(currentUser));
         redirectToDashboard(loginButton);
@@ -103,7 +99,7 @@ async function handleLogin(event) {
 }
 
 function redirectToDashboard(loginButton) {
-    if (!currentUser || !currentUser.organizacoes) {
+    if (!currentUser || !currentUser.organizacoes) { // A verificação agora é em currentUser.organizacoes
         showError("Erro fatal: Dados do usuário incompletos.");
         logout();
         return;
@@ -114,23 +110,18 @@ function redirectToDashboard(loginButton) {
     const orgSelect = document.getElementById('orgSelect');
     const loginForm = document.getElementById('loginForm');
 
-    // Se não tiver time (pode usar solo) ou tiver 1 time, entra direto
     if (orgs.length === 0) {
-        currentOrg = { id: null, nome: 'Espaço Pessoal' }; // Modo Solo - ID nulo para diferenciar
+        currentOrg = { id: null, nome: 'Espaço Pessoal' }; // Modo Solo com id null
         showMainSystem();
     } else if (orgs.length === 1) {
         currentOrg = orgs[0];
         showMainSystem();
-    }
-    // Se tiver múltiplos times, mostra seletor
-    else {
+    } else {
         orgSelect.innerHTML = orgs.map(o => `<option value="${o.id}">${escapeHTML(o.nome)}</option>`).join('');
         orgSelectGroup.style.display = 'block';
         orgSelect.focus();
-
         loginButton.disabled = false;
         loginButton.innerHTML = 'CONFIRMAR TIME';
-
         loginForm.removeEventListener('submit', handleLogin);
         loginForm.addEventListener('submit', handleOrgSelection);
     }
@@ -161,15 +152,13 @@ function showMainSystem() {
     document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
     document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
 
-    // Carrega projeto ativo e colunas antes de mostrar qualquer view
     loadActiveProject().then(() => {
         showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
         feather.replace();
     }).catch(err => {
          console.error("Erro ao carregar projeto ativo:", err);
-         showNotification(`Erro: ${err.message}. Verifique o console.`, "error", 6000);
-         // Mostra dashboard mesmo assim (pode ter erros parciais)
-         showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
+         showNotification(`Erro ao carregar dados iniciais: ${err.message}. Verifique o console.`, "error", 6000);
+         showView('dashboardView', document.querySelector('a[href="#dashboard"]')); // Tenta mostrar mesmo com erro
          feather.replace();
     });
 }
@@ -177,16 +166,14 @@ function showMainSystem() {
 function logout() {
     currentUser = null;
     currentOrg = null;
-    currentProject = null; // Zerar
-    currentColumns = [];   // Zerar
+    currentProject = null;
+    currentColumns = [];
     localStorage.removeItem('user');
     localStorage.removeItem('auth_token');
     document.body.classList.remove('system-active');
-
     document.getElementById('mainSystem').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'flex';
 
-    // Reseta o form de login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.reset();
@@ -216,11 +203,11 @@ function showView(viewId, element = null) {
         switch (viewId) {
             case 'dashboardView': loadDashboardView(); break;
             case 'projetosView': loadKanbanView(); break;
-            case 'timelineView': loadTimelineView(); break; // NOVO
+            case 'timelineView': loadTimelineView(); break;
             case 'calendarioView': loadCalendarView(); break;
             case 'notasView': loadNotasView(); break;
             case 'timeView': loadTimeView(); break;
-            case 'perfilView': loadPerfilView(); break; // NOVO
+            case 'perfilView': loadPerfilView(); break;
         }
     } catch(e) { console.error(`Erro ao carregar view ${viewId}:`, e); }
     feather.replace();
@@ -258,14 +245,12 @@ async function loadActiveProject() {
     console.log("Carregando projeto ativo...");
     currentProject = null;
     currentColumns = [];
-    // Filtra por org_id (time) ou, se for espaço pessoal (currentOrg.id == null), filtra por created_by
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
         const projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
-        
+
         if (!projetos || projetos.length === 0) {
-            // Se não houver projeto, cria o 'Meu Primeiro Quadro'
             console.warn("Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
             const newProject = {
                  nome: 'Meu Primeiro Quadro',
@@ -273,7 +258,7 @@ async function loadActiveProject() {
                  org_id: currentOrg?.id || null
             };
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
-            if (!createResponse || !createResponse[0]) throw new Error("Falha ao criar projeto padrão.");
+            if (!createResponse || !createResponse[0]) throw new Error("Falha ao criar projeto padrão. Verifique as RLS da tabela 'projetos'.");
             currentProject = createResponse[0];
             console.log("Projeto padrão criado:", currentProject);
         } else {
@@ -281,23 +266,21 @@ async function loadActiveProject() {
             console.log("Projeto ativo:", currentProject);
         }
 
-        // Buscar colunas do projeto ativo
         currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-        
+
         if (!currentColumns || currentColumns.length === 0) {
             console.warn("Nenhuma coluna encontrada para o projeto ativo. Criando padrão.");
-            await createDefaultColumns(currentProject.id); // Cria e espera
-            // Busca novamente
+            await createDefaultColumns(currentProject.id);
             currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
              if (!currentColumns || currentColumns.length === 0){
-                  throw new Error("Falha ao criar ou buscar colunas padrão após tentativa.");
+                  throw new Error("Falha ao criar ou buscar colunas padrão. Verifique as RLS da tabela 'colunas_kanban'.");
              }
         }
         console.log("Colunas carregadas:", currentColumns.map(c => `${c.nome} (${c.id})`));
 
     } catch (error) {
         console.error("Erro fatal ao carregar projeto/colunas:", error);
-        throw error; // Repassa o erro para showMainSystem tratar
+        throw error;
     }
 }
 
@@ -320,17 +303,15 @@ async function createDefaultColumns(projectId) {
 // ========================================
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
-    // Limpa a view para mostrar o loading
     view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                       <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
 
     if (!currentProject || currentColumns.length === 0) {
-         view.innerHTML = '<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1><div class="alert alert-error">Não foi possível carregar o dashboard. Verifique a configuração do projeto e colunas.</div>';
+         view.innerHTML = '<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1><div class="alert alert-error">Não foi possível carregar o dashboard. Projeto ou colunas não encontrados ou sem permissão de acesso (Verifique RLS).</div>';
          return;
     }
 
-    // Recria a estrutura dos cards
-     view.innerHTML = `
+    view.innerHTML = `
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">...</span><span class="stat-label">Tarefas Ativas</span></div>
@@ -348,16 +329,11 @@ async function loadDashboardView() {
             </div>
         </div>
      `;
-    
-    // Lógica original de busca dos cards (ajustada para usar currentProject)
+
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        
-        // Encontrar o ID da coluna 'Concluído'
         const doneColumn = currentColumns.find(col => col.nome.toLowerCase() === 'concluído');
         const doneColumnId = doneColumn ? doneColumn.id : null;
-        
-        // Encontrar IDs de colunas NÃO concluídas
         const activeColumnIds = currentColumns.filter(col => col.id !== doneColumnId).map(col => col.id);
 
         let totalTasks = 0;
@@ -374,14 +350,18 @@ async function loadDashboardView() {
         }
 
         const today = new Date().toISOString().split('T')[0];
-        const { count: dueTasks } = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=eq.${today}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
+        let dueTasks = 0;
+         if (activeColumnIds.length > 0) {
+            const { count } = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=eq.${today}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
+            dueTasks = count;
+         }
 
         document.getElementById('dashTotalTasks').textContent = totalTasks || 0;
         document.getElementById('dashCompletedTasks').textContent = completedTasks || 0;
         document.getElementById('dashDueTasks').textContent = dueTasks || 0;
-    } catch (error) { 
+    } catch (error) {
         console.error("Erro ao carregar stats do dashboard:", error);
-        showNotification("Erro ao carregar estatísticas.", "error");
+        showNotification("Erro ao carregar estatísticas do dashboard.", "error");
     }
 
     renderStatusChart();
@@ -391,13 +371,12 @@ async function loadDashboardView() {
 async function renderStatusChart() {
     if (!currentProject || currentColumns.length === 0) return;
 
-    const ctx = document.getElementById('statusChart').getContext('2d');
+    const ctx = document.getElementById('statusChart')?.getContext('2d');
+    if (!ctx) return;
     if (chartInstances.statusChart) chartInstances.statusChart.destroy();
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        
-        // Busca a contagem de tarefas para cada coluna em paralelo
         const counts = await Promise.all(currentColumns.map(async (col) => {
             const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=eq.${col.id}&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
             return count || 0;
@@ -408,7 +387,7 @@ async function renderStatusChart() {
         chartInstances.statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: currentColumns.map(col => col.nome), // Nomes das colunas reais
+                labels: currentColumns.map(col => col.nome),
                 datasets: [{
                     label: 'Tarefas por Status',
                     data: counts,
@@ -417,49 +396,47 @@ async function renderStatusChart() {
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
-    } catch (error) { 
+    } catch (error) {
         console.error("Erro ao renderizar gráfico de status:", error);
         showNotification("Erro ao carregar gráfico de status.", "error");
     }
 }
 
-
 async function renderGanttChart() {
     if (!currentProject) return;
 
-    const ctx = document.getElementById('ganttChart').getContext('2d');
+    const ctx = document.getElementById('ganttChart')?.getContext('2d');
+     if (!ctx) return;
     if (chartInstances.ganttChart) chartInstances.ganttChart.destroy();
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=id,titulo,created_at,data_entrega&data_entrega=not.is.null&order=data_entrega.asc&limit=10`, 'GET');
+        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=id,titulo,created_at,data_entrega&data_entrega=not.is.null&order=data_entrega.asc&limit=15`, 'GET');
 
         if (!tasks || tasks.length === 0) {
              ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-             ctx.font = "16px Inter";
-             ctx.fillStyle = "#64748b";
-             ctx.textAlign = "center";
-             ctx.fillText("Nenhuma tarefa com data para exibir no Gantt.", ctx.canvas.width / 2, ctx.canvas.height / 2);
+             ctx.font = "16px Inter"; ctx.fillStyle = "#64748b"; ctx.textAlign = "center";
+             ctx.fillText("Nenhuma tarefa com data para exibir no Gantt.", ctx.canvas.width / 2, 50);
              return;
         }
 
         const ganttData = tasks.map((task, index) => ({
              label: task.titulo,
-             data: [{ 
-                 // Usa created_at como início e data_entrega como fim
-                 x: [new Date(task.created_at).toISOString(), new Date(task.data_entrega).toISOString()], 
-                 y: task.titulo 
+             data: [{
+                 x: [new Date(task.created_at).toISOString(), new Date(task.data_entrega).toISOString()],
+                 y: task.titulo
              }],
-             backgroundColor: index % 2 === 0 ? 'rgba(0, 212, 170, 0.7)' : 'rgba(0, 180, 216, 0.7)',
-             borderColor: index % 2 === 0 ? 'rgba(0, 212, 170, 1)' : 'rgba(0, 180, 216, 1)',
-             barPercentage: 0.5
+             backgroundColor: index % 3 === 0 ? 'rgba(0, 212, 170, 0.7)' : (index % 3 === 1 ? 'rgba(0, 180, 216, 0.7)' : 'rgba(0, 119, 182, 0.7)'),
+             borderColor: index % 3 === 0 ? 'rgba(0, 212, 170, 1)' : (index % 3 === 1 ? 'rgba(0, 180, 216, 1)' : 'rgba(0, 119, 182, 1)'),
+             barPercentage: 0.6,
+             categoryPercentage: 0.7
         }));
 
         const allDates = tasks.flatMap(t => [new Date(t.created_at), new Date(t.data_entrega)]);
         const minDate = new Date(Math.min(...allDates));
         const maxDate = new Date(Math.max(...allDates));
-        minDate.setDate(minDate.getDate() - 1); // Margem
-        maxDate.setDate(maxDate.getDate() + 1); // Margem
+        minDate.setDate(minDate.getDate() - 2);
+        maxDate.setDate(maxDate.getDate() + 2);
 
         chartInstances.ganttChart = new Chart(ctx, {
             type: 'bar',
@@ -471,16 +448,32 @@ async function renderGanttChart() {
                 scales: {
                     x: {
                         type: 'time',
-                        time: { unit: 'day', tooltipFormat: 'dd/MM/yy' },
+                        time: { unit: 'day', tooltipFormat: 'dd/MM/yy', displayFormats: { day: 'dd/MM' } },
                         min: minDate.toISOString().split('T')[0],
                         max: maxDate.toISOString().split('T')[0],
+                        grid: { display: true, color: '#e5e7eb' },
+                        ticks: { font: { size: 10 } }
                     },
-                     y: { display: true }
+                     y: {
+                         display: true,
+                         ticks: { font: { size: 11 }, autoSkip: false }
+                     }
                 },
-                plugins: { legend: { display: false } }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                         callbacks: {
+                              label: function(context) {
+                                   const start = new Date(context.parsed._custom.barStart).toLocaleDateString('pt-BR');
+                                   const end = new Date(context.parsed._custom.barEnd).toLocaleDateString('pt-BR');
+                                   return `${context.dataset.label}: ${start} - ${end}`;
+                              }
+                         }
+                    }
+                }
             }
         });
-    } catch (error) { 
+    } catch (error) {
         console.error("Erro ao renderizar gráfico Gantt:", error);
         showNotification("Erro ao carregar gráfico Gantt.", "error");
     }
@@ -489,11 +482,11 @@ async function renderGanttChart() {
 // ========================================
 // 6. LÓGICA DO KANBAN (Projetos)
 // ========================================
-let draggedTask = null; // Guarda o elemento sendo arrastado
+let draggedTask = null;
 
 async function loadKanbanView() {
     if (!currentProject || currentColumns.length === 0) {
-         document.getElementById('kanbanBoard').innerHTML = '<div class="alert alert-error col-span-3">Projeto ou colunas não carregados. Verifique as configurações.</div>';
+         document.getElementById('kanbanBoard').innerHTML = '<div class="alert alert-error col-span-3">Projeto ou colunas não carregados. Verifique as configurações ou crie um novo projeto.</div>';
          return;
     }
 
@@ -502,9 +495,9 @@ async function loadKanbanView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=*,assignee_id(nome,profile_picture_url)&order=ordem_na_coluna.asc`, 'GET');
+        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=*,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`, 'GET');
 
-        kanbanBoard.innerHTML = ''; // Limpar o loading
+        kanbanBoard.innerHTML = '';
         currentColumns.forEach(coluna => {
             const columnEl = document.createElement('div');
             columnEl.className = 'kanban-column';
@@ -516,16 +509,14 @@ async function loadKanbanView() {
             columnContentEl.ondragover = handleDragOver;
             columnContentEl.ondrop = (e) => handleDrop(e, coluna.id);
 
-            // Botão de adicionar tarefa (+) na coluna
-            const addTaskBtn = `<button class="btn btn-primary btn-small w-full" onclick="openTaskModal(null, '${coluna.id}')">
-                                    <i data-feather="plus" class="h-4 w-4"></i>
+            const addTaskBtn = `<button class="btn btn-secondary btn-small w-full" style="border-style: dashed;" onclick="openTaskModal(null, '${coluna.id}')">
+                                    <i data-feather="plus" class="h-4 w-4 mr-1"></i> Adicionar Tarefa
                                 </button>`;
 
             columnEl.innerHTML = `<h3 class="kanban-column-title">${escapeHTML(coluna.nome)}</h3>`;
             columnEl.appendChild(columnContentEl);
-            columnEl.innerHTML += `<div class="p-2">${addTaskBtn}</div>`; // Adiciona o botão no rodapé da coluna
+            columnEl.innerHTML += `<div class="p-2 border-t border-gray-200 mt-auto">${addTaskBtn}</div>`;
 
-            // Adicionar tasks à coluna
             (tasks || []).filter(t => t.coluna_id === coluna.id).forEach(task => {
                 const card = createTaskCard(task);
                 columnContentEl.appendChild(card);
@@ -536,7 +527,7 @@ async function loadKanbanView() {
 
         feather.replace();
 
-    } catch (error) { 
+    } catch (error) {
          console.error("Erro ao carregar quadro Kanban:", error);
          kanbanBoard.innerHTML = `<div class="alert alert-error col-span-3">Erro ao carregar quadro: ${escapeHTML(error.message)}</div>`;
     }
@@ -545,58 +536,53 @@ async function loadKanbanView() {
 function createTaskCard(task) {
     const card = document.createElement('div');
     card.id = `task-${task.id}`;
-    card.className = 'kanban-card';
+    card.className = `kanban-card priority-${task.prioridade}`;
     card.draggable = true;
     card.dataset.taskId = task.id;
     card.dataset.colunaId = task.coluna_id;
 
-    card.classList.add(`priority-${task.prioridade}`);
-
-    // Data (se existir)
     let dateHtml = '';
     if (task.data_entrega) {
-         const dueDate = new Date(task.data_entrega + 'T00:00:00'); // Trata como data local
+         const dueDate = new Date(task.data_entrega + 'T00:00:00');
          const today = new Date(); today.setHours(0,0,0,0);
-         const isLate = dueDate < today;
+         const doneColumnId = currentColumns.find(c=>c.nome.toLowerCase() === 'concluído')?.id;
+         const isLate = dueDate < today && task.coluna_id !== doneColumnId;
          dateHtml = `
-            <span class="kanban-card-date ${isLate ? 'text-red-600 font-bold' : ''}" title="Data de Entrega">
-                <i data-feather="calendar" class="h-4 w-4 inline-block -mt-1"></i>
-                ${dueDate.toLocaleDateString('pt-BR')}
+            <span class="kanban-card-date ${isLate ? 'text-red-600 font-semibold' : ''}" title="Data de Entrega">
+                <i data-feather="calendar" class="h-3 w-3 inline-block -mt-1 mr-1"></i>
+                ${dueDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
             </span>`;
     }
-        
-    // Avatar (Assignee)
+
     let assigneeHtml = '';
-    if (task.assignee_id) {
+    if (task.assignee) {
         assigneeHtml = `
-            <img src="${escapeHTML(task.assignee_id.profile_picture_url || 'icon.png')}" 
-                 alt="${escapeHTML(task.assignee_id.nome)}" 
-                 title="Atribuído a: ${escapeHTML(task.assignee_id.nome)}"
-                 class="w-6 h-6 rounded-full object-cover border-2 border-white shadow-sm">
+            <img src="${escapeHTML(task.assignee.profile_picture_url || 'icon.png')}"
+                 alt="${escapeHTML(task.assignee.nome)}"
+                 title="Atribuído a: ${escapeHTML(task.assignee.nome)}"
+                 class="w-5 h-5 rounded-full object-cover border border-gray-200 shadow-sm">
         `;
     }
 
     card.innerHTML = `
         <div class="kanban-card-title">${escapeHTML(task.titulo)}</div>
         <div class="kanban-card-footer">
-            <div>
-                ${dateHtml}
-                <span class="kanban-card-priority priority-${task.prioridade}">${escapeHTML(task.prioridade)}</span>
+            <div class="flex items-center gap-2">
+                 <span class="kanban-card-priority priority-${task.prioridade}" title="Prioridade ${task.prioridade}">${escapeHTML(task.prioridade)}</span>
+                 ${dateHtml}
             </div>
             ${assigneeHtml}
         </div>
     `;
 
     card.addEventListener('dragstart', handleDragStart);
-    card.addEventListener('click', () => openTaskModal(task)); // Abre modal para edição
+    card.addEventListener('click', () => openTaskModal(task));
 
     return card;
 }
 
-
-// --- Funções de Drag & Drop ---
 function handleDragStart(e) {
-    draggedTask = e.target.closest('.kanban-card'); // Garante que pegou o card pai
+    draggedTask = e.target.closest('.kanban-card');
     if(!draggedTask) return;
     e.dataTransfer.effectAllowed = 'move';
     setTimeout(() => draggedTask.classList.add('dragging'), 0);
@@ -607,18 +593,15 @@ function handleDragOver(e) {
     e.dataTransfer.dropEffect = 'move';
     const columnContent = e.target.closest('.kanban-column-content');
     if (columnContent) {
-        // Remove 'drag-over' de todas as outras colunas
         document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
         columnContent.classList.add('drag-over');
     }
 }
 
-// Remove o highlight
 document.querySelectorAll('.kanban-column-content').forEach(col => {
     col.addEventListener('dragleave', (e) => col.classList.remove('drag-over'));
     col.addEventListener('drop', (e) => col.classList.remove('drag-over'));
 });
-
 
 async function handleDrop(e, newColunaId) {
     e.preventDefault();
@@ -629,25 +612,22 @@ async function handleDrop(e, newColunaId) {
         if (oldColunaId !== newColunaId) {
             console.log(`Movendo task #${taskId} da coluna ${oldColunaId} para ${newColunaId}`);
 
-            // 1. (Otimista) Mover o card na UI
             const targetColumn = document.getElementById(`col-${newColunaId}`).querySelector('.kanban-column-content');
-            targetColumn.appendChild(draggedTask);
+            targetColumn.appendChild(draggedTask); // Move na UI
             draggedTask.dataset.colunaId = newColunaId;
-            // TODO: Atualizar a 'ordem_na_coluna' de todos os cards na old e new colunas
 
-            // 2. (Real) Atualizar no Supabase
             try {
-                // *** DESCOMENTADO ***
-                await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', { 
+                // SALVA NO BANCO
+                await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', {
                     coluna_id: newColunaId,
-                    updated_at: new Date().toISOString() // Força atualização do timestamp
+                    updated_at: new Date().toISOString()
                 });
                 showNotification(`Tarefa #${taskId} movida.`, 'success');
-                loadTimelineView(); // Atualiza a timeline
+                loadTimelineView(); // Atualiza timeline
+                loadDashboardView(); // Atualiza gráficos
             } catch (error) {
-                // Reverter UI em caso de erro
                 console.error("Falha ao atualizar task:", error);
-                document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask);
+                document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask); // Reverte UI
                 draggedTask.dataset.colunaId = oldColunaId;
                 showNotification('Falha ao mover tarefa.', 'error');
             }
@@ -656,7 +636,6 @@ async function handleDrop(e, newColunaId) {
         draggedTask = null;
     }
 }
-
 
 // ========================================
 // 7. LÓGICA DO MODAL DE TAREFAS
@@ -672,7 +651,6 @@ function openTaskModal(task = null, defaultColunaId = null) {
     form.reset();
     document.getElementById('taskAlert').innerHTML = '';
 
-    // Garante que o input hidden 'taskColunaId' existe
     let colunaIdInput = document.getElementById('taskColunaId');
     if (!colunaIdInput) {
         colunaIdInput = document.createElement('input');
@@ -682,30 +660,26 @@ function openTaskModal(task = null, defaultColunaId = null) {
     }
 
     if (task) {
-        // Modo Edição
         document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
         document.getElementById('taskDescription').value = task.descricao || '';
         document.getElementById('taskDueDate').value = task.data_entrega || '';
         document.getElementById('taskPriority').value = task.prioridade || 'media';
-        colunaIdInput.value = task.coluna_id; // Guarda a coluna atual
+        colunaIdInput.value = task.coluna_id;
     } else {
-        // Modo Criação
         document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
         document.getElementById('taskId').value = '';
-        // Define a coluna padrão (a coluna clicada ou a primeira coluna)
-        colunaIdInput.value = defaultColunaId || currentColumns[0]?.id || '';
+        colunaIdInput.value = defaultColunaId || currentColumns[0]?.id || ''; // Usa a coluna clicada ou a primeira
     }
     modal.style.display = 'flex';
-    feather.replace(); // Recarregar ícones no modal
+    feather.replace();
 }
-
 
 async function handleTaskFormSubmit(e) {
     e.preventDefault();
-     if (!currentProject || !currentUser) {
-         showNotification("Erro: Projeto ou usuário não carregado.", "error");
+     if (!currentProject || !currentUser || !document.getElementById('taskColunaId').value) {
+         showNotification("Erro: Projeto, usuário ou coluna inválida.", "error");
          return;
      }
 
@@ -719,22 +693,19 @@ async function handleTaskFormSubmit(e) {
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
         org_id: currentOrg?.id || null,
-        projeto_id: currentProject.id, // Usa o projeto ativo
-        coluna_id: document.getElementById('taskColunaId').value // Usa o input hidden
-        // updated_at será atualizado pelo trigger no DB
+        projeto_id: currentProject.id,
+        coluna_id: document.getElementById('taskColunaId').value,
+        updated_at: new Date().toISOString()
     };
-    
-    // Adicionar created_by apenas na criação
-     if (!taskId) {
-          taskData.created_by = currentUser.id;
-     }
+
+    if (!taskId) { taskData.created_by = currentUser.id; } // Define criador apenas no INSERT
 
     try {
         if (taskId) {
-            // Edição (PATCH)
+            // SALVA EDIÇÃO NO BANCO
             await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', taskData);
         } else {
-            // Criação (POST)
+            // SALVA CRIAÇÃO NO BANCO
             await supabaseRequest('tarefas', 'POST', taskData);
         }
 
@@ -761,12 +732,12 @@ async function loadTimeView() {
 
     try {
         const orgId = currentOrg?.id;
-        if (!orgId) { // Não carrega time se for espaço pessoal
+        if (!orgId) {
              teamBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Funcionalidade de time não disponível no Espaço Pessoal.</td></tr>';
-             if(inviteButton) inviteButton.style.display = 'none'; // Esconder botão de convite
+             if(inviteButton) inviteButton.style.display = 'none';
              return;
         } else {
-             if(inviteButton) inviteButton.style.display = 'inline-flex'; // Mostrar botão de convite
+             if(inviteButton) inviteButton.style.display = 'inline-flex';
         }
 
         const members = await supabaseRequest(`usuario_orgs?org_id=eq.${orgId}&select=role,joined_at,usuarios(id,nome,email,ativo)`, 'GET');
@@ -778,7 +749,7 @@ async function loadTimeView() {
 
         teamBody.innerHTML = members.map(m => {
             const user = m.usuarios;
-            if (!user) return ''; // Proteção caso o usuário tenha sido deletado mas o vínculo não
+            if (!user) return '';
             const statusClass = user.ativo ? 'status-finalizada' : 'status-negada';
             const statusText = user.ativo ? 'Ativo' : 'Inativo';
             return `
@@ -809,7 +780,7 @@ function openInviteModal() {
     document.getElementById('inviteForm').reset();
     document.getElementById('inviteAlert').innerHTML = '';
     document.getElementById('inviteModal').style.display = 'flex';
-    feather.replace(); // Ícones no modal
+    feather.replace();
 }
 
 async function handleInviteFormSubmit(e) {
@@ -842,7 +813,7 @@ async function handleInviteFormSubmit(e) {
 
         showNotification(`Convite enviado para ${email}!`, 'success');
         closeModal('inviteModal');
-        loadTimeView(); // Recarrega a lista do time
+        loadTimeView();
 
     } catch (error) {
         console.error("Erro ao convidar:", error);
@@ -873,18 +844,14 @@ async function loadNotasView() {
                       <div class="loading"><div class="spinner"></div> Carregando notas...</div>`;
 
     try {
-        // Filtra por org_id (time) ou, se for espaço pessoal (currentOrg.id == null), filtra por user_id E org_id=is.null
-        const orgFilter = currentOrg?.id 
-            ? `org_id=eq.${currentOrg.id}` 
-            : `org_id=is.null&user_id=eq.${currentUser.id}`;
-            
+        const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&user_id=eq.${currentUser.id}`;
         const notes = await supabaseRequest(`notas?${orgFilter}&select=id,titulo,updated_at&order=updated_at.desc`, 'GET');
 
-        list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>`; // Limpa o loading
+        list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>`;
 
         if (!notes || notes.length === 0) {
             list.innerHTML += '<p class="text-center text-sm text-gray-500">Nenhuma nota encontrada.</p>';
-            createNewNote(); // Abre editor vazio
+            createNewNote();
             return;
         }
 
@@ -900,14 +867,13 @@ async function loadNotasView() {
             list.appendChild(item);
         });
 
-        // Abre a nota mais recente por padrão
-        openNote(notes[0].id);
+        if (notes[0]) { openNote(notes[0].id); } else { createNewNote(); }
 
     } catch (error) {
         console.error("Erro ao carregar notas:", error);
         list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>
                           <div class="alert alert-error">Erro ao carregar notas.</div>`;
-        createNewNote(); // Abre editor vazio mesmo com erro
+        createNewNote();
     }
 }
 
@@ -921,10 +887,8 @@ function createNewNote() {
 }
 
 async function openNote(noteId) {
-    if (noteId === null) {
-        createNewNote();
-        return;
-    }
+    if (noteId === null) { createNewNote(); return; }
+
     document.querySelectorAll('.note-list-item').forEach(item => {
         item.classList.toggle('active', item.dataset.noteId == noteId);
     });
@@ -934,7 +898,6 @@ async function openNote(noteId) {
     currentNoteId = noteId;
 
     try {
-        // Busca a nota completa pelo ID (RLS garantirá que só busque se tiver permissão)
         const note = await supabaseRequest(`notas?id=eq.${noteId}&select=titulo,conteudo`, 'GET');
         if (!note || note.length === 0) throw new Error("Nota não encontrada.");
 
@@ -958,9 +921,9 @@ async function saveNote() {
     const noteData = {
         titulo: title || 'Nota sem título',
         conteudo: body,
-        org_id: currentOrg?.id || null, // Permite notas pessoais
-        user_id: currentUser.id
-        // updated_at será atualizado pelo trigger
+        org_id: currentOrg?.id || null,
+        user_id: currentUser.id,
+        updated_at: new Date().toISOString() // Força atualização
     };
 
     const saveButton = document.querySelector('.note-editor .btn-success');
@@ -971,18 +934,17 @@ async function saveNote() {
     try {
         let savedNote;
         if (currentNoteId) {
-            // Update
-            savedNote = await supabaseRequest(`notas?id=eq.${currentNoteId}`, 'PATCH', noteData); // Descomentado
+            // SALVA EDIÇÃO NO BANCO
+            savedNote = await supabaseRequest(`notas?id=eq.${currentNoteId}`, 'PATCH', noteData);
         } else {
-            // Create
-            savedNote = await supabaseRequest('notas', 'POST', noteData); // Descomentado
+            // SALVA CRIAÇÃO NO BANCO
+            savedNote = await supabaseRequest('notas', 'POST', noteData);
             if (savedNote && savedNote[0]) {
-                 currentNoteId = savedNote[0].id; // Pega o ID da nova nota
+                 currentNoteId = savedNote[0].id;
             }
         }
         showNotification('Nota salva!', 'success');
-        // Recarrega a lista para mostrar o título/data atualizados
-        loadNotasView(); 
+        loadNotasView(); // Recarrega a lista
 
     } catch (error) {
         console.error("Erro ao salvar nota:", error);
@@ -1000,7 +962,7 @@ async function saveNote() {
 async function loadCalendarView() {
     const container = document.getElementById('calendarContainer');
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Carregando tarefas...</div>`;
-    
+
     if (!currentProject) {
         container.innerHTML = '<p class="text-center text-gray-500">Nenhum projeto ativo selecionado.</p>';
         return;
@@ -1008,7 +970,6 @@ async function loadCalendarView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        // Buscar tarefas com data_entrega no projeto atual
         const tasksWithDate = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=not.is.null&select=id,titulo,data_entrega,prioridade&order=data_entrega.asc`, 'GET');
 
         if (!tasksWithDate || tasksWithDate.length === 0) {
@@ -1018,14 +979,13 @@ async function loadCalendarView() {
 
         container.innerHTML = `
             <h4 class="text-lg font-semibold mb-3">Próximas Entregas:</h4>
-            <ul class_alias="list-disc list-inside space-y-2">
+            <ul class="list-none space-y-2">
                 ${tasksWithDate.map(t => {
-                    // Adiciona T00:00:00 para tratar a data como local e evitar bugs de fuso
                     const dataEntrega = new Date(t.data_entrega + 'T00:00:00').toLocaleDateString('pt-BR');
-                    return `<li class="flex items-center">
-                                <span class="kanban-card-priority priority-${t.prioridade} mr-2" style="font-size: 0.7rem; padding: 2px 6px;">${escapeHTML(t.prioridade)}</span>
-                                ${escapeHTML(t.titulo)} - 
-                                <strong class="ml-1">${dataEntrega}</strong>
+                    return `<li class="flex items-center p-2 rounded hover:bg-gray-100">
+                                <span class="kanban-card-priority priority-${t.prioridade} mr-3" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor;">${escapeHTML(t.prioridade)}</span>
+                                <span class="flex-1">${escapeHTML(t.titulo)}</span>
+                                <strong class="ml-4 text-sm text-gray-700">${dataEntrega}</strong>
                             </li>`
                 }).join('')}
             </ul>
@@ -1035,7 +995,6 @@ async function loadCalendarView() {
         container.innerHTML = `<div class="alert alert-error">Erro ao carregar tarefas do calendário.</div>`;
     }
 }
-
 
 // ========================================
 // 11. UTILITÁRIOS
@@ -1047,44 +1006,32 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
         logout();
         throw new Error("Sessão expirada. Faça login novamente.");
     }
-
-    // Usa a constante SUPABASE_PROXY_URL definida no HTML
     const url = `${SUPABASE_PROXY_URL}?endpoint=${encodeURIComponent(endpoint)}`;
-
     const config = {
         method: method,
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
-            'Prefer': 'return=representation', // Sempre pede para retornar o registro
-            ...headers // Adiciona headers customizados (como 'count=exact')
+            'Prefer': 'return=representation',
+            ...headers
         }
     };
-
     if (body && (method === 'POST' || method === 'PATCH')) {
         config.body = JSON.stringify(body);
     }
-
     try {
         const response = await fetch(url, config);
         if (!response.ok) {
              let errorData = { message: `Erro ${response.status}: ${response.statusText}` };
-             try {
-                  errorData = await response.json();
-             } catch(e) { /* Ignora erro de parse */ }
+             try { errorData = await response.json(); } catch(e) {}
             console.error("Erro Supabase:", errorData);
             throw new Error(errorData.message || errorData.error || `Erro na requisição Supabase (${response.status})`);
         }
-        
-        // Tratamento para DELETE ou respostas sem corpo
         if (response.status === 204 || response.headers.get('content-length') === '0' ) return null;
-
-        // Tratamento para count=exact
         if (headers['Prefer'] === 'count=exact') {
              const count = response.headers.get('content-range')?.split('/')[1];
              return { count: parseInt(count || '0', 10) };
         }
-
         return await response.json();
     } catch (error) {
         console.error("Erro em supabaseRequest:", error);
@@ -1094,8 +1041,6 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
         throw error;
     }
 }
-
-
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -1122,22 +1067,22 @@ function showError(message) {
 }
 
 // ========================================
-// 13. NOVAS FUNÇÕES: PERFIL
+// 13. FUNÇÕES: PERFIL
 // ========================================
 function loadPerfilView() {
     const form = document.getElementById('perfilForm');
     const alertContainer = document.getElementById('perfilAlert');
+    if (!form || !alertContainer) return; // Garante que elementos existem
     alertContainer.innerHTML = '';
-    form.reset(); 
+    form.reset();
 
-    // Preenche campos
     document.getElementById('perfilEmail').value = currentUser.email || '';
     document.getElementById('perfilNome').value = currentUser.nome || '';
     document.getElementById('perfilNickname').value = currentUser.nickname || '';
     document.getElementById('perfilDescription').value = currentUser.description || '';
     document.getElementById('perfilSector').value = currentUser.sector || '';
-    document.getElementById('perfilSkills').value = (currentUser.skills || []).join(', '); // Converte array para string
-    document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png'; // Usa icon.png como fallback
+    document.getElementById('perfilSkills').value = (currentUser.skills || []).join(', ');
+    document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
 
     feather.replace();
 }
@@ -1159,14 +1104,14 @@ async function handlePerfilFormSubmit(event) {
     event.preventDefault();
     const alertContainer = document.getElementById('perfilAlert');
     const saveButton = event.target.querySelector('button[type="submit"]');
+    if (!saveButton || !alertContainer) return;
     const originalButtonText = saveButton.innerHTML;
     alertContainer.innerHTML = '';
     saveButton.disabled = true;
     saveButton.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div> Salvando...';
 
-    let profilePicUrl = currentUser.profile_picture_url; // Mantém a URL atual por padrão
+    let profilePicUrl = currentUser.profile_picture_url;
 
-    // 1. Faz upload da nova foto, se houver
     const pictureFile = document.getElementById('perfilPicture').files[0];
     if (pictureFile) {
         try {
@@ -1186,7 +1131,7 @@ async function handlePerfilFormSubmit(event) {
             }
             const result = await response.json();
             if (result.publicUrl) {
-                profilePicUrl = result.publicUrl; // Atualiza a URL a ser salva
+                profilePicUrl = result.publicUrl;
                 console.log("Nova URL da foto:", profilePicUrl);
             } else {
                  throw new Error("API de upload não retornou URL pública.");
@@ -1197,7 +1142,6 @@ async function handlePerfilFormSubmit(event) {
         }
     }
 
-    // 2. Prepara os dados do perfil para salvar
     const skillsArray = document.getElementById('perfilSkills').value.split(',')
                           .map(s => s.trim()).filter(s => s !== '');
 
@@ -1210,20 +1154,14 @@ async function handlePerfilFormSubmit(event) {
         profile_picture_url: profilePicUrl || null
     };
 
-    // 3. Salva os dados no banco (na tabela usuarios, usando o ID do usuário)
     try {
-        // A política RLS permite este PATCH porque o ID do usuário bate com o auth.uid()
         const updatedUser = await supabaseRequest(`usuarios?id=eq.${currentUser.id}`, 'PATCH', profileData);
 
         if (updatedUser && updatedUser[0]) {
-            // Atualiza o currentUser local com os novos dados
             currentUser = { ...currentUser, ...updatedUser[0] };
-            localStorage.setItem('user', JSON.stringify(currentUser)); // Atualiza no localStorage
-
-            // Atualiza a UI imediatamente
+            localStorage.setItem('user', JSON.stringify(currentUser));
             document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
             if (!pictureFile) document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
-
             showNotification('Perfil atualizado com sucesso!', 'success');
         } else {
              throw new Error("Resposta inesperada do servidor ao atualizar perfil.");
@@ -1231,19 +1169,19 @@ async function handlePerfilFormSubmit(event) {
 
     } catch (error) {
         console.error("Erro ao salvar perfil:", error);
-        if (!alertContainer.innerHTML) { // Só mostra erro se já não houver um erro de upload
+        if (!alertContainer.innerHTML) {
              alertContainer.innerHTML = `<div class="alert alert-error">Erro ao salvar dados: ${escapeHTML(error.message)}</div>`;
         }
     } finally {
         saveButton.disabled = false;
         saveButton.innerHTML = originalButtonText;
-         document.getElementById('perfilPicture').value = ''; // Limpa o input file
+         document.getElementById('perfilPicture').value = '';
     }
 }
 
 
 // ========================================
-// 14. NOVAS FUNÇÕES: TIMELINE
+// 14. FUNÇÕES: TIMELINE
 // ========================================
 async function loadTimelineView() {
     const container = document.getElementById('timelineContainer');
@@ -1253,13 +1191,11 @@ async function loadTimelineView() {
         container.innerHTML = '<p class="text-center text-gray-500">Nenhum projeto ativo selecionado.</p>';
         return;
     }
-    
+
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        // Buscar tarefas recentes (criadas ou atualizadas), incluindo quem criou e o status (coluna)
-        // O ideal seria ter uma tabela de "histórico", mas vamos simular com 'updated_at'
         const events = await supabaseRequest(
-            `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome),assignee_id(nome),colunas_kanban(nome)&order=updated_at.desc&limit=50`,
+            `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome),assignee:assignee_id(nome),coluna:colunas_kanban(nome)&order=updated_at.desc&limit=50`,
             'GET'
         );
 
@@ -1269,18 +1205,16 @@ async function loadTimelineView() {
         }
 
         container.innerHTML = events.map(event => {
-            const isCreation = (new Date(event.updated_at).getTime() - new Date(event.created_at).getTime()) < 2000; // 2 segundos de margem
+            const isCreation = (new Date(event.updated_at).getTime() - new Date(event.created_at).getTime()) < 3000;
             const actionText = isCreation ? 'criou a tarefa' : 'atualizou a tarefa';
-            const statusName = event.colunas_kanban?.nome || 'Status Desconhecido';
+            const statusName = event.coluna?.nome || 'Status Desconhecido';
             const icon = isCreation ? 'plus-circle' : (statusName.toLowerCase() === 'concluído' ? 'check-circle' : 'edit-2');
             const itemClass = isCreation ? 'created' : (statusName.toLowerCase() === 'concluído' ? 'completed' : 'updated');
             const userName = event.created_by?.nome || 'Usuário desconhecido';
 
             return `
                 <div class="timeline-item ${itemClass}">
-                    <div class="timeline-item-icon">
-                        <i data-feather="${icon}" class="h-5 w-5"></i>
-                    </div>
+                    <div class="timeline-item-icon"> <i data-feather="${icon}" class="h-5 w-5"></i> </div>
                     <div class="timeline-item-content">
                         <p>
                             <span class="user-name">${escapeHTML(userName)}</span>
@@ -1289,11 +1223,8 @@ async function loadTimelineView() {
                             ${!isCreation ? `(Status: ${escapeHTML(statusName)})` : ''}
                         </p>
                     </div>
-                    <div class="timeline-item-timestamp">
-                        ${timeAgo(event.updated_at)}
-                    </div>
-                </div>
-            `;
+                    <div class="timeline-item-timestamp"> ${timeAgo(event.updated_at)} </div>
+                </div> `;
         }).join('');
 
         feather.replace();
@@ -1304,7 +1235,6 @@ async function loadTimelineView() {
     }
 }
 
-// Função utilitária simples para "tempo atrás"
 function timeAgo(timestamp) {
     const now = new Date();
     const past = new Date(timestamp);
@@ -1319,20 +1249,30 @@ function timeAgo(timestamp) {
     if (diffInHours === 1) return `1 hora atrás`;
     if (diffInHours < 24) return `${diffInHours} horas atrás`;
     if (diffInDays === 1) return `ontem`;
-    return `${diffInDays} dias atrás`;
+    if (diffInDays < 7) return `${diffInDays} dias atrás`;
+    // Para mais antigo, mostrar data
+    return past.toLocaleDateString('pt-BR');
 }
 
 // ========================================
-// 15. NOVAS FUNÇÕES: MODAIS DE LOGIN
+// 15. FUNÇÕES: MODAIS DE LOGIN
 // ========================================
 function openForgotPasswordModal() {
     const modal = document.getElementById('forgotPasswordModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+         document.getElementById('forgotPasswordForm')?.reset();
+         document.getElementById('forgotPasswordAlert').innerHTML = '';
+         modal.style.display = 'flex';
+    }
 }
 
 function openRequestAccessModal() {
     const modal = document.getElementById('requestAccessModal');
-    if (modal) modal.style.display = 'flex';
+     if (modal) {
+         document.getElementById('requestAccessForm')?.reset();
+         document.getElementById('requestAccessAlert').innerHTML = '';
+         modal.style.display = 'flex';
+    }
 }
 
 async function handleForgotPassword(event) {
@@ -1349,15 +1289,13 @@ async function handleForgotPassword(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })
         });
-        
-        // Sempre mostre sucesso, mesmo que o e-mail não exista (por segurança)
         if (!response.ok) {
              const err = await response.json();
              console.error("Erro da API forgot-password:", err.error || err.message);
+             // Não lançar erro para o usuário por segurança
         }
-        
         alertContainer.innerHTML = `<div class="alert alert-success">Se o e-mail estiver cadastrado, um link de recuperação foi enviado.</div>`;
-        setTimeout(() => closeModal('forgotPasswordModal'), 3000);
+        setTimeout(() => closeModal('forgotPasswordModal'), 4000);
 
     } catch (error) {
         console.error("Erro de rede ao recuperar senha:", error);
@@ -1384,18 +1322,13 @@ async function handleRequestAccess(event) {
              headers: { 'Content-Type': 'application/json' },
              body: JSON.stringify({ nome, email, motivo })
         });
-
         if (!response.ok) {
             let errorMsg = 'Falha ao enviar solicitação.';
-            try {
-                const result = await response.json();
-                errorMsg = result.error || errorMsg;
-            } catch (e) { /* Ignora erro de parse */ }
+            try { const result = await response.json(); errorMsg = result.error || errorMsg; } catch (e) {}
              throw new Error(errorMsg);
         }
-
         alertContainer.innerHTML = `<div class="alert alert-success">Solicitação enviada! O administrador avaliará seu pedido.</div>`;
-        setTimeout(() => closeModal('requestAccessModal'), 3000);
+        setTimeout(() => closeModal('requestAccessModal'), 4000);
 
     } catch (error) {
         console.error("Erro ao solicitar acesso:", error);
