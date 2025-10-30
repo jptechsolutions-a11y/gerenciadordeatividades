@@ -13,54 +13,96 @@
 </head>
 <body style="background: var(--darker);">
 
+    <!-- Container principal que centraliza o conteúdo -->
     <div id="loginContainer" class="auth-container" style="background: var(--darker); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative;">
         
+        <!-- Link "Voltar" (do original) -->
         <div style="position: absolute; top: 10px; left: 10px;">
              <a href="index.html" class="text-white hover:text-gray-300 flex items-center">
                  <i data-feather="arrow-left" class="h-4 w-4 mr-2"></i> Voltar ao início
              </a>
         </div>
 
-        <div id="loginCard" class="auth-card" style="max-width: 450px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);">
+        <!-- Grid de 2 Colunas (Login + Descrição) -->
+        <div class="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl w-full">
             
-            <div class="auth-header" style="text-align: center;">
-                <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
-                <h2 id="formTitle" style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Acesso ao JProjects</h2>
-                <p id="formSubtitle" style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Seu hub de produtividade</p>
-            </div>
-
-            <div id="loginAlert" class="mt-4" style="text-align: center;"></div>
-
-            <button id="googleLoginBtn" class="btn w-full mb-4" style="background: white; color: #4b5563; border: 1px solid #d1d5db;">
-                <img src="https://rotulosonline.com/wp-content/uploads/2019/09/800px-Google__G__Logo.svg_.png" class="w-5 h-5 mr-3" alt="Google">
-                Continuar com o Google
-            </button>
-
-            <div class="flex items-center my-4">
-                <hr class="flex-1 border-t border-gray-300">
-                <span class="mx-4 text-sm text-gray-500">OU</span>
-                <hr class="flex-1 border-t border-gray-300">
-            </div>
-
-            <form id="emailForm" class="auth-form">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <input type="email" id="email" placeholder="E-mail" required class="w-full">
+            <!-- Coluna 1: Formulário de Login (Adaptado) -->
+            <div id="loginCard" class="auth-card" style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; justify-content: center;">
+                
+                <div class="auth-header" style="text-align: center;">
+                    <!-- Logo JP (Mantido) -->
+                    <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
+                    <!-- Textos da Imagem -->
+                    <h2 id="formTitle" style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Acesso ao Sistema</h2>
+                    <p id="formSubtitle" style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Controle de Baixas de Consumo</p>
                 </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <input type="password" id="password" placeholder="Senha" required class="w-full">
+
+                <div id="loginAlert" class="mt-4" style="text-align: center;"></div>
+
+                <!-- Botão Google (Mantido) -->
+                <button id="googleLoginBtn" class="btn w-full mb-4 flex items-center justify-center" style="background: white; color: #4b5563; border: 1px solid #d1d5db; text-transform: none; font-weight: 500;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" class="w-5 h-5 mr-3" alt="Logo Google">
+                    Continuar com o Google
+                </button>
+                <!-- FIM DA ATUALIZAÇÃO -->
+
+                <div class="flex items-center my-4">
+                    <hr class="flex-1 border-t border-gray-300">
+                    <span class="mx-4 text-sm text-gray-500">OU</span>
+                    <hr class="flex-1 border-t border-gray-300">
+                </div>
+
+                <!-- Formulário de Email (Adaptado) -->
+                <form id="emailForm" class="auth-form">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <input type="email" id="email" placeholder="E-mail" required class="w-full">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <input type="password" id="password" placeholder="Senha" required class="w-full">
+                    </div>
+                    
+                    <!-- Botão com texto da Imagem -->
+                    <button id="emailSubmitBtn" type="submit" class="btn btn-primary w-full" style="background: var(--primary-gradient); color: white; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 1rem;">
+                        ENTRAR
+                    </button>
+                </form>
+                
+                <!-- Links adaptados (da Imagem + Original) -->
+                <div class="mt-6 text-center text-sm flex justify-between items-center">
+                    <div>
+                        <span id="toggleText">Não tem uma conta?</span>
+                        <a href="#signup" id="toggleLink" class="text-blue-600 hover:underline">Cadastre-se</a>
+                    </div>
+                    <div>
+                        <a href="#" class="text-blue-600 hover:underline">Esqueceu sua senha?</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna 2: Descrição (Novo, da Imagem) -->
+            <div class="hidden lg:flex flex-col gap-8 justify-center">
+                <!-- Box 1 -->
+                <div class="p-10 rounded-lg text-white" style="background: var(--primary-gradient); box-shadow: 0 15px 40px rgba(0, 180, 216, 0.3);">
+                    <h2 class="text-3xl font-bold mb-4">CONTROLE EFICIENTE, REDUÇÃO DE CUSTOS.</h2>
+                    <p class="text-lg opacity-90">Gerencie as baixas de consumo com precisão, agilidade e total rastreabilidade.</p>
                 </div>
                 
-                <button id="emailSubmitBtn" type="submit" class="btn btn-primary w-full" style="background: var(--primary-gradient); color: white; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 1rem;">
-                    Continuar com E-mail
-                </button>
-            </form>
-            
-            <div class="mt-6 text-center text-sm">
-                <span id="toggleText">Não tem uma conta?</span>
-                <a href="#signup" id="toggleLink" class="text-blue-600 hover:underline">Cadastre-se</a>
+                <!-- Box 2 -->
+                <div class="p-10 rounded-lg bg-white" style="box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);">
+                    <h3 class="text-sm font-bold uppercase tracking-wider mb-2" style="color: var(--accent);">FLUXO SIMPLIFICADO</h3>
+                    <h2 class="text-2xl font-bold mb-4" style="color: var(--dark);">GESTÃO DE BAIXAS EM ETAPAS</h2>
+                    <ol class="list-none space-y-3" style="color: #333;">
+                        <li><strong class="text-gray-900">1. Solicitação:</strong> Operação registra a necessidade.</li>
+                        <li><strong class="text-gray-900">2. Aprovação:</strong> Gestor autoriza ou nega.</li>
+                        <li><strong class="text-gray-900">3. Execução:</strong> Prevenção realiza a baixa e anexa comprovantes.</li>
+                        <li><strong class="text-gray-900">4. Retirada:</strong> Operação confirma o recebimento e anexa foto.</li>
+                    </ol>
+                </div>
             </div>
-        </div>
-    </div>
+
+        </div> <!-- Fim do Grid -->
+
+    </div> <!-- Fim do Container Principal -->
 
     <script src="login.js"></script>
     <script>
@@ -68,3 +110,4 @@
     </script>
 </body>
 </html>
+
