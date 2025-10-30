@@ -1955,3 +1955,443 @@ tbody tr:hover { background-color: #f9fafb; }
     border: 3px solid white;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
  }
+
+/* ========================================
+   IDENTIDADE VISUAL (DA REFERÊNCIA)
+   ======================================== */
+:root {
+    --primary: #00D4AA;
+    --secondary: #00B4D8;
+    --accent: #0077B6;
+    --dark: #023047;
+    --darker: #011627;
+    --light: #90E0EF;
+    --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
+    --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+    background-color: var(--darker); /* Fundo escuro inicial (Login) */
+    transition: none; /* Sem transição no load */
+    color: var(--dark); /* Cor de texto padrão */
+}
+
+body.system-active {
+    background-color: #f7f9fc; /* Fundo ligeiramente azulado, estilo Asana */
+}
+
+/* ========================================
+   LAYOUT (DA REFERÊNCIA + Asana Touch)
+   ======================================== */
+.sidebar {
+    width: 260px;
+    background: var(--darker);
+    color: white;
+    flex-shrink: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e5e7eb1a; /* Borda sutil */
+}
+.sidebar nav {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+#logoutLink {
+    margin-top: auto; /* Empurra o logout para baixo */
+}
+
+.nav-item {
+    transition: all 0.2s ease;
+    color: var(--light);
+    font-weight: 500; /* Peso um pouco mais leve */
+    border-left: 4px solid transparent; /* Borda transparente por padrão */
+}
+.nav-item:hover {
+    background-color: rgba(0, 180, 216, 0.1);
+    color: white;
+}
+.nav-item.active {
+    background-color: rgba(0, 180, 216, 0.2);
+    border-left-color: var(--primary); /* Borda aparece só no ativo */
+    color: white;
+    font-weight: 600;
+}
+
+.main-content {
+    flex: 1;
+    overflow: auto;
+    height: 100vh;
+}
+
+.view-content { display: none; }
+.view-content.active { display: block; animation: fadeIn 0.4s ease-out; } /* Animação mais suave */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Títulos das Views (Asana Style) */
+.view-content h1 {
+    font-size: 1.8rem; /* Ligeiramente menor */
+    font-weight: 700; /* Mais forte */
+    color: var(--dark);
+    margin-bottom: 1.5rem; /* Mais espaçamento */
+}
+
+
+/* ========================================
+   COMPONENTES (DA REFERÊNCIA + Asana Touch)
+   ======================================== */
+/* Cards de Estatística (Dashboard) */
+.stat-card-dash {
+    background: white;
+    border: 1px solid #e5e7eb; /* Borda suave */
+    color: var(--dark);
+    border-radius: 10px; /* Menos arredondado */
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); /* Sombra muito sutil */
+    border-top: 4px solid var(--primary); /* Destaque superior */
+}
+.stat-card-dash .stat-number {
+    font-size: 2rem; /* Menor */
+    font-weight: 700;
+    display: block;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+.stat-card-dash .stat-label {
+    font-size: 0.85rem; /* Menor */
+    font-weight: 500; /* Mais leve */
+    color: #64748b; /* Cinza */
+    display: block;
+}
+
+/* Cards Genéricos (Gráficos, etc) */
+.chart-card, .bg-white.p-6.rounded-lg.shadow-md {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 24px; /* Padronizado */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.chart-card h3, .bg-white.p-6.rounded-lg.shadow-md h3 {
+    font-size: 1.1rem; /* Menor */
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 16px;
+}
+
+/* Forms */
+.form-group label { margin-bottom: 6px; font-weight: 500; color: #4b5563; font-size: 0.85rem; }
+.form-group input, .form-group select, .form-group textarea {
+    padding: 10px 14px; /* Ligeiramente menor */
+    border: 1px solid #d1d5db; /* Cinza */
+    border-radius: 6px; /* Menos arredondado */
+    font-size: 0.95rem;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    width: 100%; /* Garante largura total */
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent); /* Azul no foco */
+    box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+    background: white;
+}
+.form-group input[disabled] {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Botões */
+.btn {
+    padding: 10px 18px; /* Ligeiramente menor */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem; /* Menor */
+    font-weight: 600;
+    text-transform: none; /* Sem uppercase */
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Sombra sutil */
+}
+.btn-primary { background: var(--accent); color: white; border: 1px solid var(--accent); } /* Azul sólido */
+.btn-success { background: var(--primary); color: white; border: 1px solid var(--primary); } /* Verde sólido */
+.btn-danger { background: #dc2626; color: white; border: 1px solid #dc2626; } /* Vermelho sólido */
+.btn-secondary, .btn-danger[onclick^="closeModal"] { background: white; color: #4b5563; border: 1px solid #d1d5db; } /* Botão cinza/branco */
+
+.btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1); /* Ilumina um pouco */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.btn-secondary:hover { background-color: #f9fafb; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-small { padding: 6px 12px; font-size: 0.8rem; }
+
+/* Modais */
+.modal-overlay {
+    /* ... (igual) ... */
+     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); /* Menos escuro */
+    justify-content: center; align-items: center; z-index: 1001; padding: 20px; overflow-y: auto;
+}
+.modal-content {
+    background: white; padding: 28px; border-radius: 10px; max-width: 95vw; width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); animation: popIn 0.3s ease-out; /* Sombra e animação */
+}
+/* Alertas */
+.alert { padding: 12px 16px; margin: 16px 0; border-radius: 6px; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent; }
+.alert-success { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.alert-error { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.alert-info { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.alert-warning { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+
+
+/* Notificações (Toast) */
+#notificationContainer { /* ... (igual) ... */ }
+.notification { /* ... (sombra mais suave) ... */
+     width: 320px; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+     transform: translateX(100%); animation: slideIn 0.5s forwards; position: relative; overflow: hidden; border-left-width: 4px;
+}
+/* ... (restante igual) ... */
+
+/* Tabelas */
+.table-container { /* ... (igual) ... */ }
+table { width: 100%; border-collapse: separate; border-spacing: 0; } /* Separate para border-radius */
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; font-size: 0.9rem; }
+th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+tbody tr:hover { background-color: #f3f4f6; } /* Hover mais sutil */
+/* Arredondar cantos da tabela */
+.table-container { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
+th:first-child { border-top-left-radius: 10px; }
+th:last-child { border-top-right-radius: 10px; }
+tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+tr:last-child td:last-child { border-bottom-right-radius: 10px; }
+
+
+/* ========================================
+   ESTILOS KANBAN (Asana Touch)
+   ======================================== */
+.kanban-container {
+    display: flex;
+    gap: 20px; /* Mais espaço */
+    overflow-x: auto;
+    padding-bottom: 20px;
+    min-height: calc(100vh - 220px);
+}
+
+.kanban-column {
+    flex: 0 0 300px; /* Pouco mais estreito */
+    background-color: #f0f2f5; /* Cinza Asana */
+    border-radius: 8px; /* Menos redondo */
+    /* box-shadow: none; Borda em vez de sombra */
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.kanban-column-title {
+    font-size: 0.95rem; /* Menor */
+    font-weight: 600;
+    color: var(--dark);
+    padding: 12px 16px; /* Menos padding */
+    border-bottom: 1px solid #e5e7eb; /* Linha divisória */
+    /* background-color: #f9fafb; Fundo ligeiramente diferente */
+}
+
+.kanban-column-content {
+    padding: 10px; /* Menos padding */
+    flex-grow: 1;
+    min-height: 100px;
+    transition: background-color 0.2s;
+}
+.kanban-column-content.drag-over { background-color: rgba(0, 180, 216, 0.1); } /* Destaque azul */
+
+.kanban-card {
+    background: white;
+    border-radius: 6px;
+    padding: 12px; /* Menos padding */
+    margin-bottom: 10px; /* Menos margem */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); /* Sombra muito sutil */
+    cursor: grab;
+    border: 1px solid #e5e7eb; /* Borda leve */
+    border-left-width: 4px; /* Mantém a borda de prioridade */
+    transition: all 0.2s ease;
+}
+.kanban-card:hover {
+    transform: none; /* Sem levantar */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra um pouco maior no hover */
+    border-color: #d1d5db;
+}
+.kanban-card.dragging { opacity: 0.6; transform: rotate(2deg); }
+
+.kanban-card-title {
+    font-weight: 500; /* Mais leve */
+    color: var(--dark);
+    margin-bottom: 6px;
+    font-size: 0.9rem; /* Menor */
+}
+.kanban-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.75rem; /* Menor */
+    color: #6b7280;
+}
+.kanban-card-priority { /* Mantido igual */ }
+
+/* Cores de Prioridade */
+.kanban-card.priority-urgente { border-left-color: #dc2626; } /* Vermelho */
+.kanban-card.priority-alta { border-left-color: #f59e0b; } /* Laranja */
+.kanban-card.priority-media { border-left-color: var(--accent); } /* Azul */
+.kanban-card.priority-baixa { border-left-color: #6b7280; } /* Cinza */
+
+.kanban-card .kanban-card-priority { /* Remove fundo colorido, usa só texto */
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: 600;
+}
+.kanban-card .priority-urgente { color: #dc2626; }
+.kanban-card .priority-alta { color: #f59e0b; }
+.kanban-card .priority-media { color: var(--accent); }
+.kanban-card .priority-baixa { color: #6b7280; }
+
+/* Adiciona avatar pequeno (se tiver) */
+.kanban-card-footer img {
+    width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;
+}
+
+/* Botão de adicionar tarefa na coluna */
+.kanban-column .btn-small {
+    width: 100%;
+    padding: 6px;
+    background: transparent;
+    color: #6b7280;
+    border: 1px dashed #d1d5db;
+    box-shadow: none;
+}
+.kanban-column .btn-small:hover {
+    background: #e5e7eb;
+    color: var(--dark);
+    border-style: solid;
+    border-color: #9ca3af;
+}
+
+
+/* ========================================
+   ESTILOS BLOCO DE NOTAS (Asana Touch)
+   ======================================== */
+.note-container {
+    display: flex;
+    height: calc(100vh - 200px);
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+.note-list {
+    flex: 0 0 260px; /* Pouco mais estreito */
+    border-right: 1px solid #e5e7eb;
+    padding: 12px;
+    overflow-y: auto;
+    background: #f9fafb; /* Fundo levemente diferente */
+}
+.note-list .btn { margin-bottom: 12px; }
+
+.note-list-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    border-bottom: none; /* Remove borda inferior */
+    margin-bottom: 4px; /* Espaço entre itens */
+}
+.note-list-item:hover { background: #f0f2f5; }
+.note-list-item.active { background: #e0f2fe; /* Azul bem claro */ color: var(--accent); }
+.note-list-item.active .note-list-title { color: var(--accent); font-weight: 600; }
+.note-list-item.active .note-list-excerpt { color: #075985; }
+
+.note-list-title { font-weight: 500; color: var(--dark); font-size: 0.9rem; /* ... (overflow igual) ... */ }
+.note-list-excerpt { font-size: 0.8rem; color: #6b7280; /* ... (overflow igual) ... */ }
+
+.note-editor { flex-grow: 1; display: flex; flex-direction: column; }
+#noteTitle {
+    border: none; padding: 16px 20px; font-size: 1.25rem; font-weight: 600; color: var(--dark); border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb; /* Fundo do título */
+}
+#noteTitle:focus { outline: none; box-shadow: none; border-color: var(--accent); background: white; }
+#noteBody { flex-grow: 1; border: none; padding: 20px; font-size: 0.95rem; line-height: 1.6; resize: none; }
+#noteBody:focus { outline: none; box-shadow: none; }
+.note-editor .btn { margin: 16px 20px; }
+
+/* ========================================
+   ESTILOS TIMELINE (Asana Touch)
+   ======================================== */
+.timeline-item {
+    padding: 12px 16px; background-color: white; border-left: 3px solid #9ca3af; /* Cinza padrão */
+    border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px;
+    border-top: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; /* Bordas sutis */
+}
+.timeline-item-icon { flex-shrink: 0; color: #6b7280; /* Cinza */ }
+.timeline-item-content p { margin: 0; line-height: 1.4; font-size: 0.9rem; }
+.timeline-item-content .task-title { font-weight: 500; color: var(--dark); }
+.timeline-item-content .user-name { font-weight: 500; color: var(--accent); }
+.timeline-item-timestamp { font-size: 0.75rem; color: #9ca3af; margin-left: auto; white-space: nowrap; }
+
+/* Ajuste de status na timeline */
+.timeline-item.created { border-left-color: var(--accent); } /* Azul */
+.timeline-item.updated { border-left-color: #f59e0b; } /* Laranja */
+.timeline-item.completed { border-left-color: var(--primary); } /* Verde */
+.timeline-item.created .timeline-item-icon { color: var(--accent); }
+.timeline-item.updated .timeline-item-icon { color: #f59e0b; }
+.timeline-item.completed .timeline-item-icon { color: var(--primary); }
+
+/* ========================================
+   ESTILOS PERFIL (Asana Touch)
+   ======================================== */
+ #perfilPicturePreview {
+    border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+ }
+ #perfilView .form-group input[disabled] { border: 1px solid #e5e7eb; } /* Borda cinza para email */
+
+/* ========================================
+   RESPONSIVIDADE (Ajustes Finais)
+   ======================================== */
+@media (max-width: 768px) {
+    /* ... (sidebar igual) ... */
+    .main-content { padding-left: 1rem; padding-right: 1rem; }
+    .view-content h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+
+    .kanban-container { flex-direction: column; gap: 16px; min-height: auto; }
+    .kanban-column { flex: 1 1 auto; }
+
+    .note-container { flex-direction: column; height: auto; }
+    .note-list { flex: 0 0 auto; border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 200px; }
+
+    .stat-card-dash .stat-number { font-size: 1.8rem; }
+    .stat-card-dash .stat-label { font-size: 0.8rem; }
+
+    /* Ajuste de padding geral */
+    .bg-white.p-6.rounded-lg.shadow-md, .chart-card { padding: 16px; }
+
+    /* Ajuste modal */
+    .modal-content { padding: 20px; }
+
+    /* Ajuste form perfil */
+     #perfilView .flex-col.sm\:flex-row { flex-direction: column; }
+     #perfilPicturePreview { margin-right: 0; margin-bottom: 1rem; }
+
+     /* Ajusta grid forms */
+     .grid.grid-cols-1.md\:grid-cols-2 { grid-template-columns: 1fr; }
+}
+
+/* Ajustes finos */
+.loading { display: flex; justify-content: center; align-items: center; padding: 30px; color: var(--secondary); font-size: 0.9rem; }
+.spinner { width: 24px; height: 24px; margin-right: 8px; }
