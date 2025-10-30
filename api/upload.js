@@ -5,19 +5,19 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-// Validação inicial... (manter igual)
+// --- VERIFICAÇÃO CRÍTICA ---
+// Verifique se você criou estes buckets no seu Supabase Storage.
+// O bucket 'profile-pictures' DEVE ser PÚBLICO.
+const BUCKET_PROFILES = 'profile-pictures';
+const BUCKET_TASKS = 'task-attachments';
+// --------------------------
+
 if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
     console.error('ERRO CRÍTICO [upload]: Variáveis de Ambiente SUPABASE_URL, SUPABASE_SERVICE_KEY ou SUPABASE_ANON_KEY estão ausentes/incorretas na Vercel.');
 }
 
 const supabaseAnon = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
 const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null;
-
-// ****** MODIFICAÇÃO: Ajustar Nomes de Bucket ******
-// É melhor ter buckets separados ou pastas bem definidas
-const BUCKET_PROFILES = 'profile-pictures'; // Exemplo: bucket para fotos de perfil
-const BUCKET_TASKS = 'task-attachments';   // Exemplo: bucket para anexos de tarefas
-// ***********************************************
 
 export default async (req, res) => {
     if (!supabase || !supabaseAnon) {
@@ -28,12 +28,16 @@ export default async (req, res) => {
         return res.status(405).json({ error: 'Método não permitido.' });
     }
 
-    // --- Validação de Segurança JWT (manter igual) ---
+    // --- Validação de Segurança JWT ---
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) { /* ... (código igual) ... */ return res.status(401).json({ error: 'Não autorizado. Token JWT ausente.' }); }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Não autorizado. Token JWT ausente.' });
+    }
     const token = authHeader.split(' ')[1];
     const { data: { user }, error: authError } = await supabaseAnon.auth.getUser(token);
-    if (authError || !user) { /* ... (código igual) ... */ return res.status(401).json({ error: 'Não autorizado. Token inválido ou expirado.' }); }
+    if (authError || !user) {
+        return res.status(401).json({ error: 'Não autorizado. Token inválido ou expirado.' });
+    }
     console.log(`[upload] Autenticação bem-sucedida para user ID: ${user.id}`);
     // --- Fim da Validação ---
 
@@ -46,13 +50,13 @@ export default async (req, res) => {
     let filePath = '';
     const timestamp = Date.now();
 
-    // ****** MODIFICAÇÃO: Definir pasta e bucket com base no tipo ******
+    // Define pasta e bucket com base no tipo
     if (fileType === 'profile_picture') {
         bucketName = BUCKET_PROFILES;
         // Salva na pasta do usuário com nome único (timestamp) para evitar sobrescrita e cache
         filePath = `${user.id}/${timestamp}_${fileName}`;
     } else if (fileType === 'anexo_tarefa') {
-        const taskId = req.query.taskId; // Precisa passar taskId na query para anexos
+        const taskId = req.query.taskId;
         if (!taskId) {
             return res.status(400).json({ error: 'ID da Tarefa não especificado para anexo.' });
         }
@@ -61,14 +65,13 @@ export default async (req, res) => {
     } else {
         return res.status(400).json({ error: 'Tipo de arquivo inválido.' });
     }
-    // ***************************************************************
-
-
+    
     const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${filePath}`;
 
     try {
         console.log(`[upload] Tentando POST para bucket: ${bucketName}, path: ${filePath}`);
 
+        // Envia o arquivo usando a Service Key (seguro, feito no backend)
         const response = await fetch(uploadUrl, {
             method: 'POST',
             headers: {
@@ -81,17 +84,25 @@ export default async (req, res) => {
             duplex: 'half'
         });
 
-        if (!response.ok) { /* ... (tratamento de erro igual) ... */ }
+        if (!response.ok) {
+            const errorBody = await response.text();
+             console.error(`[upload] Erro ${response.status} do Supabase Storage:`, errorBody);
+            return res.status(response.status).json({ error: 'Falha no upload do Supabase', details: errorBody });
+        }
 
         console.log(`[upload] Upload para ${filePath} concluído.`);
 
-        // Obter URL pública
+        // --- Obter URL Pública ---
+        // Isso SÓ FUNCIONA se o bucket (ex: 'profile-pictures') estiver marcado como PÚBLICO
         const { data: urlData, error: urlError } = supabase
             .storage
-            .from(bucketName) // Usa o bucket correto
+            .from(bucketName)
             .getPublicUrl(filePath);
 
-        if (urlError || !urlData || !urlData.publicUrl) { /* ... (tratamento de erro igual) ... */ }
+        if (urlError || !urlData || !urlData.publicUrl) {
+            console.error('[upload] Erro ao obter URL pública:', urlError?.message);
+            throw new Error(`Arquivo salvo, mas falha ao obter URL pública. O bucket '${bucketName}' é público?`);
+        }
 
         console.log(`[upload] URL Pública obtida: ${urlData.publicUrl}`);
         return res.status(200).json({ publicUrl: urlData.publicUrl });
@@ -102,4 +113,4 @@ export default async (req, res) => {
     }
 };
 
-export const config = { api: { bodyParser: false } }; // Manter igual
+export const config = { api: { bodyParser: false } };
