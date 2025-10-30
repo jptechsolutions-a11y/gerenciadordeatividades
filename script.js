@@ -1336,7 +1336,3 @@ function timeAgo(timestamp) {
     return past.toLocaleDateString('pt-BR');
 }
 
-// ========================================
-// 15. FUNÇÕES DE LOGIN (REMOVIDAS)
-// (showError, handleForgotPassword, etc. foram movidas para login.js)
-// ========================================
