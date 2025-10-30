@@ -615,15 +615,41 @@ async function loadKanbanView() {
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         
-        // --- CORREÇÃO KANBAN VAZIO (RESTAURADA) ---
-        // Voltamos a usar a query complexa que busca o 'assignee'
-        const query = `tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`;
-        console.log("Query Kanban (Restaurada):", query); 
-        
-        const tasks = await supabaseRequest(query, 'GET');
+        // --- NOVA CORREÇÃO KANBAN VAZIO (Two-Step Query) ---
+            
+        // 1. Buscar Apenas as Tarefas (simples e seguro)
+        const taskQuery = `tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna&order=ordem_na_coluna.asc`;
+        console.log("Query Kanban (Step 1 - Tarefas):", taskQuery); 
+        const tasks = await supabaseRequest(taskQuery, 'GET');
 
-        console.log("Tarefas recebidas (Restaurada):", tasks); 
-        // --- FIM DA CORREÇÃO ---
+        if (!tasks || tasks.length === 0) {
+             console.warn("Nenhuma tarefa encontrada para este projeto.");
+             // Limpa o board, mas não dá erro
+        }
+        
+        // 2. Buscar 'Assignees' (usuários) separadamente
+        let assigneeMap = {};
+        if (tasks && tasks.length > 0) {
+            const assigneeIds = [...new Set(tasks.map(t => t.assignee_id).filter(Boolean))]; // Pega IDs únicos
+            
+            if (assigneeIds.length > 0) {
+                const userQuery = `usuarios?id=in.(${assigneeIds.join(',')})&select=id,nome,profile_picture_url`;
+                console.log("Query Kanban (Step 2 - Usuários):", userQuery);
+                try {
+                    const assignees = await supabaseRequest(userQuery, 'GET');
+                    // 3. Criar um "map" (objeto) para join fácil
+                    assigneeMap = assignees.reduce((map, user) => {
+                        map[user.id] = user;
+                        return map;
+                    }, {});
+                    console.log("Assignee Map criado:", assigneeMap);
+                } catch (userError) {
+                    console.error("Falha ao buscar usuários (assignees). O Kanban continuará sem eles.", userError);
+                    // O Kanban vai carregar sem os assignees, o que é melhor que não carregar nada.
+                }
+            }
+        }
+        // --- FIM DA NOVA CORREÇÃO ---
 
         kanbanBoard.innerHTML = '';
         currentColumns.forEach(coluna => {
@@ -645,8 +671,13 @@ async function loadKanbanView() {
             columnEl.appendChild(columnContentEl);
             columnEl.innerHTML += `<div class="p-2 mt-auto">${addTaskBtn}</div>`;
 
+            // 4. Fazer o "join" no lado do cliente
             if (tasks && tasks.length > 0) {
                 tasks.filter(t => t.coluna_id === coluna.id).forEach(task => {
+                    // Injeta o objeto 'assignee' no 'task'
+                    if (task.assignee_id && assigneeMap[task.assignee_id]) {
+                        task.assignee = assigneeMap[task.assignee_id];
+                    }
                     const card = createTaskCard(task);
                     columnContentEl.appendChild(card);
                 });
@@ -657,9 +688,9 @@ async function loadKanbanView() {
 
         feather.replace();
 
-    } catch (error) {
-         console.error("Erro ao carregar quadro Kanban:", error);
-         kanbanBoard.innerHTML = `<div class="alert alert-error col-span-3">Erro ao carregar quadro: ${escapeHTML(error.message)}</div>`;
+    } catch (error) { // Este 'catch' agora só pega erros da query de TAREFAS
+         console.error("Erro ao carregar quadro Kanban (Query de Tarefas):", error);
+         kanbanBoard.innerHTML = `<div class="alert alert-error col-span-3">Erro ao carregar tarefas: ${escapeHTML(error.message)}</div>`;
     }
 }
 
