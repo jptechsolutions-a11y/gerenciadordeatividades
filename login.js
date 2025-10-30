@@ -30,7 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
     googleLoginBtn.addEventListener('click', handleGoogleLogin);
     emailForm.addEventListener('submit', handleEmailFormSubmit);
     toggleLink.addEventListener('click', toggleMode);
-
+supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN') {
+            // Usuário logou com sucesso, AGORA redirecionamos
+            window.location.href = 'app.html';
+        }
+    });
     // Verifica se o usuário já está logado (ex: voltou para a pág de login)
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) {
@@ -123,8 +128,8 @@ async function handleGoogleLogin() {
     setLoading(true);
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-            redirectTo: window.location.origin + '/index.html' // Redireciona para o app principal após o Google
+       options: {
+            redirectTo: window.location.origin + '/app.html' 
         }
     });
 
