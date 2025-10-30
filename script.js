@@ -1088,7 +1088,10 @@ async function handleInviteFormSubmit(e) {
 
         if (!response.ok) {
              const errorData = await response.json();
-             throw new Error(errorData.error || errorData.message || 'Falha ao enviar convite');
+             // *** ATUALIZAÇÃO AQUI ***
+             // Prioriza a mensagem 'details' (que tem o erro do Resend)
+             // antes da 'error' genérica.
+             throw new Error(errorData.details || errorData.error || errorData.message || 'Falha ao enviar convite');
         }
 
         showNotification(`Convite enviado para ${email}!`, 'success');
@@ -1540,4 +1543,3 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
-
