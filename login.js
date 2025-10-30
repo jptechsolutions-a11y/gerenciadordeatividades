@@ -32,14 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleLink.addEventListener('click', toggleMode);
 supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN') {
-            // Usuário logou com sucesso, AGORA redirecionamos
             window.location.href = 'app.html';
         }
     });
     // Verifica se o usuário já está logado (ex: voltou para a pág de login)
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) {
-            window.location.href = 'index.html';
+            window.location.href = 'app.html';
         }
     });
 });
@@ -113,7 +112,7 @@ async function handleEmailFormSubmit(e) {
             if (error) throw error;
 
             // Sucesso! Redireciona para o app principal
-            window.location.href = 'index.html';
+            window.location.href = 'app.html';
         }
     } catch (error) {
         console.error("Erro de autenticação:", error.message);
