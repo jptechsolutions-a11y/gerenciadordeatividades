@@ -656,6 +656,12 @@ async function loadKanbanView() {
         // --- FIM DA NOVA CORREÇÃO ---
 
         kanbanBoard.innerHTML = '';
+        
+        // --- CORREÇÃO KANBAN VAZIO (Hipótese Final) ---
+        // Pega o ID da primeira coluna ("A Fazer") para usar como fallback.
+        const fallbackColumnId = currentColumns[0]?.id || null;
+        // --- FIM DA CORREÇÃO ---
+
         currentColumns.forEach(coluna => {
             const columnEl = document.createElement('div');
             columnEl.className = 'kanban-column';
@@ -677,7 +683,23 @@ async function loadKanbanView() {
 
             // 4. Fazer o "join" no lado do cliente
             if (tasks && tasks.length > 0) {
-                tasks.filter(t => t.coluna_id === coluna.id).forEach(task => {
+                
+                // --- CORREÇÃO KANBAN VAZIO (Hipótese Final) ---
+                // Modifica o filtro para incluir tarefas "órfãs" (coluna_id=null) na primeira coluna.
+                const tasksParaEstaColuna = tasks.filter(t => {
+                    if (t.coluna_id === coluna.id) {
+                        return true; // Associação normal
+                    }
+                    // Se a tarefa não tem coluna (null) E esta é a primeira coluna (fallback)
+                    if (t.coluna_id === null && coluna.id === fallbackColumnId) {
+                        console.warn(`[Kanban] Tarefa órfã '${t.titulo}' (coluna_id: null) movida para '${coluna.nome}'`);
+                        return true; // Coloca na primeira coluna
+                    }
+                    return false;
+                });
+                // --- FIM DA CORREÇÃO ---
+
+                tasksParaEstaColuna.forEach(task => {
                     // Injeta o objeto 'assignee' no 'task'
                     if (task.assignee_id && assigneeMap[task.assignee_id]) {
                         task.assignee = assigneeMap[task.assignee_id];
@@ -815,7 +837,7 @@ async function handleDrop(e, newColunaId) {
 }
 
 // ========================================
-// 8. LÓGICA DO MODAL DE TAREFAS
+// 8. LÓGICA DO MODAL DE TAREFAS (CORRIGIDO)
 // ========================================
 function openTaskModal(task = null, defaultColunaId = null) {
      if (!currentProject || currentColumns.length === 0) {
@@ -851,7 +873,16 @@ function openTaskModal(task = null, defaultColunaId = null) {
         document.getElementById('taskStartDate').value = ''; 
         document.getElementById('taskDueDate').value = ''; 
         document.getElementById('taskPriority').value = 'media'; 
-        colunaIdInput.value = defaultColunaId || currentColumns[0]?.id || ''; 
+        
+        // --- CORREÇÃO KANBAN VAZIO (Hipótese Final) ---
+        // Garante que o ID da coluna "A Fazer" seja pego de forma confiável.
+        const primeiraColunaId = currentColumns[0]?.id;
+        colunaIdInput.value = defaultColunaId || primeiraColunaId || '';
+        if (!colunaIdInput.value) {
+            console.error("CRÍTICO: Não foi possível determinar a coluna padrão para a nova tarefa!");
+            document.getElementById('taskAlert').innerHTML = '<div class="alert alert-error">Erro: Colunas não carregadas. Não é possível criar tarefa.</div>';
+        }
+        // --- FIM DA CORREÇÃO ---
     }
     modal.style.display = 'flex';
     feather.replace();
@@ -868,6 +899,16 @@ async function handleTaskFormSubmit(e) {
     alert.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Salvando...</div>';
 
     const taskId = document.getElementById('taskId').value;
+    
+    // --- CORREÇÃO KANBAN VAZIO (Hipótese Final) ---
+    // Garante que o ID da coluna não seja uma string vazia (''') e sim nulo (null)
+    let colunaIdFinal = document.getElementById('taskColunaId').value;
+    if (colunaIdFinal === '') {
+        console.warn("Nenhuma coluna ID encontrada no form, tentando fallback para a primeira coluna...");
+        colunaIdFinal = currentColumns[0]?.id || null; // Pega a primeira coluna de novo, ou define null
+    }
+    // --- FIM DA CORREÇÃO ---
+
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
@@ -876,9 +917,8 @@ async function handleTaskFormSubmit(e) {
         prioridade: document.getElementById('taskPriority').value,
         org_id: currentOrg?.id || null,
         projeto_id: currentProject.id,
-        coluna_id: document.getElementById('taskColunaId').value,
+        coluna_id: colunaIdFinal, // <-- Usa a variável corrigida
         updated_at: new Date().toISOString()
-        // assignee_id não está sendo definido aqui, pode ser um próximo passo
     };
 
     if (!taskId) { taskData.created_by = currentUser.id; } 
@@ -1440,5 +1480,6 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
+
 
 
