@@ -235,74 +235,74 @@ function openCreateTeamModal() {
     document.getElementById('createTeamCard').style.display = 'flex';
     feather.replace();
 }
-// Handler para o formulário de criação de time
+
 async function handleCreateTeamFormSubmit(event) {
     event.preventDefault();
     const alert = document.getElementById('createTeamAlert');
-    const button = event.target.querySelector('button[type="submit"]');
-    alert.innerHTML = '';
-    button.disabled = true;
-    button.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div> Criando...';
 
-    const teamName = document.getElementById('teamName').value;
-    const invites = document.getElementById('teamInvites').value
-                      .split(',')
                       .map(s => s.trim())
                       .filter(s => s.includes('@')); 
 
-    try {
-        // 1: Criar a Organização
-        const newOrgData = {
-            nome: teamName,
-            created_by: currentUser.id 
-        };
-        const newOrgResponse = await supabaseRequest('organizacoes', 'POST', newOrgData);
-        if (!newOrgResponse || !newOrgResponse[0]) {
-            throw new Error("Falha ao criar organização.");
-        }
-        const newOrg = newOrgResponse[0];
+        try {
+            // 1: Criar a Organização
+            const newOrgData = {
+                nome: teamName,
+                created_by: currentUser.id 
+            };
+            const newOrgResponse = await supabaseRequest('organizacoes', 'POST', newOrgData);
+            if (!newOrgResponse || !newOrgResponse[0]) {
+                throw new Error("Falha ao criar organização.");
+            }
+            const newOrg = newOrgResponse[0];
 
-        // 2: Vincular o usuário atual (admin) à organização
-        const linkData = {
-            usuario_id: currentUser.id,
-            org_id: newOrg.id,
-            role: 'admin'
-        };
-        await supabaseRequest('usuario_orgs', 'POST', linkData);
+            // 2: Vincular o usuário atual (admin) à organização
+            const linkData = {
+                usuario_id: currentUser.id,
+                org_id: newOrg.id,
+                role: 'admin'
+            };
+            await supabaseRequest('usuario_orgs', 'POST', linkData);
 
-        // 3: Enviar convites (se houver)
-        if (invites.length > 0) {
-            for (const email of invites) {
-                try {
-                    await fetch('/api/invite', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                        },
-                        body: JSON.stringify({
-                            email: email,
-                            role: 'membro',
-                            org_id: newOrg.id,
-                            org_name: newOrg.nome
-                        })
-                    });
-                } catch (inviteError) {
-                    console.warn(`Falha ao enviar convite para ${email}:`, inviteError);
+            // 3: Enviar convites (se houver)
+            if (invites.length > 0) {
+                for (const email of invites) {
+                    try {
+                        await fetch('/api/invite', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                            },
+                            body: JSON.stringify({
+                                email: email,
+                                role: 'membro',
+                                org_id: newOrg.id,
+                                org_name: newOrg.nome
+                            })
+                        });
+                    } catch (inviteError) {
+                        console.warn(`Falha ao enviar convite para ${email}:`, inviteError);
+                    }
                 }
             }
-        }
 
-        // 4: Atualizar o estado local e prosseguir
-        currentOrg = newOrg;
-        currentUser.organizacoes.push(newOrg); 
-        localStorage.setItem('user', JSON.stringify(currentUser)); 
-        
-        document.getElementById('createTeamCard').style.display = 'none'; 
-        showMainSystem(); // Entra no sistema!
-// ... (O resto da função permanece igual) ...
+            // 4: Atualizar o estado local e prosseguir
+            currentOrg = newOrg;
+            currentUser.organizacoes.push(newOrg); 
+            localStorage.setItem('user', JSON.stringify(currentUser)); 
+            
+            document.getElementById('createTeamCard').style.display = 'none'; 
+            showMainSystem(); // Entra no sistema!
+
+        } catch (error) {
+            console.error("Erro ao criar time:", error);
+            alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
+            button.disabled = false;
+            button.innerHTML = '<i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar';
+            feather.replace();
+        }
     }
-}
+
 
 // Mostra o sistema principal (App)
 function showMainSystem() {
