@@ -261,22 +261,19 @@ function showMainSystem() {
     document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
     document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
 
+
    // Vamos transformar o final desta função em async para esperar o projeto
-   // Vamos transformar o final desta função em async para esperar o projeto
-    (async () => {
+   (async () => {
         try {
-            await loadActiveProject(); // 1. ESPERA o projeto e colunas carregarem
-            // 2. SÓ ENTÃO chama o showView (que vai chamar os gráficos)
+            await loadActiveProject();
             showView('dashboardView', document.querySelector('a[href="#dashboard"]')); 
             feather.replace();
         } catch (err) {
             console.error("Erro ao carregar projeto ativo:", err);
             showNotification(`Erro ao carregar dados iniciais: ${err.message}.`, "error", 6000);
-            // Mesmo com erro, tenta mostrar o dashboard (que mostrará a mensagem de erro interna)
             showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
             feather.replace();
         }
-    }  
     })();
 }
 // ========================================
