@@ -1,12 +1,13 @@
 // Service Worker Otimizado (sw.js)
 const CACHE_NAME = 'jprojects-v2'; // Mudei para v2 para forçar a reinstalação
 const urlsToCache = [
-    '/', 
+   '/', 
     '/app.html', 
     '/login.html', 
     '/style.css',
     '/script.js',
-    '/icon.png'
+    '/icon.png',
+    '/manifest.json' //
     // Não precisamos cachear CDNs (tailwindcss, chart.js), o navegador já faz isso.
 ];
 
