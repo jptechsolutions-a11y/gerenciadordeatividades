@@ -1,3 +1,7 @@
+
+
+const SUPABASE_URL = 'https://mxtlanpjzenfghsjubzm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dGxhbnBqemVuZmdoc2p1YnptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTk0MzksImV4cCI6MjA3NzIzNTQzOX0.RFfy6orSso72v-0GtkSqwt4WJ3XWlLmZkyHoE71Dtdc';
 // ========================================
 // 1. VARIÁVEIS GLOBAIS E ESTADO
 // ========================================
@@ -28,105 +32,72 @@ document.addEventListener('DOMContentLoaded', () => {
     if (requestForm) requestForm.addEventListener('submit', handleRequestAccess);
 });
 
-async function handleLogin(event) {
-    event.preventDefault();
-    const loginButton = event.target.querySelector('button[type="submit"]');
-    const originalButtonText = loginButton.innerHTML;
-    showError('');
-    loginButton.disabled = true;
-    loginButton.innerHTML = `<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin-right: 8px;"></div> CARREGANDO...`;
-
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+// ADICIONE ESTA FUNÇÃO (NO LUGAR DE handleLogin)
+async function initializeApp(session) {
+    
+    // =================================================================
+    // ESTA É A "PONTE" DE SEGURANÇA
+    // Salvamos o Access Token da sessão de autenticação...
+    localStorage.setItem('auth_token', session.access_token);
+    // ...para que sua função supabaseRequest() antiga possa pegá-lo
+    // e enviá-lo para sua /api/proxy.js com segurança.
+    // =================================================================
+    
+    const authUser = session.user;
 
     try {
-        const authResponse = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        if (!authResponse.ok) {
-             const errorData = await authResponse.json();
-             throw new Error(errorData.error || 'Falha na autenticação. Verifique e-mail e senha.');
-        }
-
-        const { user: authUser, session: authSession } = await authResponse.json();
-        localStorage.setItem('auth_token', authSession.access_token);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Busca Perfil + Times/Orgs (Puxando todos os campos de usuarios)
-        // CORREÇÃO: Pede o auth_user_id explicitamente para a verificação
+        // Esta lógica é IDÊNTICA à sua 'handleLogin' original,
+        // mas usa o 'authUser' da sessão.
+        
         const endpoint = `usuarios?email=eq.${authUser.email}&select=*,usuario_orgs(org_id,organizacoes(id,nome))`;
         let profileResponse = await supabaseRequest(endpoint, 'GET');
 
         if (!profileResponse || !profileResponse[0]) {
-             console.warn("Perfil não encontrado na primeira tentativa. Tentando novamente após 1.5s...");
-             await new Promise(resolve => setTimeout(resolve, 1500));
-             profileResponse = await supabaseRequest(endpoint, 'GET');
-             if (!profileResponse || !profileResponse[0]) {
-                 console.log("Criando novo perfil de usuário...");
-                 const newProfile = {
-                     auth_user_id: authUser.id,
-                     email: authUser.email,
-                     nome: authUser.email.split('@')[0] // Nome temporário
-                 };
-                 // MODIFICADO: O 'select=*' é implícito pelo 'Prefer: return=representation' no proxy
-                 const createResponse = await supabaseRequest('usuarios', 'POST', newProfile);
-                 if (!createResponse || !createResponse[0]) {
-                     throw new Error("Falha ao criar o perfil de usuário no banco de dados.");
-                 }
-                 currentUser = createResponse[0];
-                 currentUser.organizacoes = [];
-                 console.log("Novo perfil criado com sucesso!", currentUser);
-             } else {
-                currentUser = profileResponse[0];
-                console.log("Sucesso na segunda tentativa!");
+             console.warn("Perfil não encontrado. Tentando criar...");
+             const newProfile = {
+                 auth_user_id: authUser.id,
+                 email: authUser.email,
+                 // Tenta pegar o nome do Google (se houver), senão usa o e-mail
+                 nome: authUser.user_metadata?.full_name || authUser.email.split('@')[0] 
+             };
+             // Sua função supabaseRequest() continua sendo usada aqui
+             const createResponse = await supabaseRequest('usuarios', 'POST', newProfile);
+             if (!createResponse || !createResponse[0]) {
+                 throw new Error("Falha ao criar o perfil de usuário no banco de dados.");
              }
+             currentUser = createResponse[0];
+             currentUser.organizacoes = [];
+             console.log("Novo perfil criado com sucesso!", currentUser);
         } else {
              currentUser = profileResponse[0];
-             console.log("Sucesso na primeira tentativa!");
+             console.log("Perfil encontrado!");
         }
 
         const userOrgs = (currentUser.usuario_orgs || []).map(uo => uo.organizacoes).filter(Boolean);
         currentUser.organizacoes = userOrgs;
         delete currentUser.usuario_orgs;
 
-        // =================================================================
-        // INÍCIO DA CORREÇÃO CRÍTICA (Adicionar este bloco)
-        // =================================================================
-        // Esta verificação corrige o "catch-22" para usuários antigos.
-        // Se o usuário existe mas não tem o auth_user_id (porque é antigo),
-        // nós o atualizamos AGORA, antes que as políticas de RLS falhem.
+        // Bloco de correção de 'auth_user_id' (Mantido do seu original)
         if (!currentUser.auth_user_id && authUser.id) {
             console.log(`Corrigindo auth_user_id (NULL) para o usuário: ${currentUser.id}`);
-            try {
-                // A política de UPDATE da tabela 'usuarios' (do SQL) permite
-                // esta operação de correção.
-                await supabaseRequest(`usuarios?id=eq.${currentUser.id}`, 'PATCH', {
-                    auth_user_id: authUser.id
-                });
-                currentUser.auth_user_id = authUser.id; // Atualiza o cache local
-                console.log("auth_user_id corrigido com sucesso.");
-            } catch (updateError) {
-                console.error("Falha ao corrigir auth_user_id (RLS?):", updateError);
-                // Se isso falhar, o RLS falhará.
-                throw new Error(`Falha crítica ao vincular seu perfil à sua conta: ${updateError.message}`);
-            }
+            await supabaseRequest(`usuarios?id=eq.${currentUser.id}`, 'PATCH', {
+                auth_user_id: authUser.id
+            });
+            currentUser.auth_user_id = authUser.id;
         }
-        // =================================================================
-        // FIM DA CORREÇÃO CRÍTICA
-        // =================================================================
 
         localStorage.setItem('user', JSON.stringify(currentUser));
-        redirectToDashboard(loginButton);
+        
+        // CHAMA A LÓGICA DE ONBOARDING/REDIRECIONAMENTO (Sua função original)
+        redirectToDashboard();
 
     } catch (error) {
-        console.error("Erro detalhado no login:", error);
-        showError(error.message);
-        loginButton.disabled = false;
-        loginButton.innerHTML = originalButtonText;
+        console.error("Erro detalhado na inicialização:", error);
+        // Se falhar (ex: RLS), desloga o usuário
+        logout();
     }
 }
+// FIM DA FUNÇÃO ADICIONADA
 
 // ========================================
 // MODIFICADO: Lógica de Onboarding (Criação de Time)
@@ -149,19 +120,19 @@ function redirectToDashboard(loginButton) {
         // MODIFICADO: Em vez de criar "Espaço Pessoal", força a criação do time
         console.log("Nenhuma organização encontrada. Iniciando fluxo de criação de time.");
         openCreateTeamModal();
-    } else if (orgs.length === 1) {
-        // Comportamento existente: entra direto
+   } else if (orgs.length === 1) {
+        // 2. UM TIME: Entra direto (Sua lógica existente)
         currentOrg = orgs[0];
         showMainSystem();
+    
     } else {
-        // Comportamento existente: mostra seletor
-        orgSelect.innerHTML = orgs.map(o => `<option value="${o.id}">${escapeHTML(o.nome)}</option>`).join('');
-        orgSelectGroup.style.display = 'block';
-        orgSelect.focus();
-        loginButton.disabled = false;
-        loginButton.innerHTML = 'CONFIRMAR TIME';
-        loginForm.removeEventListener('submit', handleLogin);
-        loginForm.addEventListener('submit', handleOrgSelection);
+        // 3. VÁRIOS TIMES:
+        // O seletor de <select> foi removido.
+        // Por enquanto, vamos apenas pegar o primeiro time.
+        // TODO: Você pode criar um modal "Seletor de Time" aqui se desejar.
+        console.warn("Múltiplos times detectados. Selecionando o primeiro por padrão.");
+        currentOrg = orgs[0];
+        showMainSystem();
     }
 }
 
@@ -185,8 +156,7 @@ function handleOrgSelection(event) {
 
 // NOVO: Função para mostrar o card de criação de time
 function openCreateTeamModal() {
-    document.getElementById('loginCard').style.display = 'none';
-    document.getElementById('createTeamCard').style.display = 'block';
+    document.getElementById('createTeamCard').style.display = 'flex';
     feather.replace();
 }
 
@@ -261,7 +231,8 @@ async function handleCreateTeamFormSubmit(event) {
         currentUser.organizacoes.push(newOrg); // Adiciona a nova org ao cache local
         localStorage.setItem('user', JSON.stringify(currentUser)); // Salva o cache
         
-        document.getElementById('createTeamCard').style.display = 'none'; // Esconde o card de criação
+        // MODIFICADO: Esconde o modal de criação
+        document.getElementById('createTeamCard').style.display = 'none'; 
         showMainSystem(); // Entra no sistema!
 
     } catch (error) {
@@ -276,8 +247,6 @@ async function handleCreateTeamFormSubmit(event) {
 
 
 function showMainSystem() {
-    // MODIFICADO: Esconde o container de login inteiro
-    document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('mainSystem').style.display = 'flex';
     document.body.classList.add('system-active');
 
@@ -295,33 +264,24 @@ function showMainSystem() {
     });
 }
 
-function logout() {
+// SUBSTITUA A FUNÇÃO logout() INTEIRA POR ESTA
+async function logout() {
+    console.log("Deslogando usuário...");
     currentUser = null;
     currentOrg = null;
     currentProject = null;
     currentColumns = [];
     localStorage.removeItem('user');
-    localStorage.removeItem('auth_token');
-    document.body.classList.remove('system-active');
-    document.getElementById('mainSystem').style.display = 'none';
+    localStorage.removeItem('auth_token'); // Limpa o token da sua API proxy
     
-    // MODIFICADO: Garante que o container de login e o card de login corretos sejam exibidos
-    document.getElementById('loginContainer').style.display = 'flex';
-    document.getElementById('createTeamCard').style.display = 'none';
-    document.getElementById('loginCard').style.display = 'block';
-
-
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.reset();
-        showError('');
-        document.getElementById('orgSelectGroup').style.display = 'none';
-        loginForm.removeEventListener('submit', handleOrgSelection);
-        loginForm.addEventListener('submit', handleLogin);
-        const loginButton = loginForm.querySelector('button[type="submit"]');
-        if (loginButton) loginButton.innerHTML = 'ENTRAR';
-    }
+    // NOVO: Chama o signOut do Supabase para limpar a sessão de auth
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) console.error("Erro ao deslogar:", error);
+    
+    // Redireciona para a página de login
+    window.location.href = 'login.html';
 }
+// FIM DA FUNÇÃO SUBSTITUÍDA
 
 
 // ========================================
