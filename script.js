@@ -227,7 +227,8 @@ function redirectToDashboard() {
 // Mostra o modal de criação de time
 function openCreateTeamModal() {
     // ADICIONADO: Mostra o container principal (o sidebar e a área de conteúdo)
-    document.getElementById('mainSystem').style.display = 'flex';
+    // ATUALIZADO: Mostra 'appShell' em vez de 'mainSystem'
+    document.getElementById('appShell').style.display = 'flex';
     // ADICIONADO: Muda o fundo para a cor do sistema (cinza claro)
     document.body.classList.add('system-active');
 
@@ -235,74 +236,80 @@ function openCreateTeamModal() {
     document.getElementById('createTeamCard').style.display = 'flex';
     feather.replace();
 }
-
+// Handler para o formulário de criação de time
 async function handleCreateTeamFormSubmit(event) {
     event.preventDefault();
     const alert = document.getElementById('createTeamAlert');
+    const button = event.target.querySelector('button[type="submit"]');
+    alert.innerHTML = '';
+    button.disabled = true;
+    button.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div> Criando...';
 
+    const teamName = document.getElementById('teamName').value;
+    const invites = document.getElementById('teamInvites').value
+                      .split(',')
                       .map(s => s.trim())
                       .filter(s => s.includes('@')); 
 
-        try {
-            // 1: Criar a Organização
-            const newOrgData = {
-                nome: teamName,
-                created_by: currentUser.id 
-            };
-            const newOrgResponse = await supabaseRequest('organizacoes', 'POST', newOrgData);
-            if (!newOrgResponse || !newOrgResponse[0]) {
-                throw new Error("Falha ao criar organização.");
-            }
-            const newOrg = newOrgResponse[0];
+    try {
+        // 1: Criar a Organização
+        const newOrgData = {
+            nome: teamName,
+            created_by: currentUser.id 
+        };
+        const newOrgResponse = await supabaseRequest('organizacoes', 'POST', newOrgData);
+        if (!newOrgResponse || !newOrgResponse[0]) {
+            throw new Error("Falha ao criar organização.");
+        }
+        const newOrg = newOrgResponse[0];
 
-            // 2: Vincular o usuário atual (admin) à organização
-            const linkData = {
-                usuario_id: currentUser.id,
-                org_id: newOrg.id,
-                role: 'admin'
-            };
-            await supabaseRequest('usuario_orgs', 'POST', linkData);
+        // 2: Vincular o usuário atual (admin) à organização
+        const linkData = {
+            usuario_id: currentUser.id,
+            org_id: newOrg.id,
+            role: 'admin'
+        };
+        await supabaseRequest('usuario_orgs', 'POST', linkData);
 
-            // 3: Enviar convites (se houver)
-            if (invites.length > 0) {
-                for (const email of invites) {
-                    try {
-                        await fetch('/api/invite', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                            },
-                            body: JSON.stringify({
-                                email: email,
-                                role: 'membro',
-                                org_id: newOrg.id,
-                                org_name: newOrg.nome
-                            })
-                        });
-                    } catch (inviteError) {
-                        console.warn(`Falha ao enviar convite para ${email}:`, inviteError);
-                    }
+        // 3: Enviar convites (se houver)
+        if (invites.length > 0) {
+            for (const email of invites) {
+                try {
+                    await fetch('/api/invite', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            role: 'membro',
+                            org_id: newOrg.id,
+                            org_name: newOrg.nome
+                        })
+                    });
+                } catch (inviteError) {
+                    console.warn(`Falha ao enviar convite para ${email}:`, inviteError);
                 }
             }
-
-            // 4: Atualizar o estado local e prosseguir
-            currentOrg = newOrg;
-            currentUser.organizacoes.push(newOrg); 
-            localStorage.setItem('user', JSON.stringify(currentUser)); 
-            
-            document.getElementById('createTeamCard').style.display = 'none'; 
-            showMainSystem(); // Entra no sistema!
-
-        } catch (error) {
-            console.error("Erro ao criar time:", error);
-            alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
-            button.disabled = false;
-            button.innerHTML = '<i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar';
-            feather.replace();
         }
-    }
 
+        // 4: Atualizar o estado local e prosseguir
+        currentOrg = newOrg;
+        currentUser.organizacoes.push(newOrg); 
+        localStorage.setItem('user', JSON.stringify(currentUser)); 
+        
+        document.getElementById('createTeamCard').style.display = 'none'; 
+        showMainSystem(); // Entra no sistema!
+
+    } catch (error) {
+        console.error("Erro ao criar time:", error);
+        alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
+        button.disabled = false;
+        button.innerHTML = '<i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar';
+        feather.replace();
+    }
+}
 
 // Mostra o sistema principal (App)
 function showMainSystem() {
@@ -447,10 +454,8 @@ async function createDefaultColumns(projectId) {
 // ========================================
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
-
-    // --- REVERTENDO A CORREÇÃO ANTERIOR ---
-    // Removendo os blocos .destroy() daqui
-    /*
+    
+    // Destrói gráficos ANTES de recarregar o HTML
     if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
         chartInstances.statusChart.destroy();
         chartInstances.statusChart = null;
@@ -459,8 +464,6 @@ async function loadDashboardView() {
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
     }
-    */
-    // --- FIM DA REVERSÃO ---
 
     view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                       <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
@@ -535,9 +538,8 @@ async function renderStatusChart() {
     }
    
     // --- CORREÇÃO ERRO CANVAS ---
-    // Adicionando o bloco .destroy() DE VOLTA, aqui dentro da função.
+    // Destrói o gráfico antigo ANTES de criar um novo
     if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { 
-        console.log("Destruindo instância antiga de statusChart (dentro de renderStatusChart)");
         chartInstances.statusChart.destroy();
         chartInstances.statusChart = null;
     }
@@ -551,8 +553,7 @@ async function renderStatusChart() {
         }));
         const backgroundColors = [ '#0077B6', '#F77F00', '#00D4AA', '#00B4D8', '#90E0EF', '#023047'];
         
-        console.log("Renderizando statusChart...");
-        chartInstances.statusChart = new Chart(ctx, { // <--- Erro acontecia aqui
+        chartInstances.statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: currentColumns.map(col => col.nome),
@@ -577,9 +578,8 @@ async function renderGanttChart() {
      }
 
     // --- CORREÇÃO ERRO CANVAS ---
-    // Adicionando o bloco .destroy() DE VOLTA, aqui dentro da função.
+    // Destrói o gráfico antigo ANTES de criar um novo
     if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-        console.log("Destruindo instância antiga de ganttChart (dentro de renderGanttChart)");
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
     }
@@ -614,8 +614,7 @@ async function renderGanttChart() {
         minDate.setDate(minDate.getDate() - 2);
         maxDate.setDate(maxDate.getDate() + 2);
 
-        console.log("Renderizando ganttChart...");
-        chartInstances.ganttChart = new Chart(ctx, { // <--- Erro acontecia aqui
+        chartInstances.ganttChart = new Chart(ctx, {
             type: 'bar',
             data: { datasets: ganttData },
             options: {
@@ -1434,7 +1433,11 @@ async function handlePerfilFormSubmit(event) {
         if (updatedUser && updatedUser[0]) {
             currentUser = { ...currentUser, ...updatedUser[0] };
             localStorage.setItem('user', JSON.stringify(currentUser));
-            document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
+            
+            // ATUALIZADO: Popula o topBar E o preview do perfil
+            document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
+            document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
+            document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
             
             if (!newPictureUploaded) {
                  document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
@@ -1537,3 +1540,4 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
+
