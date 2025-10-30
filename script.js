@@ -144,7 +144,7 @@ async function initializeApp(session) {
 function redirectToDashboard() {
     if (!currentUser || !currentUser.organizacoes) {
         console.error("Erro fatal: Dados do usuário incompletos.");
-        logout();
+        logout(); // 'logout' está definido no DOMContentLoaded
         return;
     }
 
@@ -154,14 +154,12 @@ function redirectToDashboard() {
         // NENHUM TIME: Força a criação do primeiro time
         console.log("Nenhuma organização encontrada. Iniciando fluxo de criação de time.");
         openCreateTeamModal();
-   
-   } else if (orgs.length === 1) {
+    } else if (orgs.length === 1) {
         // UM TIME: Entra direto
         currentOrg = orgs[0];
         showMainSystem();
-    
     } else {
-        // MÚLTIPLOS TIMES: Por enquanto, pega o primeiro.
+        // MÚLTIPLOS TIMES: Pega o primeiro.
         // TODO: Criar um modal "Seletor de Time" aqui
         console.warn("Múltiplos times detectados. Selecionando o primeiro por padrão.");
         currentOrg = orgs[0];
