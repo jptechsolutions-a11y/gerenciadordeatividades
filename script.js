@@ -15,8 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
     document.getElementById('taskForm')?.addEventListener('submit', handleTaskFormSubmit);
     document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
-    // NOVO: Bind para o form de perfil
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
+
+    // MODIFICADO: Adiciona listener para o novo form de criação de time
+    document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
 
     // NOVO: Bind para os modais de login
     const forgotForm = document.getElementById('forgotPasswordForm');
@@ -67,13 +69,14 @@ async function handleLogin(event) {
                      email: authUser.email,
                      nome: authUser.email.split('@')[0] // Nome temporário
                  };
+                 // MODIFICADO: O 'select=*' é implícito pelo 'Prefer: return=representation' no proxy
                  const createResponse = await supabaseRequest('usuarios', 'POST', newProfile);
                  if (!createResponse || !createResponse[0]) {
                      throw new Error("Falha ao criar o perfil de usuário no banco de dados.");
                  }
                  currentUser = createResponse[0];
                  currentUser.organizacoes = [];
-                 console.log("Novo perfil criado com sucesso!");
+                 console.log("Novo perfil criado com sucesso!", currentUser);
              } else {
                 currentUser = profileResponse[0];
                 console.log("Sucesso na segunda tentativa!");
@@ -98,8 +101,11 @@ async function handleLogin(event) {
     }
 }
 
+// ========================================
+// MODIFICADO: Lógica de Onboarding (Criação de Time)
+// ========================================
 function redirectToDashboard(loginButton) {
-    if (!currentUser || !currentUser.organizacoes) { // A verificação agora é em currentUser.organizacoes
+    if (!currentUser || !currentUser.organizacoes) {
         showError("Erro fatal: Dados do usuário incompletos.");
         logout();
         return;
@@ -110,13 +116,17 @@ function redirectToDashboard(loginButton) {
     const orgSelect = document.getElementById('orgSelect');
     const loginForm = document.getElementById('loginForm');
 
+    // --- ESTA É A MUDANÇA PRINCIPAL ---
     if (orgs.length === 0) {
-        currentOrg = { id: null, nome: 'Espaço Pessoal' }; // Modo Solo com id null
-        showMainSystem();
+        // MODIFICADO: Em vez de criar "Espaço Pessoal", força a criação do time
+        console.log("Nenhuma organização encontrada. Iniciando fluxo de criação de time.");
+        openCreateTeamModal();
     } else if (orgs.length === 1) {
+        // Comportamento existente: entra direto
         currentOrg = orgs[0];
         showMainSystem();
     } else {
+        // Comportamento existente: mostra seletor
         orgSelect.innerHTML = orgs.map(o => `<option value="${o.id}">${escapeHTML(o.nome)}</option>`).join('');
         orgSelectGroup.style.display = 'block';
         orgSelect.focus();
@@ -127,6 +137,7 @@ function redirectToDashboard(loginButton) {
     }
 }
 
+// MODIFICADO: Não é mais "handleOrgSelection", agora é a seleção normal
 function handleOrgSelection(event) {
     event.preventDefault();
     const orgId = document.getElementById('orgSelect').value;
@@ -144,13 +155,106 @@ function handleOrgSelection(event) {
     }
 }
 
+// NOVO: Função para mostrar o card de criação de time
+function openCreateTeamModal() {
+    document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('createTeamCard').style.display = 'block';
+    feather.replace();
+}
+
+// NOVO: Handler para o formulário de criação de time
+async function handleCreateTeamFormSubmit(event) {
+    event.preventDefault();
+    const alert = document.getElementById('createTeamAlert');
+    const button = event.target.querySelector('button[type="submit"]');
+    alert.innerHTML = '';
+    button.disabled = true;
+    button.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div> Criando...';
+
+    const teamName = document.getElementById('teamName').value;
+    const invites = document.getElementById('teamInvites').value
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(s => s.includes('@')); // Filtra apenas e-mails válidos
+
+    try {
+        // Etapa 1: Criar a Organização
+        console.log("Criando organização:", teamName);
+        const newOrgData = {
+            nome: teamName,
+            created_by: currentUser.id // Assume que a tabela 'organizacoes' tem 'created_by'
+        };
+        const newOrgResponse = await supabaseRequest('organizacoes', 'POST', newOrgData);
+        if (!newOrgResponse || !newOrgResponse[0]) {
+            throw new Error("Falha ao criar organização. Verifique as RLS (ver Plano_Criar_Time.md).");
+        }
+        const newOrg = newOrgResponse[0];
+        console.log("Organização criada:", newOrg);
+
+        // Etapa 2: Vincular o usuário atual (admin) à organização
+        console.log(`Vinculando usuário ${currentUser.id} à org ${newOrg.id}`);
+        const linkData = {
+            usuario_id: currentUser.id,
+            org_id: newOrg.id,
+            role: 'admin' // O criador é o admin
+        };
+        const linkResponse = await supabaseRequest('usuario_orgs', 'POST', linkData);
+        if (!linkResponse) {
+             throw new Error("Falha ao vincular admin à organização. Verifique as RLS (ver Plano_Criar_Time.md).");
+        }
+        console.log("Admin vinculado.");
+
+        // Etapa 3: Enviar convites (se houver)
+        if (invites.length > 0) {
+            console.log("Enviando convites para:", invites);
+            for (const email of invites) {
+                try {
+                    await fetch('/api/invite', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            role: 'membro',
+                            org_id: newOrg.id,
+                            org_name: newOrg.nome
+                        })
+                    });
+                } catch (inviteError) {
+                    console.warn(`Falha ao enviar convite para ${email}:`, inviteError);
+                }
+            }
+        }
+
+        // Etapa 4: Atualizar o estado local e prosseguir
+        currentOrg = newOrg;
+        currentUser.organizacoes.push(newOrg); // Adiciona a nova org ao cache local
+        localStorage.setItem('user', JSON.stringify(currentUser)); // Salva o cache
+        
+        document.getElementById('createTeamCard').style.display = 'none'; // Esconde o card de criação
+        showMainSystem(); // Entra no sistema!
+
+    } catch (error) {
+        console.error("Erro ao criar time:", error);
+        alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
+        button.disabled = false;
+        button.innerHTML = '<i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar';
+        feather.replace();
+    }
+}
+// --- Fim da Lógica de Onboarding ---
+
+
 function showMainSystem() {
+    // MODIFICADO: Esconde o container de login inteiro
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('mainSystem').style.display = 'flex';
     document.body.classList.add('system-active');
 
     document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
+    document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A'; // currentOrg é definido antes daqui
 
     loadActiveProject().then(() => {
         showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
@@ -172,7 +276,12 @@ function logout() {
     localStorage.removeItem('auth_token');
     document.body.classList.remove('system-active');
     document.getElementById('mainSystem').style.display = 'none';
+    
+    // MODIFICADO: Garante que o container de login e o card de login corretos sejam exibidos
     document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('createTeamCard').style.display = 'none';
+    document.getElementById('loginCard').style.display = 'block';
+
 
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -245,6 +354,7 @@ async function loadActiveProject() {
     console.log("Carregando projeto ativo...");
     currentProject = null;
     currentColumns = [];
+    // MODIFICADO: A lógica de orgFilter agora é mais robusta
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
@@ -432,8 +542,9 @@ async function renderGanttChart() {
              barPercentage: 0.6,
              categoryPercentage: 0.7
         }));
-
-        const allDates = tasks.flatMap(t => [new Date(t.created_at), new Date(t.data_entrega)]);
+        
+        // MODIFICADO:flatMap para lidar com datas de início/criação
+        const allDates = tasks.flatMap(t => [new Date(t.data_inicio || t.created_at), new Date(t.data_entrega)]);
         const minDate = new Date(Math.min(...allDates));
         const maxDate = new Date(Math.max(...allDates));
         minDate.setDate(minDate.getDate() - 2);
@@ -509,14 +620,15 @@ async function loadKanbanView() {
             columnContentEl.className = 'kanban-column-content';
             columnContentEl.ondragover = handleDragOver;
             columnContentEl.ondrop = (e) => handleDrop(e, coluna.id);
-
-            const addTaskBtn = `<button class="btn btn-secondary btn-small w-full" style="border-style: dashed;" onclick="openTaskModal(null, '${coluna.id}')">
+            // MODIFICADO: Estilo do botão de adicionar
+            const addTaskBtn = `<button class="btn btn-secondary btn-small w-full" style="border-style: dashed; text-transform: none; font-weight: 500;" onclick="openTaskModal(null, '${coluna.id}')">
                                     <i data-feather="plus" class="h-4 w-4 mr-1"></i> Adicionar Tarefa
                                 </button>`;
 
             columnEl.innerHTML = `<h3 class="kanban-column-title">${escapeHTML(coluna.nome)}</h3>`;
             columnEl.appendChild(columnContentEl);
-            columnEl.innerHTML += `<div class="p-2 border-t border-gray-200 mt-auto">${addTaskBtn}</div>`;
+            // MODIFICADO: Estilo do rodapé da coluna
+            columnEl.innerHTML += `<div class="p-2 mt-auto">${addTaskBtn}</div>`;
 
             (tasks || []).filter(t => t.coluna_id === coluna.id).forEach(task => {
                 const card = createTaskCard(task);
@@ -537,6 +649,7 @@ async function loadKanbanView() {
 function createTaskCard(task) {
     const card = document.createElement('div');
     card.id = `task-${task.id}`;
+    // MODIFICADO: Aplicando estilo Asana/Jira
     card.className = `kanban-card priority-${task.prioridade}`;
     card.draggable = true;
     card.dataset.taskId = task.id;
@@ -565,11 +678,12 @@ function createTaskCard(task) {
         `;
     }
 
+    // MODIFICADO: HTML do card
     card.innerHTML = `
         <div class="kanban-card-title">${escapeHTML(task.titulo)}</div>
         <div class="kanban-card-footer">
             <div class="flex items-center gap-2">
-                 <span class="kanban-card-priority priority-${task.prioridade}" title="Prioridade ${task.prioridade}">${escapeHTML(task.prioridade)}</span>
+                 <span class"kanban-card-priority priority-${task.prioridade}" title="Prioridade ${task.prioridade}">${escapeHTML(task.prioridade)}</span>
                  ${dateHtml}
             </div>
             ${assigneeHtml}
@@ -599,6 +713,7 @@ function handleDragOver(e) {
     }
 }
 
+// MODIFICADO: Adiciona listeners aos novos seletores
 document.querySelectorAll('.kanban-column-content').forEach(col => {
     col.addEventListener('dragleave', (e) => col.classList.remove('drag-over'));
     col.addEventListener('drop', (e) => col.classList.remove('drag-over'));
@@ -606,6 +721,8 @@ document.querySelectorAll('.kanban-column-content').forEach(col => {
 
 async function handleDrop(e, newColunaId) {
     e.preventDefault();
+    document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over')); // Limpa o highlight
+
     if (draggedTask) {
         const taskId = draggedTask.dataset.taskId;
         const oldColunaId = draggedTask.dataset.colunaId;
@@ -628,7 +745,8 @@ async function handleDrop(e, newColunaId) {
                 loadDashboardView(); // Atualiza gráficos
             } catch (error) {
                 console.error("Falha ao atualizar task:", error);
-                document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask); // Reverte UI
+                // Reverte UI
+                document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask); 
                 draggedTask.dataset.colunaId = oldColunaId;
                 showNotification('Falha ao mover tarefa.', 'error');
             }
@@ -660,18 +778,23 @@ function openTaskModal(task = null, defaultColunaId = null) {
         form.appendChild(colunaIdInput);
     }
 
-   if (task) {
+    if (task) {
+        // Modo Edição
         document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
         document.getElementById('taskDescription').value = task.descricao || '';
-        document.getElementById('taskStartDate').value = task.data_inicio || ''; // <-- Linha da alteração
-        document.getElementById('taskDueDate').value = task.data_entrega || '';
+        document.getElementById('taskStartDate').value = task.data_inicio || ''; // Corrigido
+        document.getElementById('taskDueDate').value = task.data_entrega || ''; // Corrigido
         document.getElementById('taskPriority').value = task.prioridade || 'media';
         colunaIdInput.value = task.coluna_id;
     } else {
+        // Modo Criação
         document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
         document.getElementById('taskId').value = '';
+        document.getElementById('taskStartDate').value = ''; // Limpa
+        document.getElementById('taskDueDate').value = ''; // Limpa
+        document.getElementById('taskPriority').value = 'media'; // Padrão
         colunaIdInput.value = defaultColunaId || currentColumns[0]?.id || ''; // Usa a coluna clicada ou a primeira
     }
     modal.style.display = 'flex';
@@ -689,10 +812,11 @@ async function handleTaskFormSubmit(e) {
     alert.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Salvando...</div>';
 
     const taskId = document.getElementById('taskId').value;
+    // CORRIGIDO: Objeto taskData limpo e correto
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
-        data_inicio: document.getElementById('taskStartDate').value || null, // <-- Linha da alteração
+        data_inicio: document.getElementById('taskStartDate').value || null,
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
         org_id: currentOrg?.id || null,
@@ -735,6 +859,7 @@ async function loadTimeView() {
 
     try {
         const orgId = currentOrg?.id;
+        // MODIFICADO: A lógica agora checa o ID do time
         if (!orgId) {
              teamBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Funcionalidade de time não disponível no Espaço Pessoal.</td></tr>';
              if(inviteButton) inviteButton.style.display = 'none';
@@ -743,7 +868,8 @@ async function loadTimeView() {
              if(inviteButton) inviteButton.style.display = 'inline-flex';
         }
 
-        const members = await supabaseRequest(`usuario_orgs?org_id=eq.${orgId}&select=role,joined_at,usuarios(id,nome,email,ativo)`, 'GET');
+        // MODIFICADO: Busca usuários pelo `org_id`
+        const members = await supabaseRequest(`usuario_orgs?org_id=eq.${orgId}&select=role,joined_at,usuarios(id,nome,email,ativo,profile_picture_url)`, 'GET');
 
         if (!members || members.length === 0) {
             teamBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Nenhum membro encontrado neste time.</td></tr>';
@@ -753,11 +879,16 @@ async function loadTimeView() {
         teamBody.innerHTML = members.map(m => {
             const user = m.usuarios;
             if (!user) return '';
-            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada';
-            const statusText = user.ativo ? 'Ativo' : 'Inativo';
+            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada'; // Você pode querer classes melhores
+            const statusText = user.ativo ? 'Ativo' : 'Inativo'; // Assumindo que 'ativo' é um booleano
             return `
                 <tr>
-                    <td>${escapeHTML(user.nome)}</td>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <img src="${escapeHTML(user.profile_picture_url || 'icon.png')}" alt="Foto" class="w-8 h-8 rounded-full object-cover">
+                            ${escapeHTML(user.nome)}
+                        </div>
+                    </td>
                     <td>${escapeHTML(user.email)}</td>
                     <td>${escapeHTML(m.role)}</td>
                     <td><span class="status-badge ${statusClass}">${escapeHTML(statusText)}</span></td>
@@ -777,7 +908,7 @@ async function loadTimeView() {
 
 function openInviteModal() {
     if (!currentOrg?.id) {
-         showNotification("Você precisa estar em um time (não no Espaço Pessoal) para convidar.", "error");
+         showNotification("Você precisa estar em um time para convidar.", "error");
          return;
     }
     document.getElementById('inviteForm').reset();
@@ -825,7 +956,12 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
-     if (!confirm(`Tem certeza que deseja remover este membro do time?`)) return;
+     // MODIFICADO: Substituído confirm() por um prompt simples (idealmente, use um modal customizado)
+     const confirmation = prompt(`Tem certeza que deseja remover este membro do time? Digite 'REMOVER' para confirmar.`);
+     if (confirmation !== 'REMOVER') {
+        showNotification("Remoção cancelada.", "info");
+        return;
+     }
 
      try {
          await supabaseRequest(`usuario_orgs?usuario_id=eq.${userIdToRemove}&org_id=eq.${currentOrg.id}`, 'DELETE');
@@ -847,6 +983,7 @@ async function loadNotasView() {
                       <div class="loading"><div class="spinner"></div> Carregando notas...</div>`;
 
     try {
+        // MODIFICADO: Lógica de filtro do Espaço Pessoal
         const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&user_id=eq.${currentUser.id}`;
         const notes = await supabaseRequest(`notas?${orgFilter}&select=id,titulo,updated_at&order=updated_at.desc`, 'GET');
 
@@ -985,8 +1122,9 @@ async function loadCalendarView() {
             <ul class="list-none space-y-2">
                 ${tasksWithDate.map(t => {
                     const dataEntrega = new Date(t.data_entrega + 'T00:00:00').toLocaleDateString('pt-BR');
+                    // MODIFICADO: Estilo da prioridade
                     return `<li class="flex items-center p-2 rounded hover:bg-gray-100">
-                                <span class="kanban-card-priority priority-${t.prioridade} mr-3" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor;">${escapeHTML(t.prioridade)}</span>
+                                <span class="kanban-card-priority priority-${t.prioridade} mr-3" style="font-size: 0.7rem; padding: 2px 6px;">${escapeHTML(t.prioridade)}</span>
                                 <span class="flex-1">${escapeHTML(t.titulo)}</span>
                                 <strong class="ml-4 text-sm text-gray-700">${dataEntrega}</strong>
                             </li>`
@@ -1028,7 +1166,9 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
              let errorData = { message: `Erro ${response.status}: ${response.statusText}` };
              try { errorData = await response.json(); } catch(e) {}
             console.error("Erro Supabase:", errorData);
-            throw new Error(errorData.message || errorData.error || `Erro na requisição Supabase (${response.status})`);
+            // Tenta extrair a mensagem de erro específica do Supabase
+            const detailedError = errorData.message || errorData.error || `Erro na requisição Supabase (${response.status})`;
+            throw new Error(detailedError);
         }
         if (response.status === 204 || response.headers.get('content-length') === '0' ) return null;
         if (headers['Prefer'] === 'count=exact') {
@@ -1114,11 +1254,13 @@ async function handlePerfilFormSubmit(event) {
     saveButton.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div> Salvando...';
 
     let profilePicUrl = currentUser.profile_picture_url;
+    let newPictureUploaded = false; // Flag para saber se atualizamos a foto
 
     const pictureFile = document.getElementById('perfilPicture').files[0];
     if (pictureFile) {
         try {
             console.log("Enviando nova foto de perfil...");
+            newPictureUploaded = true; // Marca que tentamos o upload
             const apiUrl = `/api/upload?fileName=${encodeURIComponent(pictureFile.name)}&fileType=profile_picture`;
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -1142,6 +1284,11 @@ async function handlePerfilFormSubmit(event) {
         } catch (uploadError) {
             console.error("Falha no upload da foto:", uploadError);
             alertContainer.innerHTML = `<div class="alert alert-error">Falha ao enviar a nova foto: ${escapeHTML(uploadError.message)}. As outras informações podem ter sido salvas.</div>`;
+            // Se o upload falhar, não continuamos salvando o resto?
+            // Decisão: Vamos parar aqui. O usuário vê o erro e tenta de novo.
+             saveButton.disabled = false;
+             saveButton.innerHTML = originalButtonText;
+             return; // Para o fluxo
         }
     }
 
@@ -1164,7 +1311,13 @@ async function handlePerfilFormSubmit(event) {
             currentUser = { ...currentUser, ...updatedUser[0] };
             localStorage.setItem('user', JSON.stringify(currentUser));
             document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
-            if (!pictureFile) document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
+            
+            // MODIFICADO: Atualiza a foto de perfil apenas se não for uma nova
+            // (Se for nova, o preview já está correto)
+            if (!newPictureUploaded) {
+                 document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
+            }
+            
             showNotification('Perfil atualizado com sucesso!', 'success');
         } else {
              throw new Error("Resposta inesperada do servidor ao atualizar perfil.");
@@ -1178,7 +1331,7 @@ async function handlePerfilFormSubmit(event) {
     } finally {
         saveButton.disabled = false;
         saveButton.innerHTML = originalButtonText;
-         document.getElementById('perfilPicture').value = '';
+         document.getElementById('perfilPicture').value = ''; // Limpa o input de arquivo
     }
 }
 
@@ -1197,8 +1350,9 @@ async function loadTimelineView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        // MODIFICADO: `created_by(nome, profile_picture_url)`
         const events = await supabaseRequest(
-            `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome),assignee:assignee_id(nome),coluna:colunas_kanban(nome)&order=updated_at.desc&limit=50`,
+            `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome,profile_picture_url),assignee:assignee_id(nome),coluna:colunas_kanban(nome)&order=updated_at.desc&limit=50`,
             'GET'
         );
 
@@ -1214,10 +1368,12 @@ async function loadTimelineView() {
             const icon = isCreation ? 'plus-circle' : (statusName.toLowerCase() === 'concluído' ? 'check-circle' : 'edit-2');
             const itemClass = isCreation ? 'created' : (statusName.toLowerCase() === 'concluído' ? 'completed' : 'updated');
             const userName = event.created_by?.nome || 'Usuário desconhecido';
+            const userPic = event.created_by?.profile_picture_url || 'icon.png'; // MODIFICADO
 
+            // MODIFICADO: Adicionado <img>
             return `
                 <div class="timeline-item ${itemClass}">
-                    <div class="timeline-item-icon"> <i data-feather="${icon}" class="h-5 w-5"></i> </div>
+                    <img src="${escapeHTML(userPic)}" alt="${escapeHTML(userName)}" class="w-8 h-8 rounded-full object-cover">
                     <div class="timeline-item-content">
                         <p>
                             <span class="user-name">${escapeHTML(userName)}</span>
