@@ -660,14 +660,12 @@ function openTaskModal(task = null, defaultColunaId = null) {
         form.appendChild(colunaIdInput);
     }
 
-    if (task) {
+   if (task) {
         document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
         document.getElementById('taskDescription').value = task.descricao || '';
-        document.getElementById('taskDescription').value = task.descricao || '';
-        document.getElementById('taskStartDate').value = task.data_inicio || ''; // <-- INSIRA ESTA LINHA
-        document.getElementById('taskDueDate').value = task.data_entrega || '';
+        document.getElementById('taskStartDate').value = task.data_inicio || ''; // <-- Linha da alteração
         document.getElementById('taskDueDate').value = task.data_entrega || '';
         document.getElementById('taskPriority').value = task.prioridade || 'media';
         colunaIdInput.value = task.coluna_id;
@@ -694,12 +692,7 @@ async function handleTaskFormSubmit(e) {
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
-        const taskData = {
-        titulo: document.getElementById('taskTitle').value,
-        descricao: document.getElementById('taskDescription').value || null,
-        data_inicio: document.getElementById('taskStartDate').value || null, // <-- INSIRA ESTA LINHA
-        data_entrega: document.getElementById('taskDueDate').value || null,
-        prioridade: document.getElementById('taskPriority').value,
+        data_inicio: document.getElementById('taskStartDate').value || null, // <-- Linha da alteração
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
         org_id: currentOrg?.id || null,
