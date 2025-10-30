@@ -1,13 +1,10 @@
-// SUBSTITUA AS LINHAS 1-75 POR ESTE BLOCO:
-
 // ========================================
 // 1. CONFIGURAÇÃO SUPABASE E VARIÁVEIS GLOBAIS
 // ========================================
 
 // -----------------------------------------------------------------
 // CONFIGURAÇÃO DE AUTENTICAÇÃO (CHAVES PÚBLICAS)
-// JP, estas são suas chaves PÚBLICAS (ANON_KEY). Elas são seguras
-// para ficarem aqui no frontend.
+// Estas chaves SÃO PÚBLICAS e seguras para ficarem aqui.
 // -----------------------------------------------------------------
 const SUPABASE_URL = 'https://mxtlanpjzenfghsjubzm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dGxhbnBqemVuZmdoc2p1YnptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTk0MzksImV4cCI6MjA3NzIzNTQzOX0.RFfy6orSso72v-0GtkSqwt4WJ3XWlLmZkyHoE71Dtdc';
@@ -15,11 +12,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // Suas variáveis globais
 let currentUser = null;
-let currentOrg = null; // Organização/Time selecionado
-let currentProject = null; // NOVO: Guarda o projeto ativo (simplificado)
-let currentColumns = []; // NOVO: Cache das colunas do projeto ativo
-let chartInstances = {}; // Cache para gráficos
-let currentNoteId = null; // ID da nota ativa no editor
+let currentOrg = null; 
+let currentProject = null; 
+let currentColumns = []; 
+let chartInstances = {}; 
+let currentNoteId = null; 
 
 // ========================================
 // 2. INICIALIZAÇÃO E AUTENTICAÇÃO (BLOCO CORRIGIDO)
@@ -31,21 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
     document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
     
-    // Pega a função 'createClient' da biblioteca Supabase (que o index.html carregou)
+    // Pega a função 'createClient' da biblioteca Supabase (que o app.html carregou)
     const { createClient } = supabase;
     
     // Inicializa o cliente Supabase AQUI DENTRO
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // NOVO: Gerenciador de Sessão
+    // Gerenciador de Sessão
     supabaseClient.auth.onAuthStateChange((event, session) => {
+        console.log("Auth Event:", event);
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             if (session) {
-                // Usuário está logado.
                 initializeApp(session);
             }
         } else if (event === 'SIGNED_OUT') {
-            // Usuário deslogou, redireciona
             window.location.href = 'login.html';
         }
     });
@@ -53,10 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verifica a sessão inicial
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) {
-            // Se já tem sessão, inicializa
+            console.log("Sessão encontrada. Inicializando app.");
             initializeApp(session);
         } else {
-            // Se não tem sessão, redireciona para o login
+            console.log("Nenhuma sessão encontrada. Redirecionando para login.");
             window.location.href = 'login.html';
         }
     }).catch(error => {
@@ -64,8 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'login.html';
     });
 
-    // Adiciona a chamada da função logout ao cliente Supabase
-    // (Isso é necessário para que a função 'logout()' encontre o 'supabaseClient')
+    // Adiciona a função logout ao window para ser acessível pelo onclick=""
     window.logout = async () => {
         console.log("Deslogando usuário...");
         currentUser = null;
@@ -75,46 +70,36 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('user');
         localStorage.removeItem('auth_token'); // Limpa o token da sua API proxy
         
-        // Chama o signOut do Supabase para limpar a sessão de auth
         const { error } = await supabaseClient.auth.signOut();
         if (error) console.error("Erro ao deslogar:", error);
         
-        // Redireciona para a página de login
-        window.location.href = 'login.html';
+        // window.location.href é acionado pelo 'onAuthStateChange'
     };
 });
 
-// FIM DO BLOCO DE SUBSTITUIÇÃO
-
-// ADICIONE ESTA FUNÇÃO (NO LUGAR DE handleLogin)
+// Inicializa o App com a sessão
 async function initializeApp(session) {
     
-    // =================================================================
     // ESTA É A "PONTE" DE SEGURANÇA
-    // Salvamos o Access Token da sessão de autenticação...
+    // Salvamos o Access Token para sua API proxy usar
     localStorage.setItem('auth_token', session.access_token);
-    // ...para que sua função supabaseRequest() antiga possa pegá-lo
-    // e enviá-lo para sua /api/proxy.js com segurança.
-    // =================================================================
     
     const authUser = session.user;
 
     try {
-        // Esta lógica é IDÊNTICA à sua 'handleLogin' original,
-        // mas usa o 'authUser' da sessão.
-        
+        // Busca o perfil do usuário
         const endpoint = `usuarios?email=eq.${authUser.email}&select=*,usuario_orgs(org_id,organizacoes(id,nome))`;
         let profileResponse = await supabaseRequest(endpoint, 'GET');
 
+        // Se não tem perfil, cria um
         if (!profileResponse || !profileResponse[0]) {
              console.warn("Perfil não encontrado. Tentando criar...");
              const newProfile = {
                  auth_user_id: authUser.id,
                  email: authUser.email,
-                 // Tenta pegar o nome do Google (se houver), senão usa o e-mail
-                 nome: authUser.user_metadata?.full_name || authUser.email.split('@')[0] 
+                 nome: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
+                 profile_picture_url: authUser.user_metadata?.avatar_url || null
              };
-             // Sua função supabaseRequest() continua sendo usada aqui
              const createResponse = await supabaseRequest('usuarios', 'POST', newProfile);
              if (!createResponse || !createResponse[0]) {
                  throw new Error("Falha ao criar o perfil de usuário no banco de dados.");
@@ -127,11 +112,12 @@ async function initializeApp(session) {
              console.log("Perfil encontrado!");
         }
 
+        // Mapeia as organizações
         const userOrgs = (currentUser.usuario_orgs || []).map(uo => uo.organizacoes).filter(Boolean);
         currentUser.organizacoes = userOrgs;
         delete currentUser.usuario_orgs;
 
-        // Bloco de correção de 'auth_user_id' (Mantido do seu original)
+        // Bloco de correção (se o auth_user_id estiver faltando)
         if (!currentUser.auth_user_id && authUser.id) {
             console.log(`Corrigindo auth_user_id (NULL) para o usuário: ${currentUser.id}`);
             await supabaseRequest(`usuarios?id=eq.${currentUser.id}`, 'PATCH', {
@@ -142,79 +128,54 @@ async function initializeApp(session) {
 
         localStorage.setItem('user', JSON.stringify(currentUser));
         
-        // CHAMA A LÓGICA DE ONBOARDING/REDIRECIONAMENTO (Sua função original)
+        // Decide se mostra o App ou o Onboarding de Time
         redirectToDashboard();
 
     } catch (error) {
         console.error("Erro detalhado na inicialização:", error);
-        // Se falhar (ex: RLS), desloga o usuário
         logout();
     }
 }
-// FIM DA FUNÇÃO ADICIONADA
 
 // ========================================
-// MODIFICADO: Lógica de Onboarding (Criação de Time)
+// 3. LÓGICA DE ONBOARDING E NAVEGAÇÃO
 // ========================================
-function redirectToDashboard(loginButton) {
-// ... (O restante do arquivo script.js continua daqui para baixo) ...
+
+function redirectToDashboard() {
     if (!currentUser || !currentUser.organizacoes) {
-        showError("Erro fatal: Dados do usuário incompletos.");
+        console.error("Erro fatal: Dados do usuário incompletos.");
         logout();
         return;
     }
 
     const orgs = currentUser.organizacoes;
-    const orgSelectGroup = document.getElementById('orgSelectGroup');
-    const orgSelect = document.getElementById('orgSelect');
-    const loginForm = document.getElementById('loginForm');
 
-    // --- ESTA É A MUDANÇA PRINCIPAL ---
     if (orgs.length === 0) {
-        // MODIFICADO: Em vez de criar "Espaço Pessoal", força a criação do time
+        // NENHUM TIME: Força a criação do primeiro time
         console.log("Nenhuma organização encontrada. Iniciando fluxo de criação de time.");
         openCreateTeamModal();
+   
    } else if (orgs.length === 1) {
-        // 2. UM TIME: Entra direto (Sua lógica existente)
+        // UM TIME: Entra direto
         currentOrg = orgs[0];
         showMainSystem();
     
     } else {
-        // 3. VÁRIOS TIMES:
-        // O seletor de <select> foi removido.
-        // Por enquanto, vamos apenas pegar o primeiro time.
-        // TODO: Você pode criar um modal "Seletor de Time" aqui se desejar.
+        // MÚLTIPLOS TIMES: Por enquanto, pega o primeiro.
+        // TODO: Criar um modal "Seletor de Time" aqui
         console.warn("Múltiplos times detectados. Selecionando o primeiro por padrão.");
         currentOrg = orgs[0];
         showMainSystem();
     }
 }
 
-// MODIFICADO: Não é mais "handleOrgSelection", agora é a seleção normal
-function handleOrgSelection(event) {
-    event.preventDefault();
-    const orgId = document.getElementById('orgSelect').value;
-    const org = currentUser.organizacoes.find(o => o.id == orgId);
-
-    if (org) {
-        currentOrg = org;
-        document.getElementById('loginForm').removeEventListener('submit', handleOrgSelection);
-        document.getElementById('loginForm').addEventListener('submit', handleLogin);
-        document.getElementById('orgSelectGroup').style.display = 'none';
-        document.querySelector('#loginForm button[type="submit"]').innerHTML = 'ENTRAR';
-        showMainSystem();
-    } else {
-        showError("Erro: Time selecionado inválido.");
-    }
-}
-
-// NOVO: Função para mostrar o card de criação de time
+// Mostra o modal de criação de time
 function openCreateTeamModal() {
     document.getElementById('createTeamCard').style.display = 'flex';
     feather.replace();
 }
 
-// NOVO: Handler para o formulário de criação de time
+// Handler para o formulário de criação de time
 async function handleCreateTeamFormSubmit(event) {
     event.preventDefault();
     const alert = document.getElementById('createTeamAlert');
@@ -227,38 +188,30 @@ async function handleCreateTeamFormSubmit(event) {
     const invites = document.getElementById('teamInvites').value
                       .split(',')
                       .map(s => s.trim())
-                      .filter(s => s.includes('@')); // Filtra apenas e-mails válidos
+                      .filter(s => s.includes('@')); 
 
     try {
-        // Etapa 1: Criar a Organização
-        console.log("Criando organização:", teamName);
+        // 1: Criar a Organização
         const newOrgData = {
             nome: teamName,
-            created_by: currentUser.id // Assume que a tabela 'organizacoes' tem 'created_by'
+            created_by: currentUser.id 
         };
         const newOrgResponse = await supabaseRequest('organizacoes', 'POST', newOrgData);
         if (!newOrgResponse || !newOrgResponse[0]) {
-            throw new Error("Falha ao criar organização. Verifique as RLS (ver Plano_Criar_Time.md).");
+            throw new Error("Falha ao criar organização.");
         }
         const newOrg = newOrgResponse[0];
-        console.log("Organização criada:", newOrg);
 
-        // Etapa 2: Vincular o usuário atual (admin) à organização
-        console.log(`Vinculando usuário ${currentUser.id} à org ${newOrg.id}`);
+        // 2: Vincular o usuário atual (admin) à organização
         const linkData = {
             usuario_id: currentUser.id,
             org_id: newOrg.id,
-            role: 'admin' // O criador é o admin
+            role: 'admin'
         };
-        const linkResponse = await supabaseRequest('usuario_orgs', 'POST', linkData);
-        if (!linkResponse) {
-             throw new Error("Falha ao vincular admin à organização. Verifique as RLS (ver Plano_Criar_Time.md).");
-        }
-        console.log("Admin vinculado.");
+        await supabaseRequest('usuario_orgs', 'POST', linkData);
 
-        // Etapa 3: Enviar convites (se houver)
+        // 3: Enviar convites (se houver)
         if (invites.length > 0) {
-            console.log("Enviando convites para:", invites);
             for (const email of invites) {
                 try {
                     await fetch('/api/invite', {
@@ -280,12 +233,11 @@ async function handleCreateTeamFormSubmit(event) {
             }
         }
 
-        // Etapa 4: Atualizar o estado local e prosseguir
+        // 4: Atualizar o estado local e prosseguir
         currentOrg = newOrg;
-        currentUser.organizacoes.push(newOrg); // Adiciona a nova org ao cache local
-        localStorage.setItem('user', JSON.stringify(currentUser)); // Salva o cache
+        currentUser.organizacoes.push(newOrg); 
+        localStorage.setItem('user', JSON.stringify(currentUser)); 
         
-        // MODIFICADO: Esconde o modal de criação
         document.getElementById('createTeamCard').style.display = 'none'; 
         showMainSystem(); // Entra no sistema!
 
@@ -297,41 +249,30 @@ async function handleCreateTeamFormSubmit(event) {
         feather.replace();
     }
 }
-// --- Fim da Lógica de Onboarding ---
 
-
+// Mostra o sistema principal (App)
 function showMainSystem() {
     document.getElementById('mainSystem').style.display = 'flex';
-    document.body.classList.add('system-active');
+    document.body.classList.add('system-active'); // Muda o fundo para cinza claro
 
     document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A'; // currentOrg é definido antes daqui
+    document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
 
     loadActiveProject().then(() => {
         showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
         feather.replace();
     }).catch(err => {
          console.error("Erro ao carregar projeto ativo:", err);
-         showNotification(`Erro ao carregar dados iniciais: ${err.message}. Verifique o console.`, "error", 6000);
-         showView('dashboardView', document.querySelector('a[href="#dashboard"]')); // Tenta mostrar mesmo com erro
+         showNotification(`Erro ao carregar dados iniciais: ${err.message}.`, "error", 6000);
+         showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
          feather.replace();
     });
 }
 
-// SUBSTITUA A FUNÇÃO logout() INTEIRA POR ESTA
-async function logout() {
-    console.log("Deslogando usuário...");
-    currentUser = null;
-    // ... (todo o código) ...
-    // Redireciona para a página de login
-    window.location.href = 'login.html';
-}
-
-
-
 // ========================================
-// 3. NAVEGAÇÃO E UI
+// 4. NAVEGAÇÃO E UI (Restante do seu código)
 // ========================================
+
 function showView(viewId, element = null) {
     document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
     const viewEl = document.getElementById(viewId);
@@ -340,7 +281,6 @@ function showView(viewId, element = null) {
     document.querySelectorAll('.sidebar nav .nav-item').forEach(item => item.classList.remove('active'));
     element?.classList.add('active');
 
-    // Carrega dados específicos da view
     try {
         switch (viewId) {
             case 'dashboardView': loadDashboardView(); break;
@@ -381,13 +321,12 @@ function showNotification(message, type = 'info', timeout = 4000) {
 }
 
 // ========================================
-// 4. Carregar Projeto Ativo e Colunas
+// 5. Carregar Projeto Ativo e Colunas
 // ========================================
 async function loadActiveProject() {
     console.log("Carregando projeto ativo...");
     currentProject = null;
     currentColumns = [];
-    // MODIFICADO: A lógica de orgFilter agora é mais robusta
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
@@ -401,22 +340,21 @@ async function loadActiveProject() {
                  org_id: currentOrg?.id || null
             };
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
-            if (!createResponse || !createResponse[0]) throw new Error("Falha ao criar projeto padrão. Verifique as RLS da tabela 'projetos'.");
+            if (!createResponse || !createResponse[0]) throw new Error("Falha ao criar projeto padrão.");
             currentProject = createResponse[0];
-            console.log("Projeto padrão criado:", currentProject);
         } else {
             currentProject = projetos[0];
-            console.log("Projeto ativo:", currentProject);
         }
+        console.log("Projeto ativo:", currentProject);
 
         currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
 
         if (!currentColumns || currentColumns.length === 0) {
-            console.warn("Nenhuma coluna encontrada para o projeto ativo. Criando padrão.");
+            console.warn("Nenhuma coluna encontrada. Criando padrão.");
             await createDefaultColumns(currentProject.id);
             currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
              if (!currentColumns || currentColumns.length === 0){
-                  throw new Error("Falha ao criar ou buscar colunas padrão. Verifique as RLS da tabela 'colunas_kanban'.");
+                  throw new Error("Falha ao criar ou buscar colunas padrão.");
              }
         }
         console.log("Colunas carregadas:", currentColumns.map(c => `${c.nome} (${c.id})`));
@@ -435,14 +373,13 @@ async function createDefaultColumns(projectId) {
      ];
      try {
           await supabaseRequest('colunas_kanban', 'POST', defaultCols);
-          console.log("Colunas padrão criadas para o projeto:", projectId);
      } catch (error) {
           console.error("Erro ao criar colunas padrão:", error);
      }
 }
 
 // ========================================
-// 5. LÓGICA DO DASHBOARD (Gráficos)
+// 6. LÓGICA DO DASHBOARD
 // ========================================
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
@@ -450,7 +387,7 @@ async function loadDashboardView() {
                       <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
 
     if (!currentProject || currentColumns.length === 0) {
-         view.innerHTML = '<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1><div class="alert alert-error">Não foi possível carregar o dashboard. Projeto ou colunas não encontrados ou sem permissão de acesso (Verifique RLS).</div>';
+         view.innerHTML = '<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1><div class="alert alert-error">Não foi possível carregar o dashboard. Projeto ou colunas não encontrados.</div>';
          return;
     }
 
@@ -504,7 +441,6 @@ async function loadDashboardView() {
         document.getElementById('dashDueTasks').textContent = dueTasks || 0;
     } catch (error) {
         console.error("Erro ao carregar stats do dashboard:", error);
-        showNotification("Erro ao carregar estatísticas do dashboard.", "error");
     }
 
     renderStatusChart();
@@ -513,7 +449,6 @@ async function loadDashboardView() {
 
 async function renderStatusChart() {
     if (!currentProject || currentColumns.length === 0) return;
-
     const ctx = document.getElementById('statusChart')?.getContext('2d');
     if (!ctx) return;
     if (chartInstances.statusChart) chartInstances.statusChart.destroy();
@@ -524,9 +459,7 @@ async function renderStatusChart() {
             const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=eq.${col.id}&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
             return count || 0;
         }));
-
         const backgroundColors = [ '#0077B6', '#F77F00', '#00D4AA', '#00B4D8', '#90E0EF', '#023047'];
-
         chartInstances.statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -541,13 +474,11 @@ async function renderStatusChart() {
         });
     } catch (error) {
         console.error("Erro ao renderizar gráfico de status:", error);
-        showNotification("Erro ao carregar gráfico de status.", "error");
     }
 }
 
 async function renderGanttChart() {
     if (!currentProject) return;
-
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
      if (!ctx) return;
     if (chartInstances.ganttChart) chartInstances.ganttChart.destroy();
@@ -566,7 +497,6 @@ async function renderGanttChart() {
        const ganttData = tasks.map((task, index) => ({
              label: task.titulo,
              data: [{
-                 // Usa data_inicio SE EXISTIR, senão usa created_at como fallback
                  x: [new Date(task.data_inicio || task.created_at).toISOString(), new Date(task.data_entrega).toISOString()],
                  y: task.titulo
              }],
@@ -576,7 +506,6 @@ async function renderGanttChart() {
              categoryPercentage: 0.7
         }));
         
-        // MODIFICADO:flatMap para lidar com datas de início/criação
         const allDates = tasks.flatMap(t => [new Date(t.data_inicio || t.created_at), new Date(t.data_entrega)]);
         const minDate = new Date(Math.min(...allDates));
         const maxDate = new Date(Math.max(...allDates));
@@ -620,18 +549,17 @@ async function renderGanttChart() {
         });
     } catch (error) {
         console.error("Erro ao renderizar gráfico Gantt:", error);
-        showNotification("Erro ao carregar gráfico Gantt.", "error");
     }
 }
 
 // ========================================
-// 6. LÓGICA DO KANBAN (Projetos)
+// 7. LÓGICA DO KANBAN
 // ========================================
 let draggedTask = null;
 
 async function loadKanbanView() {
     if (!currentProject || currentColumns.length === 0) {
-         document.getElementById('kanbanBoard').innerHTML = '<div class="alert alert-error col-span-3">Projeto ou colunas não carregados. Verifique as configurações ou crie um novo projeto.</div>';
+         document.getElementById('kanbanBoard').innerHTML = '<div class="alert alert-error col-span-3">Projeto ou colunas não carregados.</div>';
          return;
     }
 
@@ -653,14 +581,13 @@ async function loadKanbanView() {
             columnContentEl.className = 'kanban-column-content';
             columnContentEl.ondragover = handleDragOver;
             columnContentEl.ondrop = (e) => handleDrop(e, coluna.id);
-            // MODIFICADO: Estilo do botão de adicionar
+            
             const addTaskBtn = `<button class="btn btn-secondary btn-small w-full" style="border-style: dashed; text-transform: none; font-weight: 500;" onclick="openTaskModal(null, '${coluna.id}')">
                                     <i data-feather="plus" class="h-4 w-4 mr-1"></i> Adicionar Tarefa
                                 </button>`;
 
             columnEl.innerHTML = `<h3 class="kanban-column-title">${escapeHTML(coluna.nome)}</h3>`;
             columnEl.appendChild(columnContentEl);
-            // MODIFICADO: Estilo do rodapé da coluna
             columnEl.innerHTML += `<div class="p-2 mt-auto">${addTaskBtn}</div>`;
 
             (tasks || []).filter(t => t.coluna_id === coluna.id).forEach(task => {
@@ -682,7 +609,6 @@ async function loadKanbanView() {
 function createTaskCard(task) {
     const card = document.createElement('div');
     card.id = `task-${task.id}`;
-    // MODIFICADO: Aplicando estilo Asana/Jira
     card.className = `kanban-card priority-${task.prioridade}`;
     card.draggable = true;
     card.dataset.taskId = task.id;
@@ -711,7 +637,6 @@ function createTaskCard(task) {
         `;
     }
 
-    // MODIFICADO: HTML do card
     card.innerHTML = `
         <div class="kanban-card-title">${escapeHTML(task.titulo)}</div>
         <div class="kanban-card-footer">
@@ -746,7 +671,6 @@ function handleDragOver(e) {
     }
 }
 
-// MODIFICADO: Adiciona listeners aos novos seletores
 document.querySelectorAll('.kanban-column-content').forEach(col => {
     col.addEventListener('dragleave', (e) => col.classList.remove('drag-over'));
     col.addEventListener('drop', (e) => col.classList.remove('drag-over'));
@@ -754,7 +678,7 @@ document.querySelectorAll('.kanban-column-content').forEach(col => {
 
 async function handleDrop(e, newColunaId) {
     e.preventDefault();
-    document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over')); // Limpa o highlight
+    document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over')); 
 
     if (draggedTask) {
         const taskId = draggedTask.dataset.taskId;
@@ -764,21 +688,19 @@ async function handleDrop(e, newColunaId) {
             console.log(`Movendo task #${taskId} da coluna ${oldColunaId} para ${newColunaId}`);
 
             const targetColumn = document.getElementById(`col-${newColunaId}`).querySelector('.kanban-column-content');
-            targetColumn.appendChild(draggedTask); // Move na UI
+            targetColumn.appendChild(draggedTask); 
             draggedTask.dataset.colunaId = newColunaId;
 
             try {
-                // SALVA NO BANCO
                 await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', {
                     coluna_id: newColunaId,
                     updated_at: new Date().toISOString()
                 });
                 showNotification(`Tarefa #${taskId} movida.`, 'success');
-                loadTimelineView(); // Atualiza timeline
-                loadDashboardView(); // Atualiza gráficos
+                loadTimelineView(); 
+                loadDashboardView(); 
             } catch (error) {
                 console.error("Falha ao atualizar task:", error);
-                // Reverte UI
                 document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask); 
                 draggedTask.dataset.colunaId = oldColunaId;
                 showNotification('Falha ao mover tarefa.', 'error');
@@ -790,7 +712,7 @@ async function handleDrop(e, newColunaId) {
 }
 
 // ========================================
-// 7. LÓGICA DO MODAL DE TAREFAS
+// 8. LÓGICA DO MODAL DE TAREFAS
 // ========================================
 function openTaskModal(task = null, defaultColunaId = null) {
      if (!currentProject || currentColumns.length === 0) {
@@ -812,23 +734,21 @@ function openTaskModal(task = null, defaultColunaId = null) {
     }
 
     if (task) {
-        // Modo Edição
         document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
         document.getElementById('taskDescription').value = task.descricao || '';
-        document.getElementById('taskStartDate').value = task.data_inicio || ''; // Corrigido
-        document.getElementById('taskDueDate').value = task.data_entrega || ''; // Corrigido
+        document.getElementById('taskStartDate').value = task.data_inicio || ''; 
+        document.getElementById('taskDueDate').value = task.data_entrega || ''; 
         document.getElementById('taskPriority').value = task.prioridade || 'media';
         colunaIdInput.value = task.coluna_id;
     } else {
-        // Modo Criação
         document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
         document.getElementById('taskId').value = '';
-        document.getElementById('taskStartDate').value = ''; // Limpa
-        document.getElementById('taskDueDate').value = ''; // Limpa
-        document.getElementById('taskPriority').value = 'media'; // Padrão
-        colunaIdInput.value = defaultColunaId || currentColumns[0]?.id || ''; // Usa a coluna clicada ou a primeira
+        document.getElementById('taskStartDate').value = ''; 
+        document.getElementById('taskDueDate').value = ''; 
+        document.getElementById('taskPriority').value = 'media'; 
+        colunaIdInput.value = defaultColunaId || currentColumns[0]?.id || ''; 
     }
     modal.style.display = 'flex';
     feather.replace();
@@ -845,7 +765,6 @@ async function handleTaskFormSubmit(e) {
     alert.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Salvando...</div>';
 
     const taskId = document.getElementById('taskId').value;
-    // CORRIGIDO: Objeto taskData limpo e correto
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
@@ -858,23 +777,19 @@ async function handleTaskFormSubmit(e) {
         updated_at: new Date().toISOString()
     };
 
-    if (!taskId) { taskData.created_by = currentUser.id; } // Define criador apenas no INSERT
+    if (!taskId) { taskData.created_by = currentUser.id; } 
 
     try {
         if (taskId) {
-            // SALVA EDIÇÃO NO BANCO
             await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', taskData);
         } else {
-            // SALVA CRIAÇÃO NO BANCO
             await supabaseRequest('tarefas', 'POST', taskData);
         }
-
         showNotification(`Tarefa ${taskId ? 'atualizada' : 'criada'}!`, 'success');
         closeModal('taskModal');
-        loadKanbanView(); // Recarrega o quadro
-        loadDashboardView(); // Atualiza os gráficos
-        loadTimelineView(); // Atualiza a timeline
-
+        loadKanbanView(); 
+        loadDashboardView(); 
+        loadTimelineView(); 
     } catch (error) {
         console.error("Erro ao salvar tarefa:", error);
         alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
@@ -883,7 +798,7 @@ async function handleTaskFormSubmit(e) {
 
 
 // ========================================
-// 8. LÓGICA DO TIME (Convites)
+// 9. LÓGICA DO TIME (Convites)
 // ========================================
 async function loadTimeView() {
     const teamBody = document.getElementById('teamTableBody');
@@ -892,7 +807,6 @@ async function loadTimeView() {
 
     try {
         const orgId = currentOrg?.id;
-        // MODIFICADO: A lógica agora checa o ID do time
         if (!orgId) {
              teamBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Funcionalidade de time não disponível no Espaço Pessoal.</td></tr>';
              if(inviteButton) inviteButton.style.display = 'none';
@@ -901,7 +815,6 @@ async function loadTimeView() {
              if(inviteButton) inviteButton.style.display = 'inline-flex';
         }
 
-        // MODIFICADO: Busca usuários pelo `org_id`
         const members = await supabaseRequest(`usuario_orgs?org_id=eq.${orgId}&select=role,joined_at,usuarios(id,nome,email,ativo,profile_picture_url)`, 'GET');
 
         if (!members || members.length === 0) {
@@ -912,8 +825,8 @@ async function loadTimeView() {
         teamBody.innerHTML = members.map(m => {
             const user = m.usuarios;
             if (!user) return '';
-            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada'; // Você pode querer classes melhores
-            const statusText = user.ativo ? 'Ativo' : 'Inativo'; // Assumindo que 'ativo' é um booleano
+            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada';
+            const statusText = user.ativo ? 'Ativo' : 'Inativo'; 
             return `
                 <tr>
                     <td>
@@ -989,7 +902,6 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
-     // MODIFICADO: Substituído confirm() por um prompt simples (idealmente, use um modal customizado)
      const confirmation = prompt(`Tem certeza que deseja remover este membro do time? Digite 'REMOVER' para confirmar.`);
      if (confirmation !== 'REMOVER') {
         showNotification("Remoção cancelada.", "info");
@@ -1008,7 +920,7 @@ async function removeMember(userIdToRemove) {
 
 
 // ========================================
-// 9. LÓGICA DO BLOCO DE NOTAS
+// 10. LÓGICA DO BLOCO DE NOTAS
 // ========================================
 async function loadNotasView() {
     const list = document.getElementById('noteList');
@@ -1016,7 +928,6 @@ async function loadNotasView() {
                       <div class="loading"><div class="spinner"></div> Carregando notas...</div>`;
 
     try {
-        // MODIFICADO: Lógica de filtro do Espaço Pessoal
         const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&user_id=eq.${currentUser.id}`;
         const notes = await supabaseRequest(`notas?${orgFilter}&select=id,titulo,updated_at&order=updated_at.desc`, 'GET');
 
@@ -1096,7 +1007,7 @@ async function saveNote() {
         conteudo: body,
         org_id: currentOrg?.id || null,
         user_id: currentUser.id,
-        updated_at: new Date().toISOString() // Força atualização
+        updated_at: new Date().toISOString() 
     };
 
     const saveButton = document.querySelector('.note-editor .btn-success');
@@ -1107,17 +1018,15 @@ async function saveNote() {
     try {
         let savedNote;
         if (currentNoteId) {
-            // SALVA EDIÇÃO NO BANCO
             savedNote = await supabaseRequest(`notas?id=eq.${currentNoteId}`, 'PATCH', noteData);
         } else {
-            // SALVA CRIAÇÃO NO BANCO
             savedNote = await supabaseRequest('notas', 'POST', noteData);
             if (savedNote && savedNote[0]) {
                  currentNoteId = savedNote[0].id;
             }
         }
         showNotification('Nota salva!', 'success');
-        loadNotasView(); // Recarrega a lista
+        loadNotasView(); 
 
     } catch (error) {
         console.error("Erro ao salvar nota:", error);
@@ -1130,7 +1039,7 @@ async function saveNote() {
 
 
 // ========================================
-// 10. LÓGICA DO CALENDÁRIO
+// 11. LÓGICA DO CALENDÁRIO
 // ========================================
 async function loadCalendarView() {
     const container = document.getElementById('calendarContainer');
@@ -1155,7 +1064,6 @@ async function loadCalendarView() {
             <ul class="list-none space-y-2">
                 ${tasksWithDate.map(t => {
                     const dataEntrega = new Date(t.data_entrega + 'T00:00:00').toLocaleDateString('pt-BR');
-                    // MODIFICADO: Estilo da prioridade
                     return `<li class="flex items-center p-2 rounded hover:bg-gray-100">
                                 <span class="kanban-card-priority priority-${t.prioridade} mr-3" style="font-size: 0.7rem; padding: 2px 6px;">${escapeHTML(t.prioridade)}</span>
                                 <span class="flex-1">${escapeHTML(t.titulo)}</span>
@@ -1171,7 +1079,7 @@ async function loadCalendarView() {
 }
 
 // ========================================
-// 11. UTILITÁRIOS
+// 12. UTILITÁRIOS (Sua API Proxy)
 // ========================================
 async function supabaseRequest(endpoint, method = 'GET', body = null, headers = {}) {
     const authToken = localStorage.getItem('auth_token');
@@ -1199,7 +1107,6 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
              let errorData = { message: `Erro ${response.status}: ${response.statusText}` };
              try { errorData = await response.json(); } catch(e) {}
             console.error("Erro Supabase:", errorData);
-            // Tenta extrair a mensagem de erro específica do Supabase
             const detailedError = errorData.message || errorData.error || `Erro na requisição Supabase (${response.status})`;
             throw new Error(detailedError);
         }
@@ -1227,14 +1134,13 @@ function escapeHTML(str) {
          .replace(/'/g, '&#39;');
 }
 
-
 // ========================================
 // 13. FUNÇÕES: PERFIL
 // ========================================
 function loadPerfilView() {
     const form = document.getElementById('perfilForm');
     const alertContainer = document.getElementById('perfilAlert');
-    if (!form || !alertContainer) return; // Garante que elementos existem
+    if (!form || !alertContainer) return; 
     alertContainer.innerHTML = '';
     form.reset();
 
@@ -1273,13 +1179,12 @@ async function handlePerfilFormSubmit(event) {
     saveButton.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div> Salvando...';
 
     let profilePicUrl = currentUser.profile_picture_url;
-    let newPictureUploaded = false; // Flag para saber se atualizamos a foto
+    let newPictureUploaded = false; 
 
     const pictureFile = document.getElementById('perfilPicture').files[0];
     if (pictureFile) {
         try {
-            console.log("Enviando nova foto de perfil...");
-            newPictureUploaded = true; // Marca que tentamos o upload
+            newPictureUploaded = true; 
             const apiUrl = `/api/upload?fileName=${encodeURIComponent(pictureFile.name)}&fileType=profile_picture`;
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -1296,18 +1201,15 @@ async function handlePerfilFormSubmit(event) {
             const result = await response.json();
             if (result.publicUrl) {
                 profilePicUrl = result.publicUrl;
-                console.log("Nova URL da foto:", profilePicUrl);
             } else {
                  throw new Error("API de upload não retornou URL pública.");
             }
         } catch (uploadError) {
             console.error("Falha no upload da foto:", uploadError);
-            alertContainer.innerHTML = `<div class="alert alert-error">Falha ao enviar a nova foto: ${escapeHTML(uploadError.message)}. As outras informações podem ter sido salvas.</div>`;
-            // Se o upload falhar, não continuamos salvando o resto?
-            // Decisão: Vamos parar aqui. O usuário vê o erro e tenta de novo.
+            alertContainer.innerHTML = `<div class="alert alert-error">Falha ao enviar a nova foto: ${escapeHTML(uploadError.message)}.</div>`;
              saveButton.disabled = false;
              saveButton.innerHTML = originalButtonText;
-             return; // Para o fluxo
+             return; 
         }
     }
 
@@ -1331,8 +1233,6 @@ async function handlePerfilFormSubmit(event) {
             localStorage.setItem('user', JSON.stringify(currentUser));
             document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
             
-            // MODIFICADO: Atualiza a foto de perfil apenas se não for uma nova
-            // (Se for nova, o preview já está correto)
             if (!newPictureUploaded) {
                  document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
             }
@@ -1350,7 +1250,7 @@ async function handlePerfilFormSubmit(event) {
     } finally {
         saveButton.disabled = false;
         saveButton.innerHTML = originalButtonText;
-         document.getElementById('perfilPicture').value = ''; // Limpa o input de arquivo
+         document.getElementById('perfilPicture').value = ''; 
     }
 }
 
@@ -1369,7 +1269,6 @@ async function loadTimelineView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        // MODIFICADO: `created_by(nome, profile_picture_url)`
         const events = await supabaseRequest(
             `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome,profile_picture_url),assignee:assignee_id(nome),coluna:colunas_kanban(nome)&order=updated_at.desc&limit=50`,
             'GET'
@@ -1387,9 +1286,8 @@ async function loadTimelineView() {
             const icon = isCreation ? 'plus-circle' : (statusName.toLowerCase() === 'concluído' ? 'check-circle' : 'edit-2');
             const itemClass = isCreation ? 'created' : (statusName.toLowerCase() === 'concluído' ? 'completed' : 'updated');
             const userName = event.created_by?.nome || 'Usuário desconhecido';
-            const userPic = event.created_by?.profile_picture_url || 'icon.png'; // MODIFICADO
+            const userPic = event.created_by?.profile_picture_url || 'icon.png'; 
 
-            // MODIFICADO: Adicionado <img>
             return `
                 <div class="timeline-item ${itemClass}">
                     <img src="${escapeHTML(userPic)}" alt="${escapeHTML(userName)}" class="w-8 h-8 rounded-full object-cover">
@@ -1428,92 +1326,10 @@ function timeAgo(timestamp) {
     if (diffInHours < 24) return `${diffInHours} horas atrás`;
     if (diffInDays === 1) return `ontem`;
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
-    // Para mais antigo, mostrar data
     return past.toLocaleDateString('pt-BR');
 }
 
 // ========================================
-// 15. FUNÇÕES: MODAIS DE LOGIN
+// 15. FUNÇÕES DE LOGIN (REMOVIDAS)
+// (showError, handleForgotPassword, etc. foram movidas para login.js)
 // ========================================
-function openForgotPasswordModal() {
-    const modal = document.getElementById('forgotPasswordModal');
-    if (modal) {
-         document.getElementById('forgotPasswordForm')?.reset();
-         document.getElementById('forgotPasswordAlert').innerHTML = '';
-         modal.style.display = 'flex';
-    }
-}
-
-function openRequestAccessModal() {
-    const modal = document.getElementById('requestAccessModal');
-     if (modal) {
-         document.getElementById('requestAccessForm')?.reset();
-         document.getElementById('requestAccessAlert').innerHTML = '';
-         modal.style.display = 'flex';
-    }
-}
-
-async function handleForgotPassword(event) {
-    event.preventDefault();
-    const email = document.getElementById('forgotEmail').value;
-    const alertContainer = document.getElementById('forgotPasswordAlert');
-    const button = event.target.querySelector('button[type="submit"]');
-    button.disabled = true;
-    alertContainer.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Enviando...</div>';
-
-    try {
-        const response = await fetch('/api/forgot-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email })
-        });
-        if (!response.ok) {
-             const err = await response.json();
-             console.error("Erro da API forgot-password:", err.error || err.message);
-             // Não lançar erro para o usuário por segurança
-        }
-        alertContainer.innerHTML = `<div class="alert alert-success">Se o e-mail estiver cadastrado, um link de recuperação foi enviado.</div>`;
-        setTimeout(() => closeModal('forgotPasswordModal'), 4000);
-
-    } catch (error) {
-        console.error("Erro de rede ao recuperar senha:", error);
-        alertContainer.innerHTML = `<div class="alert alert-error">Não foi possível enviar a solicitação. Verifique sua conexão.</div>`;
-    } finally {
-        button.disabled = false;
-    }
-}
-
-async function handleRequestAccess(event) {
-    event.preventDefault();
-    const alertContainer = document.getElementById('requestAccessAlert');
-    const button = event.target.querySelector('button[type="submit"]');
-    button.disabled = true;
-    alertContainer.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Enviando...</div>';
-
-    const nome = document.getElementById('requestNome').value;
-    const email = document.getElementById('requestEmail').value;
-    const motivo = document.getElementById('requestMotivo').value;
-
-    try {
-        const response = await fetch('/api/request-access', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ nome, email, motivo })
-        });
-        if (!response.ok) {
-            let errorMsg = 'Falha ao enviar solicitação.';
-            try { const result = await response.json(); errorMsg = result.error || errorMsg; } catch (e) {}
-             throw new Error(errorMsg);
-        }
-        alertContainer.innerHTML = `<div class="alert alert-success">Solicitação enviada! O administrador avaliará seu pedido.</div>`;
-        setTimeout(() => closeModal('requestAccessModal'), 4000);
-
-    } catch (error) {
-        console.error("Erro ao solicitar acesso:", error);
-        alertContainer.innerHTML = `<div class="alert alert-error">Erro ao enviar: ${escapeHTML(error.message)}</div>`;
-    } finally {
-         button.disabled = false;
-    }
-}
-
-
