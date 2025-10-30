@@ -411,7 +411,7 @@ async function renderGanttChart() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=id,titulo,created_at,data_entrega&data_entrega=not.is.null&order=data_entrega.asc&limit=15`, 'GET');
+       const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=id,titulo,created_at,data_inicio,data_entrega&data_entrega=not.is.null&order=data_entrega.asc&limit=15`, 'GET');
 
         if (!tasks || tasks.length === 0) {
              ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -420,10 +420,11 @@ async function renderGanttChart() {
              return;
         }
 
-        const ganttData = tasks.map((task, index) => ({
+       const ganttData = tasks.map((task, index) => ({
              label: task.titulo,
              data: [{
-                 x: [new Date(task.created_at).toISOString(), new Date(task.data_entrega).toISOString()],
+                 // Usa data_inicio SE EXISTIR, senão usa created_at como fallback
+                 x: [new Date(task.data_inicio || task.created_at).toISOString(), new Date(task.data_entrega).toISOString()],
                  y: task.titulo
              }],
              backgroundColor: index % 3 === 0 ? 'rgba(0, 212, 170, 0.7)' : (index % 3 === 1 ? 'rgba(0, 180, 216, 0.7)' : 'rgba(0, 119, 182, 0.7)'),
@@ -664,6 +665,9 @@ function openTaskModal(task = null, defaultColunaId = null) {
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
         document.getElementById('taskDescription').value = task.descricao || '';
+        document.getElementById('taskDescription').value = task.descricao || '';
+        document.getElementById('taskStartDate').value = task.data_inicio || ''; // <-- INSIRA ESTA LINHA
+        document.getElementById('taskDueDate').value = task.data_entrega || '';
         document.getElementById('taskDueDate').value = task.data_entrega || '';
         document.getElementById('taskPriority').value = task.prioridade || 'media';
         colunaIdInput.value = task.coluna_id;
@@ -690,6 +694,12 @@ async function handleTaskFormSubmit(e) {
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
+        const taskData = {
+        titulo: document.getElementById('taskTitle').value,
+        descricao: document.getElementById('taskDescription').value || null,
+        data_inicio: document.getElementById('taskStartDate').value || null, // <-- INSIRA ESTA LINHA
+        data_entrega: document.getElementById('taskDueDate').value || null,
+        prioridade: document.getElementById('taskPriority').value,
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
         org_id: currentOrg?.id || null,
