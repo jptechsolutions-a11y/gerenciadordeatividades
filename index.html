@@ -20,10 +20,13 @@
 </head>
 <body class="bg-gray-100 font-sans">
 
+    <!-- Container de Login (Existente) -->
     <div id="loginContainer" class="auth-container" style="background: var(--darker); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative;">
+        <!-- ... (fundo blur) ... -->
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 180, 216, 0.1); backdrop-filter: blur(5px);"></div>
 
-        <div class="auth-card" style="max-width: 450px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);">
+        <!-- Card de Login (Existente) -->
+        <div id="loginCard" class="auth-card" style="max-width: 450px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);">
             <div class="auth-header" style="text-align: center;">
                 <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
                 <h2 style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Acesso ao JProjects</h2>
@@ -52,11 +55,41 @@
             <div id="loginAlert" class="mt-4" style="text-align: center;"></div>
         </div>
 
+        <!-- NOVO: Card de Criação de Time (Onboarding) -->
+        <div id="createTeamCard" class="auth-card" style="display: none; max-width: 550px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);">
+            <div class="auth-header" style="text-align: center;">
+                <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
+                <h2 style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Bem-vindo ao JProjects!</h2>
+                <p style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Para começar, crie seu primeiro time.</p>
+            </div>
+            <form id="createTeamForm" class="auth-form">
+                <div class="form-group mb-4">
+                    <label for="teamName" class="font-semibold text-gray-700">Qual o nome do seu time?</label>
+                    <input type="text" id="teamName" placeholder="Ex: Time de Marketing, Projeto Alpha" required class="w-full">
+                </div>
+                <div class="form-group mb-4">
+                    <label for="teamInvites" class="font-semibold text-gray-700">Convide sua equipe (Opcional):</label>
+                    <textarea id="teamInvites" rows="3" class="w-full" placeholder="Separe os e-mails por vírgula..."></textarea>
+                </div>
+                
+                <div id="createTeamAlert" class="mt-4"></div>
+
+                <div class="flex gap-4 mt-6">
+                     <button type="button" class="btn btn-danger flex-1" onclick="logout()">Sair</button>
+                    <button type="submit" class="btn btn-success flex-1">
+                         <i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ... (Rodapé existente) ... -->
         <div style="position: absolute; bottom: 20px; color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; text-align: center; width: 100%; z-index: 10;">
             © 2025 - JProjects | Desenvolvido por <span style="font-weight: 700;">JP Tech Solutions</span>
         </div>
     </div>
 
+    <!-- #mainSystem (Sem alterações) -->
     <div id="mainSystem" class="flex h-screen" style="display: none;">
 
         <aside class="sidebar">
@@ -103,6 +136,7 @@
         <main class="flex-1 overflow-auto bg-gray-100 main-content">
             <div class="container mx-auto px-6 py-8">
 
+                <!-- #dashboardView (Sem alterações) -->
                 <div id="dashboardView" class="view-content active">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -127,6 +161,7 @@
                     </div>
                 </div>
 
+                <!-- #projetosView (Sem alterações) -->
                 <div id="projetosView" class="view-content">
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Quadro Kanban</h1>
@@ -138,6 +173,7 @@
                     </div>
                 </div>
 
+                <!-- #timelineView (Sem alterações) -->
                  <div id="timelineView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Timeline de Atividades Recentes</h1>
                      <p class="text-gray-600 mb-4">Veja as últimas criações e atualizações de tarefas.</p>
@@ -145,6 +181,8 @@
                         <div class="loading"><div class="spinner"></div> Carregando timeline...</div>
                         </div>
                 </div>
+
+                <!-- #calendarioView (Sem alterações) -->
                 <div id="calendarioView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Calendário de Entregas</h1>
                     <div class="bg-white p-6 rounded-lg shadow-md">
@@ -154,6 +192,7 @@
                     </div>
                 </div>
 
+                <!-- #notasView (Sem alterações) -->
                 <div id="notasView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Bloco de Notas</h1>
                     <div class="note-container">
@@ -169,6 +208,7 @@
                     </div>
                 </div>
 
+                <!-- #timeView (Sem alterações) -->
                 <div id="timeView" class="view-content">
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
@@ -194,6 +234,7 @@
                     </div>
                 </div>
 
+                <!-- #perfilView (Sem alterações) -->
                  <div id="perfilView" class="view-content">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
                     <div class="bg-white p-6 rounded-lg shadow-md max-w-3xl mx-auto">
@@ -248,9 +289,12 @@
                         </form>
                     </div>
                  </div>
-                 </div> </main>
+
+            </div> <!-- Fim .container -->
+        </main>
     </div>
 
+    <!-- #taskModal (Sem alterações) -->
     <div id="taskModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="flex justify-between items-center mb-4">
@@ -300,6 +344,7 @@
         </div>
     </div>
 
+    <!-- #inviteModal (Sem alterações) -->
     <div id="inviteModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
              <div class="flex justify-between items-center mb-4">
@@ -331,6 +376,7 @@
         </div>
     </div>
 
+    <!-- #forgotPasswordModal (Sem alterações) -->
     <div id="forgotPasswordModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 450px;">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">Recuperar Senha</h3>
@@ -349,6 +395,7 @@
         </div>
     </div>
 
+    <!-- #requestAccessModal (Sem alterações) -->
     <div id="requestAccessModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">Solicitar Acesso</h3>
