@@ -456,11 +456,15 @@ async function loadDashboardView() {
 
 async function renderStatusChart() {
     if (!currentProject || currentColumns.length === 0) return;
+    // CORREÇÃO: Corrigido getContext('d') para getContext('2d')
     const ctx = document.getElementById('statusChart')?.getContext('2d');
     if (!ctx) return;
-   if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-    chartInstances.ganttChart.destroy();
-}
+   
+   // CORREÇÃO: Estava destruindo 'ganttChart' por engano.
+   if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { 
+    chartInstances.statusChart.destroy();
+   }
+
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         const counts = await Promise.all(currentColumns.map(async (col) => {
@@ -484,7 +488,6 @@ async function renderStatusChart() {
         console.error("Erro ao renderizar gráfico de status:", error);
     }
 }
-
 async function renderGanttChart() {
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
@@ -578,7 +581,9 @@ async function loadKanbanView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=*,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`, 'GET');
+        
+        // CORREÇÃO: Trocado 'select=*' por colunas explícitas para evitar erros 400
+        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`, 'GET');
 
         kanbanBoard.innerHTML = '';
         currentColumns.forEach(coluna => {
