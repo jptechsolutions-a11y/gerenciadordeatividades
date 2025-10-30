@@ -611,9 +611,11 @@ async function loadKanbanView() {
 
     const kanbanBoard = document.getElementById('kanbanBoard');
     kanbanBoard.innerHTML = `<div class="loading col-span-${currentColumns.length}"><div class="spinner"></div> Carregando tarefas...</div>`;
+    console.log("Iniciando loadKanbanView..."); // NOVO LOG
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        console.log(`[Kanban] Filtro de Projeto: ${projectFilter}`); // NOVO LOG
         
         // --- NOVA CORREÇÃO KANBAN VAZIO (Two-Step Query) ---
             
@@ -622,8 +624,10 @@ async function loadKanbanView() {
         console.log("Query Kanban (Step 1 - Tarefas):", taskQuery); 
         const tasks = await supabaseRequest(taskQuery, 'GET');
 
+        console.log("[Kanban] Tarefas brutas recebidas (Step 1):", tasks); // NOVO LOG CRÍTICO
+
         if (!tasks || tasks.length === 0) {
-             console.warn("Nenhuma tarefa encontrada para este projeto.");
+             console.warn("[Kanban] NENHUMA TAREFA encontrada. Verifique RLS ou se existem tarefas com este projeto_id."); // NOVO LOG
              // Limpa o board, mas não dá erro
         }
         
@@ -642,7 +646,7 @@ async function loadKanbanView() {
                         map[user.id] = user;
                         return map;
                     }, {});
-                    console.log("Assignee Map criado:", assigneeMap);
+                    console.log("[Kanban] Mapa de Assignees (Step 2):", assigneeMap); // NOVO LOG
                 } catch (userError) {
                     console.error("Falha ao buscar usuários (assignees). O Kanban continuará sem eles.", userError);
                     // O Kanban vai carregar sem os assignees, o que é melhor que não carregar nada.
@@ -678,6 +682,7 @@ async function loadKanbanView() {
                     if (task.assignee_id && assigneeMap[task.assignee_id]) {
                         task.assignee = assigneeMap[task.assignee_id];
                     }
+                    console.log(`[Kanban] Adicionando card '${task.titulo}' na coluna '${coluna.nome}'`); // NOVO LOG
                     const card = createTaskCard(task);
                     columnContentEl.appendChild(card);
                 });
@@ -1435,4 +1440,5 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
+
 
