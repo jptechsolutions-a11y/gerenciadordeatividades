@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JProjects | Seu Hub de Produtividade</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        /* Estilos específicos para a landing page */
+        body { background: var(--darker); }
+        .hero-section {
+            background: var(--darker);
+            color: white;
+            padding: 100px 20px;
+        }
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        .hero-section p {
+            font-size: 1.25rem;
+            color: var(--light);
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+        .feature-section {
+            background: white;
+            padding: 80px 20px;
+        }
+        .feature-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-transparent absolute top-0 left-0 w-full z-10 p-5">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="icon.png" class="h-8 w-8 mr-3" alt="Logo JP">
+                <h1 class="text-xl font-bold text-white">JProjects</h1>
+            </div>
+            <div class="flex gap-4">
+                <a href="login.html" class="btn btn-secondary" style="background: white; color: var(--dark); border: none;">Entrar</a>
+                <a href="login.html#signup" class="btn btn-primary" style="padding: 10px 18px;">Começar Agora</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-section text-center flex flex-col items-center">
+        <h1>Organize, gerencie e colabore. Tudo em um só lugar.</h1>
+        <p>JProjects é a ferramenta definitiva para tirar suas ideias do papel e transformar projetos em realidade.</p>
+        <div>
+            <a href="login.html#signup" class="btn btn-primary" style="font-size: 1.1rem; padding: 14px 28px;">
+                Crie sua conta grátis
+            </a>
+        </div>
+    </section>
+
+    <section class="feature-section text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Tudo o que você precisa</h2>
+        <p class="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">De quadros Kanban a timelines, JProjects centraliza o trabalho da sua equipe.</p>
+        
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="feature-card">
+                <i data-feather="trello" class="h-10 w-10 text-white p-2 rounded-lg mb-4" style="background: var(--primary-gradient);"></i>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Quadros Kanban</h3>
+                <p class="text-gray-600">Visualize seu fluxo de trabalho e mova tarefas com facilidade.</p>
+            </div>
+            <div class="feature-card">
+                <i data-feather="git-commit" class="h-10 w-10 text-white p-2 rounded-lg mb-4" style="background: var(--primary-gradient);"></i>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Timelines e Gantt</h3>
+                <p class="text-gray-600">Planeje projetos e acompanhe o progresso em relação aos prazos.</p>
+            </div>
+            <div class="feature-card">
+                <i data-feather="users" class="h-10 w-10 text-white p-2 rounded-lg mb-4" style="background: var(--primary-gradient);"></i>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Colaboração em Time</h3>
+                <p class="text-gray-600">Convide sua equipe, atribua tarefas e mantenha todos alinhados.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="text-center p-10" style="background: var(--darker); color: var(--light);">
+        <p>© 2025 - JProjects | Desenvolvido por <span style="font-weight: 700;">JP Tech Solutions</span></p>
+    </footer>
+
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
