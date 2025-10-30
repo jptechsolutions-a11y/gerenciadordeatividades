@@ -1,8 +1,9 @@
 // Service Worker Básico (sw.js)
 const CACHE_NAME = 'jprojects-v1';
 const urlsToCache = [
-    '/',
-    '/index.html',
+    '/', // Isso agora é a landing page
+    '/app.html', // O app principal
+    '/login.html', // A página de login
     '/style.css',
     '/script.js',
     '/icon.png',
