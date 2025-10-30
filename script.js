@@ -257,20 +257,21 @@ function showMainSystem() {
     document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
 
    // Vamos transformar o final desta função em async para esperar o projeto
+   // Vamos transformar o final desta função em async para esperar o projeto
     (async () => {
         try {
             await loadActiveProject(); // 1. ESPERA o projeto e colunas carregarem
-            showView('dashboardView', document.querySelector('a[href="#dashboard"]')); // 2. SÓ ENTÃO mostra a view
+            // 2. SÓ ENTÃO chama o showView (que vai chamar os gráficos)
+            showView('dashboardView', document.querySelector('a[href="#dashboard"]')); 
             feather.replace();
         } catch (err) {
             console.error("Erro ao carregar projeto ativo:", err);
             showNotification(`Erro ao carregar dados iniciais: ${err.message}.`, "error", 6000);
-            // Mesmo com erro, tenta mostrar o dashboard (que mostrará a mensagem de erro)
+            // Mesmo com erro, tenta mostrar o dashboard (que mostrará a mensagem de erro interna)
             showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
             feather.replace();
         }
     })();
-}
 
 // ========================================
 // 4. NAVEGAÇÃO E UI (Restante do seu código)
@@ -454,9 +455,9 @@ async function renderStatusChart() {
     if (!currentProject || currentColumns.length === 0) return;
     const ctx = document.getElementById('statusChart')?.getContext('2d');
     if (!ctx) return;
-   if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
-        chartInstances.statusChart.destroy();
-    }
+   if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+    chartInstances.ganttChart.destroy();
+}
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         const counts = await Promise.all(currentColumns.map(async (col) => {
