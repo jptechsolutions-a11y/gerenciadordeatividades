@@ -386,10 +386,25 @@ async function createDefaultColumns(projectId) {
 }
 
 // ========================================
-// 6. LÓGICA DO DASHBOARD
+// 6. LÓGICA DO DASHBOARD (CORRIGIDA)
 // ========================================
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
+
+    // --- CORREÇÃO ERRO CANVAS ---
+    // Destrói instâncias de gráficos existentes ANTES de recarregar o HTML da view.
+    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+        console.log("Instância antiga de statusChart destruída.");
+    }
+    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
+        console.log("Instância antiga de ganttChart destruída.");
+    }
+    // --- FIM DA CORREÇÃO ---
+
     view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                       <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
 
@@ -456,14 +471,14 @@ async function loadDashboardView() {
 
 async function renderStatusChart() {
     if (!currentProject || currentColumns.length === 0) return;
-    // CORREÇÃO: Corrigido getContext('d') para getContext('2d')
     const ctx = document.getElementById('statusChart')?.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.warn("Canvas 'statusChart' não encontrado para renderizar.");
+        return;
+    }
    
-   // CORREÇÃO: Estava destruindo 'ganttChart' por engano.
-   if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { 
-    chartInstances.statusChart.destroy();
-   }
+    // REMOVIDO: Bloco destroy() movido para loadDashboardView()
+    // if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { ... }
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -472,6 +487,8 @@ async function renderStatusChart() {
             return count || 0;
         }));
         const backgroundColors = [ '#0077B6', '#F77F00', '#00D4AA', '#00B4D8', '#90E0EF', '#023047'];
+        
+        console.log("Renderizando statusChart...");
         chartInstances.statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -491,10 +508,13 @@ async function renderStatusChart() {
 async function renderGanttChart() {
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
-     if (!ctx) return;
-    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-        chartInstances.ganttChart.destroy();
-    }
+     if (!ctx) {
+        console.warn("Canvas 'ganttChart' não encontrado para renderizar.");
+        return;
+     }
+
+    // REMOVIDO: Bloco destroy() movido para loadDashboardView()
+    // if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') { ... }
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -525,6 +545,7 @@ async function renderGanttChart() {
         minDate.setDate(minDate.getDate() - 2);
         maxDate.setDate(maxDate.getDate() + 2);
 
+        console.log("Renderizando ganttChart...");
         chartInstances.ganttChart = new Chart(ctx, {
             type: 'bar',
             data: { datasets: ganttData },
@@ -566,7 +587,7 @@ async function renderGanttChart() {
 }
 
 // ========================================
-// 7. LÓGICA DO KANBAN
+// 7. LÓGICA DO KANBAN (CORRIGIDA)
 // ========================================
 let draggedTask = null;
 
@@ -582,8 +603,16 @@ async function loadKanbanView() {
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         
-        // CORREÇÃO: Trocado 'select=*' por colunas explícitas para evitar erros 400
-        const tasks = await supabaseRequest(`tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`, 'GET');
+        // --- CORREÇÃO KANBAN VAZIO ---
+        // Simplificamos a query para garantir que ela retorne dados.
+        // Removemos o 'join' complexo (assignee:assignee_id(...)) que pode estar causando erro 400 ou falha no RLS.
+        const query = `tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna&order=ordem_na_coluna.asc`;
+        console.log("Query Kanban:", query); // Log para depuração
+        
+        const tasks = await supabaseRequest(query, 'GET');
+
+        console.log("Tarefas recebidas:", tasks); // Log para depuração
+        // --- FIM DA CORREÇÃO ---
 
         kanbanBoard.innerHTML = '';
         currentColumns.forEach(coluna => {
@@ -605,10 +634,12 @@ async function loadKanbanView() {
             columnEl.appendChild(columnContentEl);
             columnEl.innerHTML += `<div class="p-2 mt-auto">${addTaskBtn}</div>`;
 
-            (tasks || []).filter(t => t.coluna_id === coluna.id).forEach(task => {
-                const card = createTaskCard(task);
-                columnContentEl.appendChild(card);
-            });
+            if (tasks && tasks.length > 0) {
+                tasks.filter(t => t.coluna_id === coluna.id).forEach(task => {
+                    const card = createTaskCard(task);
+                    columnContentEl.appendChild(card);
+                });
+            }
 
             kanbanBoard.appendChild(columnEl);
         });
@@ -643,14 +674,17 @@ function createTaskCard(task) {
     }
 
     let assigneeHtml = '';
-    if (task.assignee) {
+    // --- CORREÇÃO KANBAN VAZIO ---
+    // Ajustamos para não depender mais de 'task.assignee' (o objeto),
+    // pois simplificamos a query. Usamos 'task.assignee_id'.
+    if (task.assignee_id) {
         assigneeHtml = `
-            <img src="${escapeHTML(task.assignee.profile_picture_url || 'icon.png')}"
-                 alt="${escapeHTML(task.assignee.nome)}"
-                 title="Atribuído a: ${escapeHTML(task.assignee.nome)}"
-                 class="w-5 h-5 rounded-full object-cover border border-gray-200 shadow-sm">
+            <span title="Atribuído (ID: ${task.assignee_id})">
+                <i data-feather="user" class="w-5 h-5 text-gray-500"></i>
+            </span>
         `;
     }
+    // --- FIM DA CORREÇÃO ---
 
     card.innerHTML = `
         <div class="kanban-card-title">${escapeHTML(task.titulo)}</div>
@@ -790,6 +824,7 @@ async function handleTaskFormSubmit(e) {
         projeto_id: currentProject.id,
         coluna_id: document.getElementById('taskColunaId').value,
         updated_at: new Date().toISOString()
+        // assignee_id não está sendo definido aqui, pode ser um próximo passo
     };
 
     if (!taskId) { taskData.created_by = currentUser.id; } 
@@ -840,7 +875,7 @@ async function loadTimeView() {
         teamBody.innerHTML = members.map(m => {
             const user = m.usuarios;
             if (!user) return '';
-            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada';
+            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada'; // Reutilizando classes de status
             const statusText = user.ativo ? 'Ativo' : 'Inativo'; 
             return `
                 <tr>
@@ -917,6 +952,8 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
+     // ATENÇÃO: confirm() não funciona bem em todos os ambientes (como iframes).
+     // Usando prompt() como substituto temporário. O ideal é um modal customizado.
      const confirmation = prompt(`Tem certeza que deseja remover este membro do time? Digite 'REMOVER' para confirmar.`);
      if (confirmation !== 'REMOVER') {
         showNotification("Remoção cancelada.", "info");
@@ -1284,6 +1321,7 @@ async function loadTimelineView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        // Query para a timeline
         const events = await supabaseRequest(
             `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome,profile_picture_url),assignee:assignee_id(nome),coluna:colunas_kanban(nome)&order=updated_at.desc&limit=50`,
             'GET'
@@ -1297,9 +1335,14 @@ async function loadTimelineView() {
         container.innerHTML = events.map(event => {
             const isCreation = (new Date(event.updated_at).getTime() - new Date(event.created_at).getTime()) < 3000;
             const actionText = isCreation ? 'criou a tarefa' : 'atualizou a tarefa';
+            
+            // Aqui usamos event.coluna (o alias da query)
             const statusName = event.coluna?.nome || 'Status Desconhecido';
+            
             const icon = isCreation ? 'plus-circle' : (statusName.toLowerCase() === 'concluído' ? 'check-circle' : 'edit-2');
             const itemClass = isCreation ? 'created' : (statusName.toLowerCase() === 'concluído' ? 'completed' : 'updated');
+            
+            // Aqui usamos event.created_by (o join)
             const userName = event.created_by?.nome || 'Usuário desconhecido';
             const userPic = event.created_by?.profile_picture_url || 'icon.png'; 
 
