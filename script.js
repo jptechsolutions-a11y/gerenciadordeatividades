@@ -1,5 +1,5 @@
 // ========================================
-// 1. CONFIGURAÇÃO SUPABASE E VARIÁVEIS GGLOBAIS
+// 1. CONFIGURAÇÃO SUPABASE E VARIÁVEIS GLOBAIS
 // ========================================
 
 // -----------------------------------------------------------------
@@ -28,6 +28,63 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
     document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
     
+    // --- NOVO: LÓGICA DA BARRA LATERAL RECOLHÍVEL ---
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const appShell = document.getElementById('appShell');
+    
+    // Adiciona o overlay para o modo mobile
+    const sidebarOverlay = document.createElement('div');
+    sidebarOverlay.id = 'sidebarOverlay';
+    document.body.appendChild(sidebarOverlay);
+
+    if (sidebarToggle && sidebar && appShell) {
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.innerWidth <= 768) {
+                // Lógica Mobile (Abrir/Fechar com Overlay)
+                document.body.classList.toggle('sidebar-open');
+            } else {
+                // Lógica Desktop (Recolher/Expandir)
+                sidebar.classList.toggle('collapsed');
+            }
+        });
+        
+        // Clica no overlay para fechar (mobile)
+        sidebarOverlay.addEventListener('click', () => {
+             document.body.classList.remove('sidebar-open');
+        });
+
+        // Clica em um item de link para fechar (mobile)
+        document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.body.classList.remove('sidebar-open');
+                }
+            });
+        });
+    }
+
+    // --- NOVO: LÓGICA DO DROPDOWN DE PERFIL ---
+    const profileButton = document.getElementById('profileDropdownButton');
+    const profileDropdown = document.getElementById('profileDropdown');
+
+    if (profileButton && profileDropdown) {
+        profileButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('open');
+        });
+        
+        // Clica em qualquer lugar para fechar o dropdown
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('open');
+            }
+        });
+    }
+    // --- FIM DAS NOVAS LÓGICAS ---
+
+
     // Pega a função 'createClient' da biblioteca Supabase (que o app.html carregou)
     const { createClient } = supabase;
     
@@ -243,23 +300,23 @@ async function handleCreateTeamFormSubmit(event) {
         
         document.getElementById('createTeamCard').style.display = 'none'; 
         showMainSystem(); // Entra no sistema!
-
-    } catch (error) {
-        console.error("Erro ao criar time:", error);
-        alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
-        button.disabled = false;
-        button.innerHTML = '<i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar';
-        feather.replace();
+// ... (O resto da função permanece igual) ...
     }
 }
 
 // Mostra o sistema principal (App)
 function showMainSystem() {
-    document.getElementById('mainSystem').style.display = 'flex';
+    // ATUALIZADO: Mostra 'appShell' em vez de 'mainSystem'
+    document.getElementById('appShell').style.display = 'flex';
     document.body.classList.add('system-active'); // Muda o fundo para cinza claro
 
-    document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
+    // --- ATUALIZADO: Popula a nova barra superior ---
+    document.getElementById('topBarProjectName').textContent = currentOrg.nome || 'Projeto Pessoal';
+    document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
+    document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
+    document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
+    document.getElementById('dropdownUserEmail').textContent = currentUser.email || '...';
+    // --- FIM DA ATUALIZAÇÃO ---
 
 
    // Vamos transformar o final desta função em async para esperar o projeto
@@ -1480,6 +1537,3 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
-
-
-
