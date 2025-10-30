@@ -2,6 +2,7 @@
 
 const SUPABASE_URL = 'https://mxtlanpjzenfghsjubzm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dGxhbnBqemVuZmdoc2p1YnptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTk0MzksImV4cCI6MjA3NzIzNTQzOX0.RFfy6orSso72v-0GtkSqwt4WJ3XWlLmZkyHoE71Dtdc';
+const { createClient } = supabase;
 // ========================================
 // 1. VARIÁVEIS GLOBAIS E ESTADO
 // ========================================
@@ -24,9 +25,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // MODIFICADO: Adiciona listener para o novo form de criação de time
     document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
 
-    // NOVO: Bind para os modais de login
-    const forgotForm = document.getElementById('forgotPasswordForm');
-    if (forgotForm) forgotForm.addEventListener('submit', handleForgotPassword);
+    // SUBSTITUA O BLOCO 'DOMContentLoaded' (linhas 15-30 do seu arquivo original) POR ESTE:
+
+// ========================================
+// 2. INICIALIZAÇÃO E AUTENTICAÇÃO (CORRIGIDO)
+// ========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Adiciona os listeners dos formulários DO APP
+    document.getElementById('taskForm')?.addEventListener('submit', handleTaskFormSubmit);
+    document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
+    document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
+    document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
+
+    // Inicializa o cliente Supabase com as chaves PÚBLICAS no topo do arquivo
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // NOVO: Gerenciador de Sessão
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+            if (session) {
+                // Usuário está logado.
+                initializeApp(session);
+            }
+        } else if (event === 'SIGNED_OUT') {
+            // Usuário deslogou, redireciona
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Verifica a sessão inicial
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            // Se já tem sessão, inicializa
+            initializeApp(session);
+        } else {
+            // Se não tem sessão, redireciona para o login
+            window.location.href = 'login.html';
+        }
+    }).catch(error => {
+        console.error("Erro ao pegar sessão:", error);
+        window.location.href = 'login.html';
+    });
+});
 
     const requestForm = document.getElementById('requestAccessForm');
     if (requestForm) requestForm.addEventListener('submit', handleRequestAccess);
