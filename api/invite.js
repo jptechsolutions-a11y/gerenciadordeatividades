@@ -55,6 +55,16 @@ export default async (req, res) => {
             return res.status(400).json({ error: 'Dados do convite incompletos.' });
         }
 
+        // --- NOVA VERIFICAÇÃO ---
+        // Verifica se o usuário está tentando convidar a si mesmo
+        if (user.email.toLowerCase() === email.toLowerCase()) {
+            return res.status(400).json({
+                error: 'Convite inválido.',
+                details: 'Você não pode convidar a si mesmo para o time.'
+            });
+        }
+        // --- FIM DA VERIFICAÇÃO ---
+
         // 3. Lógica de Convite
         const { data: newUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
             data: { role: role } // Dados extras
