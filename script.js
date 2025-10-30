@@ -276,8 +276,9 @@ function showMainSystem() {
             showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
             feather.replace();
         }
+    }  
     })();
-
+}
 // ========================================
 // 4. NAVEGAÇÃO E UI (Restante do seu código)
 // ========================================
