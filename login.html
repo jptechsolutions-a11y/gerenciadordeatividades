@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso ao JProjects</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background: var(--darker);">
+
+    <div id="loginContainer" class="auth-container" style="background: var(--darker); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative;">
+        
+        <div style="position: absolute; top: 10px; left: 10px;">
+             <a href="landing.html" class="text-white hover:text-gray-300 flex items-center">
+                 <i data-feather="arrow-left" class="h-4 w-4 mr-2"></i> Voltar ao início
+             </a>
+        </div>
+
+        <div id="loginCard" class="auth-card" style="max-width: 450px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);">
+            
+            <div class="auth-header" style="text-align: center;">
+                <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
+                <h2 id="formTitle" style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Acesso ao JProjects</h2>
+                <p id="formSubtitle" style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Seu hub de produtividade</p>
+            </div>
+
+            <div id="loginAlert" class="mt-4" style="text-align: center;"></div>
+
+            <button id="googleLoginBtn" class="btn w-full mb-4" style="background: white; color: #4b5563; border: 1px solid #d1d5db;">
+                <img src="https://rotulosonline.com/wp-content/uploads/2019/09/800px-Google__G__Logo.svg_.png" class="w-5 h-5 mr-3" alt="Google">
+                Continuar com o Google
+            </button>
+
+            <div class="flex items-center my-4">
+                <hr class="flex-1 border-t border-gray-300">
+                <span class="mx-4 text-sm text-gray-500">OU</span>
+                <hr class="flex-1 border-t border-gray-300">
+            </div>
+
+            <form id="emailForm" class="auth-form">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="email" id="email" placeholder="E-mail" required class="w-full">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="password" id="password" placeholder="Senha" required class="w-full">
+                </div>
+                
+                <button id="emailSubmitBtn" type="submit" class="btn btn-primary w-full" style="background: var(--primary-gradient); color: white; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 1rem;">
+                    Continuar com E-mail
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-sm">
+                <span id="toggleText">Não tem uma conta?</span>
+                <a href="#signup" id="toggleLink" class="text-blue-600 hover:underline">Cadastre-se</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
