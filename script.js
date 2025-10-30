@@ -256,15 +256,20 @@ function showMainSystem() {
     document.getElementById('sidebarUser').textContent = currentUser.nome || 'Usuário';
     document.getElementById('sidebarOrg').textContent = currentOrg.nome || 'N/A';
 
-    loadActiveProject().then(() => {
-        showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
-        feather.replace();
-    }).catch(err => {
-         console.error("Erro ao carregar projeto ativo:", err);
-         showNotification(`Erro ao carregar dados iniciais: ${err.message}.`, "error", 6000);
-         showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
-         feather.replace();
-    });
+   // Vamos transformar o final desta função em async para esperar o projeto
+    (async () => {
+        try {
+            await loadActiveProject(); // 1. ESPERA o projeto e colunas carregarem
+            showView('dashboardView', document.querySelector('a[href="#dashboard"]')); // 2. SÓ ENTÃO mostra a view
+            feather.replace();
+        } catch (err) {
+            console.error("Erro ao carregar projeto ativo:", err);
+            showNotification(`Erro ao carregar dados iniciais: ${err.message}.`, "error", 6000);
+            // Mesmo com erro, tenta mostrar o dashboard (que mostrará a mensagem de erro)
+            showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
+            feather.replace();
+        }
+    })();
 }
 
 // ========================================
@@ -449,8 +454,9 @@ async function renderStatusChart() {
     if (!currentProject || currentColumns.length === 0) return;
     const ctx = document.getElementById('statusChart')?.getContext('2d');
     if (!ctx) return;
-    if (chartInstances.statusChart) chartInstances.statusChart.destroy();
-
+   if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
+        chartInstances.statusChart.destroy();
+    }
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         const counts = await Promise.all(currentColumns.map(async (col) => {
@@ -479,7 +485,9 @@ async function renderGanttChart() {
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
      if (!ctx) return;
-    if (chartInstances.ganttChart) chartInstances.ganttChart.destroy();
+    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+        chartInstances.ganttChart.destroy();
+    }
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
