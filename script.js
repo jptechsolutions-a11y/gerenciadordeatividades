@@ -1,11 +1,19 @@
+// SUBSTITUA AS LINHAS 1-75 POR ESTE BLOCO:
 
+// ========================================
+// 1. CONFIGURAÇÃO SUPABASE E VARIÁVEIS GLOBAIS
+// ========================================
 
+// -----------------------------------------------------------------
+// CONFIGURAÇÃO DE AUTENTICAÇÃO (CHAVES PÚBLICAS)
+// JP, estas são suas chaves PÚBLICAS (ANON_KEY). Elas são seguras
+// para ficarem aqui no frontend.
+// -----------------------------------------------------------------
 const SUPABASE_URL = 'https://mxtlanpjzenfghsjubzm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dGxhbnBqemVuZmdoc2p1YnptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTk0MzksImV4cCI6MjA3NzIzNTQzOX0.RFfy6orSso72v-0GtkSqwt4WJ3XWlLmZkyHoE71Dtdc';
-const { createClient } = supabase;
-// ========================================
-// 1. VARIÁVEIS GLOBAIS E ESTADO
-// ========================================
+// -----------------------------------------------------------------
+
+// Suas variáveis globais
 let currentUser = null;
 let currentOrg = null; // Organização/Time selecionado
 let currentProject = null; // NOVO: Guarda o projeto ativo (simplificado)
@@ -14,21 +22,7 @@ let chartInstances = {}; // Cache para gráficos
 let currentNoteId = null; // ID da nota ativa no editor
 
 // ========================================
-// 2. INICIALIZAÇÃO E AUTENTICAÇÃO
-// ========================================
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
-    document.getElementById('taskForm')?.addEventListener('submit', handleTaskFormSubmit);
-    document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
-    document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
-
-    // MODIFICADO: Adiciona listener para o novo form de criação de time
-    document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
-
-    // SUBSTITUA O BLOCO 'DOMContentLoaded' (linhas 15-30 do seu arquivo original) POR ESTE:
-
-// ========================================
-// 2. INICIALIZAÇÃO E AUTENTICAÇÃO (CORRIGIDO)
+// 2. INICIALIZAÇÃO E AUTENTICAÇÃO (BLOCO CORRIGIDO)
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Adiciona os listeners dos formulários DO APP
@@ -36,8 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
     document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
-
-    // Inicializa o cliente Supabase com as chaves PÚBLICAS no topo do arquivo
+    
+    // Pega a função 'createClient' da biblioteca Supabase (que o index.html carregou)
+    const { createClient } = supabase;
+    
+    // Inicializa o cliente Supabase AQUI DENTRO
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // NOVO: Gerenciador de Sessão
@@ -66,11 +63,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Erro ao pegar sessão:", error);
         window.location.href = 'login.html';
     });
+
+    // Adiciona a chamada da função logout ao cliente Supabase
+    // (Isso é necessário para que a função 'logout()' encontre o 'supabaseClient')
+    window.logout = async () => {
+        console.log("Deslogando usuário...");
+        currentUser = null;
+        currentOrg = null;
+        currentProject = null;
+        currentColumns = [];
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token'); // Limpa o token da sua API proxy
+        
+        // Chama o signOut do Supabase para limpar a sessão de auth
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) console.error("Erro ao deslogar:", error);
+        
+        // Redireciona para a página de login
+        window.location.href = 'login.html';
+    };
 });
 
-    const requestForm = document.getElementById('requestAccessForm');
-    if (requestForm) requestForm.addEventListener('submit', handleRequestAccess);
-});
+// FIM DO BLOCO DE SUBSTITUIÇÃO
 
 // ADICIONE ESTA FUNÇÃO (NO LUGAR DE handleLogin)
 async function initializeApp(session) {
@@ -308,20 +322,11 @@ function showMainSystem() {
 async function logout() {
     console.log("Deslogando usuário...");
     currentUser = null;
-    currentOrg = null;
-    currentProject = null;
-    currentColumns = [];
-    localStorage.removeItem('user');
-    localStorage.removeItem('auth_token'); // Limpa o token da sua API proxy
-    
-    // NOVO: Chama o signOut do Supabase para limpar a sessão de auth
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) console.error("Erro ao deslogar:", error);
-    
+    // ... (todo o código) ...
     // Redireciona para a página de login
     window.location.href = 'login.html';
 }
-// FIM DA FUNÇÃO SUBSTITUÍDA
+
 
 
 // ========================================
@@ -1222,20 +1227,6 @@ function escapeHTML(str) {
          .replace(/'/g, '&#39;');
 }
 
-// ========================================
-// 12. FUNÇÃO DE ERRO (Login)
-// ========================================
-function showError(message) {
-    const alertContainer = document.getElementById('loginAlert');
-    if (!message) {
-        if (alertContainer) alertContainer.innerHTML = '';
-        return;
-    }
-    console.error("Erro exibido ao usuário:", message);
-    if (alertContainer) {
-        alertContainer.innerHTML = `<div class="alert alert-error">${escapeHTML(message)}</div>`;
-    }
-}
 
 // ========================================
 // 13. FUNÇÕES: PERFIL
