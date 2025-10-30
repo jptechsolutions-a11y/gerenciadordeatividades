@@ -391,19 +391,19 @@ async function createDefaultColumns(projectId) {
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
 
-    // --- CORREÇÃO ERRO CANVAS ---
-    // Destrói instâncias de gráficos existentes ANTES de recarregar o HTML da view.
+    // --- REVERTENDO A CORREÇÃO ANTERIOR ---
+    // Removendo os blocos .destroy() daqui
+    /*
     if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
         chartInstances.statusChart.destroy();
         chartInstances.statusChart = null;
-        console.log("Instância antiga de statusChart destruída.");
     }
     if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
-        console.log("Instância antiga de ganttChart destruída.");
     }
-    // --- FIM DA CORREÇÃO ---
+    */
+    // --- FIM DA REVERSÃO ---
 
     view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                       <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
@@ -477,8 +477,14 @@ async function renderStatusChart() {
         return;
     }
    
-    // REMOVIDO: Bloco destroy() movido para loadDashboardView()
-    // if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { ... }
+    // --- CORREÇÃO ERRO CANVAS ---
+    // Adicionando o bloco .destroy() DE VOLTA, aqui dentro da função.
+    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { 
+        console.log("Destruindo instância antiga de statusChart (dentro de renderStatusChart)");
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+    }
+    // --- FIM DA CORREÇÃO ---
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -489,7 +495,7 @@ async function renderStatusChart() {
         const backgroundColors = [ '#0077B6', '#F77F00', '#00D4AA', '#00B4D8', '#90E0EF', '#023047'];
         
         console.log("Renderizando statusChart...");
-        chartInstances.statusChart = new Chart(ctx, {
+        chartInstances.statusChart = new Chart(ctx, { // <--- Erro acontecia aqui
             type: 'doughnut',
             data: {
                 labels: currentColumns.map(col => col.nome),
@@ -513,8 +519,14 @@ async function renderGanttChart() {
         return;
      }
 
-    // REMOVIDO: Bloco destroy() movido para loadDashboardView()
-    // if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') { ... }
+    // --- CORREÇÃO ERRO CANVAS ---
+    // Adicionando o bloco .destroy() DE VOLTA, aqui dentro da função.
+    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+        console.log("Destruindo instância antiga de ganttChart (dentro de renderGanttChart)");
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
+    }
+    // --- FIM DA CORREÇÃO ---
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -546,7 +558,7 @@ async function renderGanttChart() {
         maxDate.setDate(maxDate.getDate() + 2);
 
         console.log("Renderizando ganttChart...");
-        chartInstances.ganttChart = new Chart(ctx, {
+        chartInstances.ganttChart = new Chart(ctx, { // <--- Erro acontecia aqui
             type: 'bar',
             data: { datasets: ganttData },
             options: {
@@ -603,15 +615,14 @@ async function loadKanbanView() {
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         
-        // --- CORREÇÃO KANBAN VAZIO ---
-        // Simplificamos a query para garantir que ela retorne dados.
-        // Removemos o 'join' complexo (assignee:assignee_id(...)) que pode estar causando erro 400 ou falha no RLS.
-        const query = `tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna&order=ordem_na_coluna.asc`;
-        console.log("Query Kanban:", query); // Log para depuração
+        // --- CORREÇÃO KANBAN VAZIO (RESTAURADA) ---
+        // Voltamos a usar a query complexa que busca o 'assignee'
+        const query = `tarefas?${projectFilter}&select=id,titulo,descricao,data_inicio,data_entrega,prioridade,coluna_id,assignee_id,ordem_na_coluna,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`;
+        console.log("Query Kanban (Restaurada):", query); 
         
         const tasks = await supabaseRequest(query, 'GET');
 
-        console.log("Tarefas recebidas:", tasks); // Log para depuração
+        console.log("Tarefas recebidas (Restaurada):", tasks); 
         // --- FIM DA CORREÇÃO ---
 
         kanbanBoard.innerHTML = '';
@@ -674,11 +685,18 @@ function createTaskCard(task) {
     }
 
     let assigneeHtml = '';
-    // --- CORREÇÃO KANBAN VAZIO ---
-    // Ajustamos para não depender mais de 'task.assignee' (o objeto),
-    // pois simplificamos a query. Usamos 'task.assignee_id'.
-    if (task.assignee_id) {
+    // --- CORREÇÃO KANBAN VAZIO (RESTAURADA) ---
+    // Voltamos a usar task.assignee (o objeto)
+    if (task.assignee) {
         assigneeHtml = `
+            <img src="${escapeHTML(task.assignee.profile_picture_url || 'icon.png')}"
+                 alt="${escapeHTML(task.assignee.nome)}"
+                 title="Atribuído a: ${escapeHTML(task.assignee.nome)}"
+                 class="w-5 h-5 rounded-full object-cover border border-gray-200 shadow-sm">
+        `;
+    } else if (task.assignee_id) {
+        // Fallback caso o join falhe mas o ID exista
+         assigneeHtml = `
             <span title="Atribuído (ID: ${task.assignee_id})">
                 <i data-feather="user" class="w-5 h-5 text-gray-500"></i>
             </span>
@@ -1386,3 +1404,4 @@ function timeAgo(timestamp) {
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
 }
+
