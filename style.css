@@ -1906,3 +1906,52 @@ tbody tr:hover { background-color: #f9fafb; }
         border-bottom: 1px solid #e5e7eb;
     }
 }
+/* ========================================
+   NOVOS ESTILOS: Timeline
+   ======================================== */
+.timeline-item {
+    padding: 16px;
+    background-color: white;
+    border-left: 4px solid var(--secondary);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.timeline-item-icon {
+    flex-shrink: 0;
+    color: var(--accent);
+}
+.timeline-item-content p {
+    margin: 0;
+    line-height: 1.4;
+}
+.timeline-item-content .task-title {
+    font-weight: 600;
+    color: var(--dark);
+}
+.timeline-item-content .user-name {
+    font-weight: 500;
+    color: var(--accent);
+}
+.timeline-item-timestamp {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-left: auto; /* Empurra a data para a direita */
+    white-space: nowrap;
+}
+
+/* Ajuste de status na timeline */
+.timeline-item.created { border-left-color: #0077B6; } /* Azul */
+.timeline-item.updated { border-left-color: #F77F00; } /* Laranja */
+.timeline-item.completed { border-left-color: #00D4AA; } /* Verde */
+
+
+/* ========================================
+   NOVOS ESTILOS: Perfil
+   ======================================== */
+ #perfilPicturePreview {
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+ }
