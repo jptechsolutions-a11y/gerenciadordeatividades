@@ -16,39 +16,75 @@
 </head>
 <body class="bg-gray-100">
 
-    <!-- MODAL DE CRIAÇÃO DE TIME (Fica sobre a tela, antes do app principal) -->
-    <div id="createTeamCard" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
-        <div class="auth-card" style="max-width: 550px; width: 100%; background: white; padding: 50px 40px; border-radius: 16px;">
-            <div class="auth-header" style="text-align: center;">
-                <img src="icon.png" class="w-20 h-20 mb-6 mx-auto object-contain" alt="Logo JP Tech">
-                <h2 style="color: var(--dark); font-size: 1.8rem; font-weight: 700;">Bem-vindo ao JProjects!</h2>
-                <p style="color: var(--secondary); font-size: 1rem; margin-bottom: 30px;">Para começar, crie seu primeiro time.</p>
+    <!-- NOVO: MODAL DE ONBOARDING (CRIAR OU ENTRAR) -->
+    <!-- Este modal substitui o antigo 'createTeamCard' -->
+    <div id="onboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="auth-card" style="max-width: 550px; width: 100%; background: white; padding: 0; border-radius: 16px; overflow: hidden;">
+            
+            <!-- Abas (Tabs) -->
+            <div class="flex border-b">
+                <button id="tabBtnCreate" class="flex-1 p-4 font-semibold text-lg border-b-4 border-blue-500 text-blue-600" onclick="showOnboardingTab('create')">
+                    <i data-feather="plus-circle" class="h-5 w-5 mr-2 inline"></i> Criar Novo Time
+                </button>
+                <button id="tabBtnJoin" class="flex-1 p-4 font-semibold text-lg border-b-4 border-transparent text-gray-500" onclick="showOnboardingTab('join')">
+                    <i data-feather="log-in" class="h-5 w-5 mr-2 inline"></i> Entrar com Código
+                </button>
             </div>
-            <form id="createTeamForm" class="auth-form">
-                <div class="form-group mb-4">
-                    <label for="teamName" class="font-semibold text-gray-700">Qual o nome do seu time?</label>
-                    <input type="text" id="teamName" placeholder="Ex: Time de Marketing, Projeto Alpha" required class="w-full">
+
+            <div class="p-8">
+                <!-- Conteúdo da Aba 1: Criar Time -->
+                <div id="tabContentCreate">
+                    <div class="auth-header" style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="color: var(--dark); font-size: 1.5rem; font-weight: 700;">Bem-vindo ao JProjects!</h2>
+                        <p style="color: var(--secondary); font-size: 1rem;">Para começar, crie seu primeiro time.</p>
+                    </div>
+                    <form id="createTeamForm" class="auth-form">
+                        <div class="form-group mb-4">
+                            <label for="teamName" class="font-semibold text-gray-700">Qual o nome do seu time?</label>
+                            <input type="text" id="teamName" placeholder="Ex: Time de Marketing, Projeto Alpha" required class="w-full">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="teamInvites" class="font-semibold text-gray-700">Convide sua equipe (Opcional):</label>
+                            <textarea id="teamInvites" rows="2" class="w-full" placeholder="Separe os e-mails por vírgula..."></textarea>
+                        </div>
+                        <div id="createTeamAlert" class="mt-4"></div>
+                        <div class="flex gap-4 mt-6">
+                            <button type="button" class="btn btn-danger flex-1" onclick="logout()">Sair</button>
+                            <button type="submit" class="btn btn-success flex-1">
+                                <i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group mb-4">
-                    <label for="teamInvites" class="font-semibold text-gray-700">Convide sua equipe (Opcional):</label>
-                    <textarea id="teamInvites" rows="3" class="w-full" placeholder="Separe os e-mails por vírgula..."></textarea>
+
+                <!-- Conteúdo da Aba 2: Entrar com Código -->
+                <div id="tabContentJoin" style="display: none;">
+                    <div class="auth-header" style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="color: var(--dark); font-size: 1.5rem; font-weight: 700;">Entrar em um Time</h2>
+                        <p style="color: var(--secondary); font-size: 1rem;">Peça o código de convite ao administrador do time.</p>
+                    </div>
+                    <form id="joinTeamForm" class="auth-form">
+                        <div class="form-group mb-4">
+                            <label for="joinTeamCode" class="font-semibold text-gray-700">Código de Convite (6 dígitos):</label>
+                            <input type="text" id="joinTeamCode" placeholder="Ex: A8B2K4" required class="w-full" style="text-transform: uppercase; letter-spacing: 0.1em; text-align: center; font-size: 1.2rem;">
+                        </div>
+                        <div id="joinTeamAlert" class="mt-4"></div>
+                        <div class="flex gap-4 mt-6">
+                            <button type="button" class="btn btn-danger flex-1" onclick="logout()">Sair</button>
+                            <button type="submit" class="btn btn-success flex-1">
+                                <i data-feather="log-in" class="h-4 w-4 mr-2"></i> Entrar no Time
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div id="createTeamAlert" class="mt-4"></div>
-                <div class="flex gap-4 mt-6">
-                    <button type="button" class="btn btn-danger flex-1" onclick="logout()">Sair</button>
-                    <button type="submit" class="btn btn-success flex-1">
-                         <i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Este é o container principal do seu sistema -->
-    <!-- MUDANÇA: 'mainSystem' agora é 'appShell' e usa 'flex-col' -->
     <div id="appShell" class="h-screen flex flex-col" style="display: none;"> <!-- Inicia escondido, JS mostra -->
 
-        <!-- 1. BARRA SUPERIOR (HEADER) - NOVO -->
+        <!-- 1. BARRA SUPERIOR (HEADER) - ATUALIZADO -->
         <header id="topBar" class="flex-shrink-0">
             <div class="flex items-center gap-4">
                 <button id="sidebarToggle" class="btn-icon">
@@ -56,11 +92,33 @@
                 </button>
                 <img src="icon.png" class="h-8 w-8" alt="Logo JP">
                 <div class="separator"></div>
-                <div class="flex flex-col">
-                    <span class="text-sm font-semibold text-white" id="topBarProjectName">Carregando...</span>
-                    <span class="text-xs text-gray-400">JProjects</span>
+                
+                <!-- NOVO: SELETOR DE TIMES -->
+                <div id="teamSwitcherDropdown" class="relative">
+                    <button id="teamSwitcherButton" class="flex items-center gap-2 rounded hover:bg-gray-700 p-2">
+                        <span class="text-sm font-semibold text-white" id="topBarProjectName">Carregando...</span>
+                        <i data-feather="chevron-down" class="h-4 w-4 text-gray-400"></i>
+                    </button>
+                    <!-- Menu Dropdown de Times -->
+                    <div id="teamSwitcherMenu" class="dropdown-menu" style="width: 280px; top: 100%; display: none; background: #1e293b;">
+                        <div class="p-2" id="teamListContainer">
+                            <!-- Times serão injetados aqui pelo script.js -->
+                            <div class="text-gray-400 text-sm p-2">Carregando times...</div>
+                        </div>
+                        <div class="border-t border-gray-600 p-2">
+                            <a href="#" class="dropdown-item" onclick="openOnboardingModal('create')">
+                                <i data-feather="plus-circle" class="h-4 w-4 mr-2"></i> Criar novo time
+                            </a>
+                            <a href="#" class="dropdown-item" onclick="openOnboardingModal('join')">
+                                <i data-feather="log-in" class="h-4 w-4 mr-2"></i> Entrar com código
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                <!-- FIM DO SELETOR DE TIMES -->
             </div>
+
+            <!-- Restante da Barra Superior -->
             <div class="flex-1 flex justify-center px-8">
                 <input type="text" id="topBarSearch" placeholder="Buscar tarefas..." class="w-full max-w-md">
             </div>
@@ -102,11 +160,9 @@
         <!-- Container para Sidebar + Main Content -->
         <div id="mainSystem" class="flex flex-1 overflow-hidden">
 
-            <!-- 2. BARRA LATERAL (SIDEBAR) - ATUALIZADA -->
+            <!-- 2. BARRA LATERAL (SIDEBAR) -->
             <aside class="sidebar">
-                <!-- Seção do Time (Removida - Movida para o TopBar) -->
-                
-                <nav class="p-2 pt-4"> <!-- Padding atualizado -->
+                <nav class="p-2 pt-4"> 
                     <a href="#dashboard" class="nav-item" title="Dashboard" onclick="showView('dashboardView', this)">
                         <i data-feather="trending-up" class="h-5 w-5 mr-3"></i> <span class="nav-text">Dashboard</span>
                     </a>
@@ -136,13 +192,12 @@
                 </nav>
             </aside>
 
-            <!-- 3. CONTEÚDO PRINCIPAL (MAIN) - ATUALIZADO -->
+            <!-- 3. CONTEÚDO PRINCIPAL (MAIN) -->
             <main class="main-content">
                 <div class="container mx-auto px-6 py-8">
 
                     <!-- #dashboardView -->
                     <div id="dashboardView" class="view-content active">
-                        <!-- Conteúdo do Dashboard (sem alterações) -->
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                             <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">0</span><span class="stat-label">Tarefas Ativas</span></div>
@@ -165,10 +220,6 @@
                     <div id="projetosView" class="view-content">
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Quadro Kanban</h1>
-                            <!-- Botão movido para o topBar, este fica escondido -->
-                            <button class="btn btn-success" onclick="openTaskModal(null)" style="display: none;">
-                                <i data-feather="plus" class="h-4 w-4 inline-block -mt-1 mr-1"></i> Nova Tarefa
-                            </button>
                         </div>
                         <div id="kanbanBoard" class="kanban-container">
                             <div class="loading col-span-3"><div class="spinner"></div> Carregando quadro...</div>
@@ -177,7 +228,6 @@
 
                     <!-- #timelineView -->
                     <div id="timelineView" class="view-content">
-                        <!-- Conteúdo (sem alterações) -->
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Timeline de Atividades Recentes</h1>
                         <p class="text-gray-600 mb-4">Veja as últimas criações e atualizações de tarefas.</p>
                         <div id="timelineContainer" class="space-y-4">
@@ -187,7 +237,6 @@
 
                     <!-- #calendarioView -->
                     <div id="calendarioView" class="view-content">
-                        <!-- Conteúdo (sem alterações) -->
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Calendário de Entregas</h1>
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <div id="calendarContainer">
@@ -198,7 +247,6 @@
 
                     <!-- #notasView -->
                     <div id="notasView" class="view-content">
-                        <!-- Conteúdo (sem alterações) -->
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Bloco de Notas</h1>
                         <div class="note-container">
                             <div id="noteList" class="note-list">
@@ -218,9 +266,22 @@
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
                             <button class="btn btn-success" onclick="openInviteModal()">
-                                <i data-feather="user-plus" class="h-4 w-4 inline-block -mt-1 mr-1"></i> Convidar Membro
+                                <i data-feather="user-plus" class="h-4 w-4 inline-block -mt-1 mr-1"></i> Convidar por E-mail
                             </button>
                         </div>
+                        
+                        <!-- NOVO: Cartão do Código de Convite -->
+                        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                            <h3 class="text-xl font-semibold mb-4">Código de Convite do Time</h3>
+                            <p class="text-gray-600 mb-3">Compartilhe este código para que novos membros possam entrar diretamente neste time.</p>
+                            <div class="flex items-center gap-4">
+                                <input type="text" id="teamInviteCodeDisplay" value="Carregando..." readonly class="w-40 text-center text-2xl font-bold tracking-widest bg-gray-100 border-2 border-dashed border-gray-300 p-2 rounded-lg">
+                                <button class="btn btn-secondary" onclick="copyInviteCode()">
+                                    <i data-feather="copy" class="h-4 w-4 mr-2"></i> Copiar Código
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="table-container bg-white rounded-lg shadow-md">
                             <table class="w-full">
                                 <thead>
@@ -233,7 +294,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="teamTableBody">
-                                    <tr><td colspan="5" class="loading"><div class="spinner"></div> Carregando membros...</td></tr>
+                                    <tr><td colspan="5" class="loading"><div class="spinner"></div> Carregando membros...</div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -241,7 +302,6 @@
 
                     <!-- #perfilView -->
                     <div id="perfilView" class="view-content">
-                        <!-- Conteúdo (sem alterações) -->
                          <h1 class="text-3xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
                         <div class="bg-white p-6 rounded-lg shadow-md max-w-3xl mx-auto">
                             <form id="perfilForm">
@@ -303,7 +363,7 @@
     <!-- MODAIS (Pop-ups) -->
     <!-- ====================================================== -->
   
-    <!-- #taskModal (Sem alterações) -->
+    <!-- #taskModal -->
     <div id="taskModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="flex justify-between items-center mb-4">
@@ -353,11 +413,11 @@
         </div>
     </div>
 
-    <!-- #inviteModal (Sem alterações) -->
+    <!-- #inviteModal -->
     <div id="inviteModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-800">Convidar para o Time</h3>
+                <h3 class="text-xl font-semibold text-gray-800">Convidar por E-mail</h3>
                  <button class="text-gray-500 hover:text-red-600" onclick="closeModal('inviteModal')">
                     <i data-feather="x" class="h-6 w-6"></i>
                 </button>
@@ -374,6 +434,7 @@
                         <option value="admin">Admin (Pode gerenciar time e projetos)</option>
                     </select>
                 </div>
+                <p class="text-sm text-gray-500">Isso enviará um convite por e-mail. Para adicionar um membro instantaneamente, use o <a href="#" onclick="closeModal('inviteModal'); showView('timeView', document.querySelector('a[href=\'#time\']'));" class="text-blue-600 underline">Código de Convite</a>.</p>
                 <div id="inviteAlert" class="mt-4"></div>
                 <div class="flex gap-4 mt-6 justify-end">
                      <button type="button" class="btn btn-secondary" onclick="closeModal('inviteModal')">Cancelar</button>
