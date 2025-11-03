@@ -558,7 +558,8 @@ async function loadActiveProject() {
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
-        const projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
+       let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
+        if (projetos) projetos = projetos.filter(Boolean); // Filtra valores nulos retornados pelo RLS
 
        if (!projetos || projetos.length === 0 || !projetos[0]) { // <-- MUDANÇA AQUI
             console.warn("Nenhum projeto encontrado ou projeto inválido. Criando 'Meu Primeiro Quadro'...");
