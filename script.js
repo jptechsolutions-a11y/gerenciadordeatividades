@@ -674,23 +674,43 @@ async function createDefaultColumns(projectId) {
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
     
+    // VALIDAÇÃO CRÍTICA NO INÍCIO
+    if (!currentProject || !currentProject.id) {
+        console.error("❌ loadDashboardView: currentProject inválido:", currentProject);
+        view.innerHTML = `
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+            <div class="alert alert-error">
+                <p>Erro: Projeto não carregado corretamente.</p>
+                <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+            </div>`;
+        return;
+    }
+    
+    if (!currentColumns || currentColumns.length === 0) {
+        console.error("❌ loadDashboardView: Colunas não carregadas");
+        view.innerHTML = `
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+            <div class="alert alert-error">
+                <p>Erro: Colunas não carregadas.</p>
+                <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+            </div>`;
+        return;
+    }
+    
+    console.log("📊 Carregando dashboard para projeto:", currentProject.nome);
+    
     // Destrói gráficos ANTES de recarregar o HTML
-   if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
-   }
-    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { // <-- CORRIGIDO
-        chartInstances.statusChart.destroy(); // <-- CORRIGIDO
+    }
+    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
+        chartInstances.statusChart.destroy();
         chartInstances.statusChart = null;
     }
 
     view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                       <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
-
-    if (!currentProject || currentColumns.length === 0) {
-         view.innerHTML = '<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1><div class="alert alert-error">Não foi possível carregar o dashboard. Projeto ou colunas não encontrados.</div>';
-         return;
-    }
 
     view.innerHTML = `
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
@@ -732,21 +752,98 @@ async function loadDashboardView() {
 
         const today = new Date().toISOString().split('T')[0];
         let dueTasks = 0;
-         if (activeColumnIds.length > 0) {
+        if (activeColumnIds.length > 0) {
             const { count } = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=eq.${today}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
             dueTasks = count;
-         }
+        }
 
         document.getElementById('dashTotalTasks').textContent = totalTasks || 0;
         document.getElementById('dashCompletedTasks').textContent = completedTasks || 0;
         document.getElementById('dashDueTasks').textContent = dueTasks || 0;
     } catch (error) {
-        console.error("Erro ao carregar stats do dashboard:", error);
+        console.error("❌ Erro ao carregar stats do dashboard:", error);
     }
 
     renderStatusChart();
     renderGanttChart();
 }
+    console.log("🔄 Carregando projeto ativo...");
+    currentProject = null;
+    currentColumns = [];
+    currentGroups = [];
+    
+    const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
+
+    try {
+        // Tenta buscar projetos existentes
+        let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
+        
+        // CORREÇÃO: Validação mais robusta
+        const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
+
+        if (projetosValidos.length === 0) {
+            console.warn("⚠️ Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
+            
+            // Cria projeto padrão
+            const newProject = {
+                nome: 'Meu Primeiro Quadro',
+                created_by: currentUser.id,
+                org_id: currentOrg?.id || null
+            };
+            
+            const createResponse = await supabaseRequest('projetos', 'POST', newProject);
+            
+            // Valida resposta da criação
+            if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
+                console.error("❌ Resposta inválida ao criar projeto:", createResponse);
+                throw new Error("Falha ao criar projeto padrão. Verifique as permissões RLS da tabela 'projetos'.");
+            }
+            
+            currentProject = createResponse[0];
+            console.log("✅ Projeto criado com sucesso:", currentProject);
+        } else {
+            currentProject = projetosValidos[0];
+            console.log("✅ Projeto encontrado:", currentProject);
+        }
+
+        // VERIFICAÇÃO FINAL DE SEGURANÇA
+        if (!currentProject || !currentProject.id) {
+            console.error("❌ Erro fatal: currentProject inválido:", currentProject);
+            throw new Error("Não foi possível carregar ou criar um projeto válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'.");
+        }
+
+        console.log("✅ Projeto ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
+
+        // Carrega Colunas (Status)
+        let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+        currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
+
+        if (currentColumns.length === 0) {
+            console.warn("⚠️ Nenhuma coluna encontrada. Criando colunas padrão...");
+            await createDefaultColumns(currentProject.id);
+            
+            // Busca novamente
+            cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+            currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
+            
+            if (currentColumns.length === 0) {
+                throw new Error("Falha ao criar ou buscar colunas padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
+            }
+        }
+        
+        console.log("✅ Colunas carregadas:", currentColumns.length);
+
+        // Carrega Grupos de Tarefas
+        let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+        currentGroups = Array.isArray(groups) ? groups.filter(g => g && g.id) : [];
+        
+        console.log("✅ Grupos carregados:", currentGroups.length);
+
+    } catch (error) {
+        console.error("❌ Erro fatal ao carregar projeto/colunas:", error);
+        throw error;
+    }
+} // <--- ESTE FECHAMENTO ESTAVA FALTANDO!
 
 async function renderStatusChart() {
     
@@ -2145,4 +2242,91 @@ function toggleGroup(groupId) {
         taskRows.forEach(row => row.style.display = 'table-row');
         if(addRow) addRow.style.display = 'table-row';
     }
+}
+
+// Mostra o sistema principal (App)
+async function showMainSystem() {
+    document.getElementById('appShell').style.display = 'flex';
+    document.body.classList.add('system-active');
+
+    // Popula a nova barra superior
+    document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
+    document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
+    document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
+    document.getElementById('dropdownUserEmail').textContent = currentUser.email || '...';
+    
+    // Popula o seletor de times
+    populateTeamSelector();
+    updateActiveTeamUI();
+
+    try {
+        console.log("🔄 Carregando projeto ativo...");
+        await loadActiveProject();
+        
+        // Validação final antes de mostrar o dashboard
+        if (!currentProject || !currentProject.id) {
+            throw new Error("Projeto inválido após carregamento");
+        }
+        if (!currentColumns || currentColumns.length === 0) {
+            throw new Error("Nenhuma coluna carregada");
+        }
+        
+        console.log("✅ Projeto carregado com sucesso!");
+        console.log("   - Projeto ID:", currentProject.id);
+        console.log("   - Colunas:", currentColumns.length);
+        console.log("   - Grupos:", currentGroups.length);
+        
+        // Só mostra o dashboard se TUDO estiver OK
+        showView('dashboardView', document.querySelector('a[href="#dashboard"]')); 
+        feather.replace();
+        
+    } catch (err) {
+        console.error("❌ Erro ao carregar projeto ativo:", err);
+        
+        // Mostra erro amigável na tela
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = `
+            <div class="container mx-auto px-6 py-8">
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <i data-feather="alert-circle" class="h-6 w-6 text-red-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-red-900">Erro na Inicialização</h2>
+                    </div>
+                    <p class="text-red-700 mb-4">${escapeHTML(err.message)}</p>
+                    <div class="bg-white p-4 rounded border border-red-200 mb-4">
+                        <h3 class="font-semibold text-red-900 mb-2">Possíveis causas:</h3>
+                        <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+                            <li>Políticas RLS (Row Level Security) não configuradas corretamente no Supabase</li>
+                            <li>Usuário sem permissão para criar ou visualizar projetos</li>
+                            <li>Problema de conexão com o banco de dados</li>
+                        </ul>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="btn btn-danger" onclick="logout()">
+                            <i data-feather="log-out" class="h-4 w-4 mr-2"></i>
+                            Sair e Tentar Novamente
+                        </button>
+                        <button class="btn btn-secondary" onclick="location.reload()">
+                            <i data-feather="refresh-cw" class="h-4 w-4 mr-2"></i>
+                            Recarregar Página
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        feather.replace();
+    }
+}
+async function createDefaultColumns(projectId) {
+     const defaultCols = [
+          { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
+          { projeto_id: projectId, nome: 'Em Andamento', ordem: 1 },
+          { projeto_id: projectId, nome: 'Concluído', ordem: 2 }
+     ];
+     try {
+          await supabaseRequest('colunas_kanban', 'POST', defaultCols);
+          console.log("✅ Colunas padrão criadas");
+     } catch (error) {
+          console.error("❌ Erro ao criar colunas padrão:", error);
+     }
 }
