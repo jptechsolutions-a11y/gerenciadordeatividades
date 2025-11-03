@@ -16,9 +16,6 @@
 </head>
 <body class="bg-gray-100">
 
-    <!-- MODAL DE CRIAÇÃO DE TIME (Fica sobre a tela, antes do app principal) -->
-    <!-- CORREÇÃO: Removido o modal de 'Criar Time' daqui. O JS vai decidir entre 'Criar Time' e 'Entrar com Código' -->
-
     <!-- ====================================================== -->
     <!-- MODAL DE ONBOARDING (CRIAR OU ENTRAR) - NOVO -->
     <!-- ====================================================== -->
@@ -37,7 +34,7 @@
 
             <!-- Conteúdo das Abas -->
             <div class="p-8">
-                <!-- Aba 1: Criar Time (Antigo modal 'createTeamCard') -->
+                <!-- Aba 1: Criar Time -->
                 <div id="onboardingTabCriar">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
@@ -48,10 +45,6 @@
                         <div class="form-group mb-4">
                             <label for="teamName" class="font-semibold text-gray-700">Qual o nome do seu time?</label>
                             <input type="text" id="teamName" placeholder="Ex: Time de Marketing, Projeto Alpha" required class="w-full">
-                        </div>
-                        <div class="form-group mb-4">
-                            <label for="teamInvites" class="font-semibold text-gray-700">Convide sua equipe (Opcional):</label>
-                            <textarea id="teamInvites" rows="2" class="w-full" placeholder="Separe os e-mails por vírgula..."></textarea>
                         </div>
                         <div id="createTeamAlert" class="mt-4"></div>
                         <div class="flex gap-4 mt-6">
@@ -91,7 +84,6 @@
 
 
     <!-- Este é o container principal do seu sistema -->
-    <!-- CORREÇÃO: 'appShell' é o container GERAL (com topbar) -->
     <div id="appShell" class="h-screen flex flex-col" style="display: none;"> <!-- Inicia escondido, JS mostra -->
 
         <!-- 1. BARRA SUPERIOR (HEADER) - ATUALIZADO -->
@@ -169,10 +161,10 @@
         </header>
 
         <!-- Container para Sidebar + Main Content -->
-        <!-- CORREÇÃO: ID 'mainSystem' RESTAURADO AQUI. Este é o container que o seu JS antigo esperava. -->
+        <!-- CORREÇÃO: ID 'mainSystem' RESTAURADO -->
         <div id="mainSystem" class="flex flex-1 overflow-hidden">
 
-            <!-- 2. BARRA LATERAL (SIDEBAR) - ATUALIZADA -->
+            <!-- 2. BARRA LATERAL (SIDEBAR) -->
             <aside class="sidebar">
                 <nav class="p-2 pt-4">
                     <a href="#dashboard" class="nav-item" title="Dashboard" onclick="showView('dashboardView', this)">
@@ -207,13 +199,12 @@
                 </nav>
             </aside>
 
-            <!-- 3. CONTEÚDO PRINCIPAL (MAIN) - ATUALIZADO -->
-            <!-- CORREÇÃO: ID 'mainContent' RESTAURADO AQUI. Este é o container que o seu JS antigo esperava. -->
+            <!-- 3. CONTEÚDO PRINCIPAL (MAIN) -->
+            <!-- CORREÇÃO: ID 'mainContent' RESTAURADO -->
             <main id="mainContent" class="main-content">
                 <div class="container mx-auto px-6 py-8">
 
                     <!-- #dashboardView -->
-                    <!-- CORREÇÃO: ID 'dashboardView' RESTAURADO -->
                     <div id="dashboardView" class="view-content active">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -234,7 +225,6 @@
                     </div>
 
                     <!-- #projetosView -->
-                    <!-- CORREÇÃO: ID 'projetosView' RESTAURADO -->
                     <div id="projetosView" class="view-content">
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Quadro Kanban</h1>
@@ -245,7 +235,6 @@
                     </div>
 
                     <!-- #listView (NOVA VIEW) -->
-                    <!-- CORREÇÃO: ID 'listView' RESTAURADO -->
                     <div id="listView" class="view-content">
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Lista de Tarefas</h1>
@@ -256,7 +245,6 @@
                     </div>
 
                     <!-- #timelineView -->
-                    <!-- CORREÇÃO: ID 'timelineView' RESTAURADO -->
                     <div id="timelineView" class="view-content">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Timeline de Atividades Recentes</h1>
                         <p class="text-gray-600 mb-4">Veja as últimas criações e atualizações de tarefas.</p>
@@ -266,7 +254,6 @@
                     </div>
 
                     <!-- #calendarioView -->
-                    <!-- CORREÇÃO: ID 'calendarioView' RESTAURADO -->
                     <div id="calendarioView" class="view-content">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Calendário de Entregas</h1>
                         <div class="bg-white p-6 rounded-lg shadow-md">
@@ -277,7 +264,6 @@
                     </div>
 
                     <!-- #notasView -->
-                    <!-- CORREÇÃO: ID 'notasView' RESTAURADO -->
                     <div id="notasView" class="view-content">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Bloco de Notas</h1>
                         <div class="note-container">
@@ -294,17 +280,19 @@
                     </div>
 
                     <!-- #timeView -->
-                    <!-- CORREÇÃO: ID 'timeView' RESTAURADO -->
                     <div id="timeView" class="view-content">
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
                             <div class="flex gap-2">
-                                <button class="btn btn-secondary" id="teamInviteCodeButton" onclick="copyInviteCode()">
-                                    <i data-feather="copy" class="h-4 w-4 mr-2"></i> 
-                                    <span id="teamInviteCodeText"></span>
+                                <!-- NOVO: Input + Botão para Código de Convite -->
+                                <div class="form-group flex-1">
+                                    <input type="text" id="teamInviteCodeDisplay" class="w-full bg-gray-100" value="Carregando..." readonly style="text-transform: uppercase; letter-spacing: 1px; text-align: center; font-weight: 600;">
+                                </div>
+                                <button class="btn btn-secondary" onclick="copyInviteCode()" title="Copiar Código">
+                                    <i data-feather="copy" class="h-4 w-4"></i>
                                 </button>
-                                <button class="btn btn-success" onclick="openInviteModal()">
-                                    <i data-feather="user-plus" class="h-4 w-4 inline-block -mt-1 mr-1"></i> Convidar Membro
+                                <button class="btn btn-success" onclick="openInviteModal()" title="Convidar por E-mail">
+                                    <i data-feather="user-plus" class="h-4 w-4"></i>
                                 </button>
                             </div>
                         </div>
@@ -327,7 +315,6 @@
                     </div>
 
                     <!-- #perfilView -->
-                    <!-- CORREÇÃO: ID 'perfilView' RESTAURADO -->
                     <div id="perfilView" class="view-content">
                          <h1 class="text-3xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
                         <div class="bg-white p-6 rounded-lg shadow-md max-w-3xl mx-auto">
