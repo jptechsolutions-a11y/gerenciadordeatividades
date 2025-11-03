@@ -3303,4 +3303,60 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     text-align: right;
 }
 
+/* ... existing code ... */
+.task-list-table th.esforco-header {
+    text-align: right;
+}
+
+/* ========================================
+   CORREÇÃO DROPDOWNS (TOPBAR)
+   ======================================== */
+
+/* O dropdown-menu (perfil e seletor de time) */
+.dropdown-menu {
+    display: none; /* Escondido por padrão */
+    position: absolute;
+    top: 120%; /* Abaixo do botão */
+    right: 0;
+    width: 240px;
+    background: #1e293b; /* Cor de fundo (slate-800) */
+    border: 1px solid #334155; /* Borda (slate-700) */
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    z-index: 1010;
+    overflow: hidden;
+    animation: popIn 0.2s ease-out; /* Animação sutil */
+}
+
+/* Seletor de time (que é a esquerda) */
+#teamSelectorMenu {
+    right: auto;
+    left: 0;
+    width: 280px;
+}
+
+/* ESTA É A REGRA FALTANTE: */
+/* Mostra o menu quando ele (ou seu pai) tem a classe .open */
+.dropdown-menu.open, .relative.open .dropdown-menu {
+    display: block;
+}
+
+/* Links dentro do dropdown */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem; /* 12px 16px */
+    font-size: 0.9rem;
+    color: #e2e8f0; /* slate-200 */
+    transition: background-color 0.2s ease;
+    text-decoration: none; /* Garante que não seja sublinhado */
+}
+.dropdown-item:hover, .dropdown-item.active {
+    background-color: #334155; /* slate-700 */
+    color: white;
+}
+.dropdown-item .feather {
+    color: #94a3b8; /* slate-400 */
+    margin-right: 0.75rem;
+}
 
