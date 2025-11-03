@@ -19,15 +19,18 @@
     <!-- ====================================================== -->
     <!-- MODAL DE ONBOARDING (CRIAR OU ENTRAR) - NOVO -->
     <!-- ====================================================== -->
-    <div id="onboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+    <!-- CORREÇÃO DE ID: Mudado de 'onboardingModal' para 'teamOnboardingModal' para bater com o JS -->
+    <div id="teamOnboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
         <div class="modal-content" style="max-width: 550px; width: 100%; padding: 0; overflow: hidden;">
             
             <!-- Abas de Navegação -->
             <div class="flex border-b border-gray-200">
-                <button id="tabCriarTime" class="flex-1 p-4 font-semibold text-center text-blue-600 border-b-2 border-blue-600" onclick="showOnboardingTab('criar')">
+                <!-- CORREÇÃO DE ID: Mudado de 'tabCriarTime' para 'tabCreateTeam' -->
+                <button id="tabCreateTeam" class="flex-1 p-4 font-semibold text-center text-blue-600 border-b-2 border-blue-600" onclick="showOnboardingTab('create')">
                     <i data-feather="plus-circle" class="h-4 w-4 inline-block mr-2"></i> Criar Novo Time
                 </button>
-                <button id="tabEntrarTime" class="flex-1 p-4 font-medium text-center text-gray-500 hover:bg-gray-50" onclick="showOnboardingTab('entrar')">
+                <!-- CORREÇÃO DE ID: Mudado de 'tabEntrarTime' para 'tabJoinTeam' -->
+                <button id="tabJoinTeam" class="flex-1 p-4 font-medium text-center text-gray-500 hover:bg-gray-50" onclick="showOnboardingTab('join')">
                     <i data-feather="log-in" class="h-4 w-4 inline-block mr-2"></i> Entrar com Código
                 </button>
             </div>
@@ -35,7 +38,8 @@
             <!-- Conteúdo das Abas -->
             <div class="p-8">
                 <!-- Aba 1: Criar Time -->
-                <div id="onboardingTabCriar">
+                <!-- CORREÇÃO DE ID: Mudado de 'onboardingTabCriar' para 'panelCreateTeam' -->
+                <div id="panelCreateTeam">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
                         <h2 style="color: var(--dark); font-size: 1.5rem; font-weight: 700;">Bem-vindo ao JProjects!</h2>
@@ -57,7 +61,8 @@
                 </div>
 
                 <!-- Aba 2: Entrar com Código -->
-                <div id="onboardingTabEntrar" style="display: none;">
+                <!-- CORREÇÃO DE ID: Mudado de 'onboardingTabEntrar' para 'panelJoinTeam' -->
+                <div id="panelJoinTeam" style="display: none;">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
                         <h2 style="color: var(--dark); font-size: 1.5rem; font-weight: 700;">Entrar em um Time</h2>
@@ -96,25 +101,29 @@
                 <div class="separator"></div>
 
                 <!-- NOVO: Seletor de Times (Dropdown) -->
-                <div id="teamSelectorDropdown" class="relative">
+                <!-- CORREÇÃO DE ID: Mudado de 'teamSelectorDropdown' para 'teamSelector' -->
+                <div id="teamSelector" class="relative">
                     <button id="teamSelectorButton" class="flex items-center gap-2 rounded-md hover:bg-gray-700 p-2 transition-colors">
                         <div class="flex flex-col text-left">
-                            <span class="text-sm font-semibold text-white" id="topBarOrgName">Carregando...</span>
+                            <!-- CORREÇÃO DE ID: Mudado de 'topBarOrgName' para 'topBarProjectName' (para bater com o JS antigo) -->
+                            <span class="text-sm font-semibold text-white" id="topBarProjectName">Carregando...</span>
                             <span class="text-xs text-gray-400">JProjects</span>
                         </div>
                         <i data-feather="chevrons-up-down" class="h-4 w-4 text-gray-400"></i>
                     </button>
                     <!-- Menu Dropdown de Times -->
                     <div id="teamSelectorMenu" class="dropdown-menu" style="width: 280px; top: 110%; background: #1e293b;">
-                        <div id="teamListContainer" class="max-h-60 overflow-y-auto">
+                        <!-- CORREÇÃO DE ID: Mudado de 'teamListContainer' para 'teamSelectorList' -->
+                        <div id="teamSelectorList" class="max-h-60 overflow-y-auto">
                             <!-- Times serão preenchidos pelo JS -->
                             <div class="p-4 text-center text-gray-400 text-sm">Carregando times...</div>
                         </div>
                         <div class="border-t border-gray-600 p-2">
-                             <a href="#" class="dropdown-item" onclick="openOnboardingModal('criar')">
+                             <!-- CORREÇÃO: JS usa 'openCreateTeamModal' e 'openJoinTeamModal' -->
+                             <a href="#" class="dropdown-item" onclick="openCreateTeamModal()">
                                 <i data-feather="plus-circle" class="h-4 w-4 mr-2"></i> Criar Novo Time
                             </a>
-                             <a href="#" class="dropdown-item" onclick="openOnboardingModal('entrar')">
+                             <a href="#" class="dropdown-item" onclick="openJoinTeamModal()">
                                 <i data-feather="log-in" class="h-4 w-4 mr-2"></i> Entrar com Código
                             </a>
                         </div>
@@ -161,7 +170,7 @@
         </header>
 
         <!-- Container para Sidebar + Main Content -->
-        <!-- CORREÇÃO: ID 'mainSystem' RESTAURADO -->
+        <!-- ID 'mainSystem' RESTAURADO -->
         <div id="mainSystem" class="flex flex-1 overflow-hidden">
 
             <!-- 2. BARRA LATERAL (SIDEBAR) -->
@@ -173,6 +182,7 @@
                     <a href="#projetos" class="nav-item" title="Projetos (Kanban)" onclick="showView('projetosView', this)">
                         <i data-feather="trello" class="h-5 w-5 mr-3"></i> <span class="nav-text">Projetos (Kanban)</span>
                     </a>
+                    <!-- CORREÇÃO: href '#lista' deve bater com o JS ('listView') -->
                     <a href="#lista" class="nav-item" title="Lista de Tarefas" onclick="showView('listView', this)">
                         <i data-feather="list" class="h-5 w-5 mr-3"></i> <span class="nav-text">Lista</span>
                     </a>
@@ -200,7 +210,7 @@
             </aside>
 
             <!-- 3. CONTEÚDO PRINCIPAL (MAIN) -->
-            <!-- CORREÇÃO: ID 'mainContent' RESTAURADO -->
+            <!-- ID 'mainContent' RESTAURADO -->
             <main id="mainContent" class="main-content">
                 <div class="container mx-auto px-6 py-8">
 
@@ -285,7 +295,7 @@
                             <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
                             <div class="flex gap-2">
                                 <!-- NOVO: Input + Botão para Código de Convite -->
-                                <div class="form-group flex-1">
+                                <div class="form-group flex-1" style="margin-bottom: 0;">
                                     <input type="text" id="teamInviteCodeDisplay" class="w-full bg-gray-100" value="Carregando..." readonly style="text-transform: uppercase; letter-spacing: 1px; text-align: center; font-weight: 600;">
                                 </div>
                                 <button class="btn btn-secondary" onclick="copyInviteCode()" title="Copiar Código">
