@@ -388,122 +388,6 @@ async function handleJoinTeamFormSubmit(event) {
     }
 }
 
-
-// Mostra o sistema principal (App)
-function showMainSystem() {
-    document.getElementById('appShell').style.display = 'flex';
-    document.body.classList.add('system-active');
-
-    // Popula a nova barra superior
-    document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
-    document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('dropdownUserEmail').textContent = currentUser.email || '...';
-    
-    // Popula o seletor de times
-    populateTeamSelector();
-    updateActiveTeamUI();
-
-   // Vamos transformar o final desta função em async para esperar o projeto
-   (async () => {
-        try {
-            await loadActiveProject();
-            // Só mostra o dashboard se o loadActiveProject funcionar
-            showView('dashboardView', document.querySelector('a[href="#dashboard"]')); 
-            feather.replace();
-        } catch (err) {
-            console.error("Erro ao carregar projeto ativo:", err);
-            showNotification(`Erro fatal ao carregar dados iniciais: ${err.message}.`, "error", 10000);
-            
-            // NÃO chame showView aqui. Você pode, opcionalmente,
-            // mostrar uma mensagem de erro em tela cheia.
-            // Por exemplo:
-            document.getElementById('appShell').innerHTML = `<div class="alert alert-error m-8">
-                <h2>Erro Crítico na Inicialização</h2>
-                <p>Não foi possível carregar os dados do projeto (${err.message}).</p>
-                <p>Verifique suas permissões (RLS) no Supabase e atualize a página.</p>
-                <button class="btn btn-danger mt-4" onclick="logout()">Sair</button>
-            </div>`;
-        }
-    })();
-}
-
-// NOVO: Atualiza a UI do seletor de time
-function updateActiveTeamUI() {
-    if (currentOrg) {
-        document.getElementById('topBarProjectName').textContent = currentOrg.nome || 'Projeto Pessoal';
-    } else {
-        document.getElementById('topBarProjectName').textContent = 'Espaço Pessoal';
-    }
-    // Atualiza o menu dropdown
-    document.querySelectorAll('#teamSelectorList .team-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.orgId === currentOrg?.id) {
-            item.classList.add('active');
-        }
-    });
-}
-
-// NOVO: Popula o dropdown do seletor de times
-function populateTeamSelector() {
-    const list = document.getElementById('teamSelectorList');
-    if (!list) return;
-
-    list.innerHTML = ''; // Limpa
-    
-    // Adiciona todos os times do usuário
-    currentUser.organizacoes.forEach(org => {
-        const item = document.createElement('a');
-        item.href = '#';
-        item.className = 'dropdown-item team-item';
-        item.dataset.orgId = org.id;
-        item.innerHTML = `<i data-feather="users" class="h-4 w-4 mr-2"></i> ${escapeHTML(org.nome)}`;
-        if (org.id === currentOrg?.id) {
-            item.classList.add('active');
-        }
-        item.onclick = (e) => {
-            e.preventDefault();
-            switchActiveTeam(org.id);
-        };
-        list.appendChild(item);
-    });
-
-    feather.replace();
-}
-
-// NOVO: Troca o time ativo
-async function switchActiveTeam(orgId) {
-    const newOrg = currentUser.organizacoes.find(org => org.id === orgId);
-    if (!newOrg || newOrg.id === currentOrg?.id) {
-        // Fecha o dropdown se clicar no mesmo time
-        document.getElementById('teamSelectorMenu').classList.remove('open');
-        document.getElementById('teamSelector').classList.remove('open');
-        return;
-    }
-
-    currentOrg = newOrg;
-    localStorage.setItem('current_org_id', currentOrg.id);
-    
-    console.log(`Trocando para o time: ${currentOrg.nome}`);
-    
-    // Atualiza a UI imediatamente
-    updateActiveTeamUI();
-    document.getElementById('teamSelectorMenu').classList.remove('open');
-    document.getElementById('teamSelector').classList.remove('open');
-
-    // Recarrega os dados do dashboard/kanban para o novo time
-    try {
-        await loadActiveProject(); // Carrega o projeto principal DESTE time
-        // Recarrega a view atual com os dados do novo time
-        const activeView = document.querySelector('.view-content.active')?.id || 'dashboardView';
-        const activeLink = document.querySelector(`.sidebar .nav-item[href="#${activeView.replace('View', '')}"]`);
-        showView(activeView, activeLink);
-    } catch (err) {
-        console.error("Erro ao trocar de time:", err);
-        showNotification(`Erro ao carregar dados do time: ${err.message}`, 'error');
-    }
-}
-
 // ========================================
 // 4. NAVEGAÇÃO E UI (Restante do seu código)
 // ========================================
@@ -559,7 +443,10 @@ function showNotification(message, type = 'info', timeout = 4000) {
 // ========================================
 // 5. Carregar Projeto Ativo e Colunas
 // ========================================
-// Substitua a função loadActiveProject completa por esta versão corrigida:
+
+// (PRIMEIRA DEFINIÇÃO DE `loadActiveProject` REMOVIDA)
+
+// (PRIMEIRA DEFINIÇÃO DE `loadDashboardView` REMOVIDA)
 
 async function loadActiveProject() {
     console.log("🔄 Carregando projeto ativo...");
@@ -638,9 +525,8 @@ async function loadActiveProject() {
         console.error("❌ Erro fatal ao carregar projeto/colunas:", error);
         throw error;
     }
-} // <--- ESTE FECHAMENTO ESTAVA FALTANDO!
+} // <--- CHAVE DE FECHAMENTO ADICIONADA AQUI
 
-// AGORA SIM, define createDefaultColumns
 async function createDefaultColumns(projectId) {
      const defaultCols = [
           { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
@@ -652,19 +538,6 @@ async function createDefaultColumns(projectId) {
           console.log("✅ Colunas padrão criadas");
      } catch (error) {
           console.error("❌ Erro ao criar colunas padrão:", error);
-     }
-}
-        
-async function createDefaultColumns(projectId) {
-     const defaultCols = [
-          { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
-          { projeto_id: projectId, nome: 'Em Andamento', ordem: 1 },
-          { projeto_id: projectId, nome: 'Concluído', ordem: 2 }
-     ];
-     try {
-          await supabaseRequest('colunas_kanban', 'POST', defaultCols);
-     } catch (error) {
-          console.error("Erro ao criar colunas padrão:", error);
      }
 }
 
@@ -709,8 +582,7 @@ async function loadDashboardView() {
         chartInstances.statusChart = null;
     }
 
-    view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
-                      <div class="loading"><div class="spinner"></div> Carregando estatísticas...</div>`;
+    // (REMOVIDA a definição incompleta de `loadDashboardView`)
 
     view.innerHTML = `
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
@@ -767,84 +639,7 @@ async function loadDashboardView() {
     renderStatusChart();
     renderGanttChart();
 }
-    console.log("🔄 Carregando projeto ativo...");
-    currentProject = null;
-    currentColumns = [];
-    currentGroups = [];
     
-    const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
-
-    try {
-        // Tenta buscar projetos existentes
-        let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
-        
-        // CORREÇÃO: Validação mais robusta
-        const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
-
-        if (projetosValidos.length === 0) {
-            console.warn("⚠️ Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
-            
-            // Cria projeto padrão
-            const newProject = {
-                nome: 'Meu Primeiro Quadro',
-                created_by: currentUser.id,
-                org_id: currentOrg?.id || null
-            };
-            
-            const createResponse = await supabaseRequest('projetos', 'POST', newProject);
-            
-            // Valida resposta da criação
-            if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
-                console.error("❌ Resposta inválida ao criar projeto:", createResponse);
-                throw new Error("Falha ao criar projeto padrão. Verifique as permissões RLS da tabela 'projetos'.");
-            }
-            
-            currentProject = createResponse[0];
-            console.log("✅ Projeto criado com sucesso:", currentProject);
-        } else {
-            currentProject = projetosValidos[0];
-            console.log("✅ Projeto encontrado:", currentProject);
-        }
-
-        // VERIFICAÇÃO FINAL DE SEGURANÇA
-        if (!currentProject || !currentProject.id) {
-            console.error("❌ Erro fatal: currentProject inválido:", currentProject);
-            throw new Error("Não foi possível carregar ou criar um projeto válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'.");
-        }
-
-        console.log("✅ Projeto ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
-
-        // Carrega Colunas (Status)
-        let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-        currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
-
-        if (currentColumns.length === 0) {
-            console.warn("⚠️ Nenhuma coluna encontrada. Criando colunas padrão...");
-            await createDefaultColumns(currentProject.id);
-            
-            // Busca novamente
-            cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-            currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
-            
-            if (currentColumns.length === 0) {
-                throw new Error("Falha ao criar ou buscar colunas padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
-            }
-        }
-        
-        console.log("✅ Colunas carregadas:", currentColumns.length);
-
-        // Carrega Grupos de Tarefas
-        let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-        currentGroups = Array.isArray(groups) ? groups.filter(g => g && g.id) : [];
-        
-        console.log("✅ Grupos carregados:", currentGroups.length);
-
-    } catch (error) {
-        console.error("❌ Erro fatal ao carregar projeto/colunas:", error);
-        throw error;
-    }
-} // <--- ESTE FECHAMENTO ESTAVA FALTANDO!
-
 async function renderStatusChart() {
     
     if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
@@ -2244,6 +2039,8 @@ function toggleGroup(groupId) {
     }
 }
 
+// (PRIMEIRA DEFINIÇÃO DE `showMainSystem` REMOVIDA)
+
 // Mostra o sistema principal (App)
 async function showMainSystem() {
     document.getElementById('appShell').style.display = 'flex';
@@ -2317,16 +2114,5 @@ async function showMainSystem() {
         feather.replace();
     }
 }
-async function createDefaultColumns(projectId) {
-     const defaultCols = [
-          { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
-          { projeto_id: projectId, nome: 'Em Andamento', ordem: 1 },
-          { projeto_id: projectId, nome: 'Concluído', ordem: 2 }
-     ];
-     try {
-          await supabaseRequest('colunas_kanban', 'POST', defaultCols);
-          console.log("✅ Colunas padrão criadas");
-     } catch (error) {
-          console.error("❌ Erro ao criar colunas padrão:", error);
-     }
-}
+
+// (DUPLICATA DE `createDefaultColumns` REMOVIDA)
