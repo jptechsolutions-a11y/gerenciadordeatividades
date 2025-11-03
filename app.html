@@ -162,12 +162,15 @@
 
             <!-- 2. BARRA LATERAL (SIDEBAR) -->
             <aside class="sidebar">
-                <nav class="p-2 pt-4"> 
+                <nav class="p-2 pt-4"> <!-- Padding atualizado -->
                     <a href="#dashboard" class="nav-item" title="Dashboard" onclick="showView('dashboardView', this)">
                         <i data-feather="trending-up" class="h-5 w-5 mr-3"></i> <span class="nav-text">Dashboard</span>
                     </a>
                     <a href="#projetos" class="nav-item" title="Projetos (Kanban)" onclick="showView('projetosView', this)">
                         <i data-feather="trello" class="h-5 w-5 mr-3"></i> <span class="nav-text">Projetos (Kanban)</span>
+                    </a>
+                    <a href="#lista" class="nav-item" title="Lista de Tarefas" onclick="showView('listView', this)">
+                        <i data-feather="list" class="h-5 w-5 mr-3"></i> <span class="nav-text">Lista</span>
                     </a>
                     <a href="#timeline" class="nav-item" title="Timeline" onclick="showView('timelineView', this)">
                         <i data-feather="git-commit" class="h-5 w-5 mr-3"></i> <span class="nav-text">Timeline</span>
@@ -212,7 +215,6 @@
                             <div class="bg-white p-6 rounded-lg shadow-md chart-card">
                                 <h3 class="text-xl font-semibold mb-4">Tarefas por Status</h3>
                                 <div class="relative h-96"><canvas id="statusChart"></canvas></div>
-                            </div>
                         </div>
                     </div>
 
@@ -223,6 +225,19 @@
                         </div>
                         <div id="kanbanBoard" class="kanban-container">
                             <div class="loading col-span-3"><div class="spinner"></div> Carregando quadro...</div>
+                        </div>
+                    </div>
+
+                    <!-- #listView (NOVA VIEW) -->
+                    <div id="listView" class="view-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h1 class="text-3xl font-bold text-gray-800">Lista de Tarefas</h1>
+                            <button class="btn btn-success" onclick="openTaskModal(null)">
+                                <i data-feather="plus" class="h-4 w-4 inline-block -mt-1 mr-1"></i> Nova Tarefa
+                            </button>
+                        </div>
+                        <div id="taskListContainer" class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+                            <div class="loading p-8"><div class="spinner"></div> Carregando lista...</div>
                         </div>
                     </div>
 
@@ -402,6 +417,14 @@
                         </select>
                     </div>
                 </div>
+                <!-- NOVO CAMPO: Responsável -->
+                <div class="form-group mb-4">
+                    <label for="taskAssignee">Responsável:</label>
+                    <select id="taskAssignee" class="w-full">
+                        <option value="">Ninguém atribuído</option>
+                        <!-- Membros do time serão preenchidos pelo JS -->
+                    </select>
+                </div>
                 <div id="taskAlert" class="mt-4"></div>
                 <div class="flex gap-4 mt-6 justify-end">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('taskModal')">Cancelar</button>
@@ -466,3 +489,4 @@
     </script>
 </body>
 </html>
+
