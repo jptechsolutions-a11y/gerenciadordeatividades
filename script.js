@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupDropdown('profileDropdownButton', 'profileDropdownMenu');
-    //setupDropdown('teamSelectorButton', 'teamSelectorMenu');
+    setupDropdown('teamSelectorButton', 'teamSelectorMenu');
     
     // Clica em qualquer lugar para fechar os dropdowns
     document.addEventListener('click', (e) => {
