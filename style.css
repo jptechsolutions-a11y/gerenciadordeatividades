@@ -3009,3 +3009,97 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
 .loading { display: flex; justify-content: center; align-items: center; padding: 30px; color: var(--secondary); font-size: 0.9rem; }
 .spinner { width: 24px; height: 24px; margin-right: 8px; border: 3px solid rgba(0, 212, 170, 0.1); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ... existing code ... */
+    document.body.classList.remove('sidebar-open');
+}
+/* ... existing code ... */
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ========================================
+   NOVOS ESTILOS: Tabela de Lista (Monday Style)
+   ======================================== */
+
+.task-list-table {
+    width: 100%;
+    border-collapse: collapse; /* Borda única */
+    font-size: 0.9rem;
+    color: var(--dark);
+}
+
+.task-list-table thead th {
+    background-color: #f9fafb; /* Cinza claro */
+    border-bottom: 2px solid #e5e7eb; /* Borda mais grossa no header */
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #4b5563; /* Cinza escuro */
+    position: sticky; /* Header pegajoso */
+    top: 0;
+}
+
+.task-list-table tbody tr {
+    border-bottom: 1px solid #e5e7eb; /* Borda de linha */
+    transition: background-color 0.15s ease;
+}
+
+.task-list-table tbody tr:hover {
+    background-color: #f3f4f6; /* Hover sutil */
+}
+
+.task-list-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+.task-list-table .task-name-cell {
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+}
+.task-list-table .task-name-cell:hover {
+    text-decoration: underline;
+}
+
+.task-list-table .assignee-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.task-list-table .assignee-cell img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+.task-list-table .assignee-cell .no-assignee {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.task-list-table .status-cell span {
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+}
+/* Cores baseadas no nome do status (exemplo) */
+.task-list-table .status-a-fazer { background-color: #e0e7ff; color: #3730a3; }
+.task-list-table .status-em-andamento { background-color: #fef3c7; color: #92400e; }
+.task-list-table .status-concluído { background-color: #d1fae5; color: #065f46; }
+.task-list-table .status-default { background-color: #e5e7eb; color: #4b5563; }
+
+.task-list-table .date-cell {
+    font-weight: 500;
+}
+.task-list-table .date-cell.is-late {
+    color: #dc2626; /* Vermelho para datas atrasadas */
+}
