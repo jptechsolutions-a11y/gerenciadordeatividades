@@ -408,13 +408,22 @@ function showMainSystem() {
    (async () => {
         try {
             await loadActiveProject();
+            // Só mostra o dashboard se o loadActiveProject funcionar
             showView('dashboardView', document.querySelector('a[href="#dashboard"]')); 
             feather.replace();
         } catch (err) {
             console.error("Erro ao carregar projeto ativo:", err);
-            showNotification(`Erro ao carregar dados iniciais: ${err.message}.`, "error", 6000);
-            showView('dashboardView', document.querySelector('a[href="#dashboard"]'));
-            feather.replace();
+            showNotification(`Erro fatal ao carregar dados iniciais: ${err.message}.`, "error", 10000);
+            
+            // NÃO chame showView aqui. Você pode, opcionalmente,
+            // mostrar uma mensagem de erro em tela cheia.
+            // Por exemplo:
+            document.getElementById('appShell').innerHTML = `<div class="alert alert-error m-8">
+                <h2>Erro Crítico na Inicialização</h2>
+                <p>Não foi possível carregar os dados do projeto (${err.message}).</p>
+                <p>Verifique suas permissões (RLS) no Supabase e atualize a página.</p>
+                <button class="btn btn-danger mt-4" onclick="logout()">Sair</button>
+            </div>`;
         }
     })();
 }
