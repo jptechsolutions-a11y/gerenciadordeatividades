@@ -17,19 +17,16 @@
 <body class="bg-gray-100">
 
     <!-- ====================================================== -->
-    <!-- MODAL DE ONBOARDING (CRIAR OU ENTRAR) - NOVO -->
+    <!-- MODAL DE ONBOARDING (CRIAR OU ENTRAR) - ADICIONADO DE VOLTA -->
     <!-- ====================================================== -->
-    <!-- ID 'teamOnboardingModal' para bater com o JS -->
     <div id="teamOnboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
         <div class="modal-content" style="max-width: 550px; width: 100%; padding: 0; overflow: hidden;">
             
             <!-- Abas de Navegação -->
             <div class="flex border-b border-gray-200">
-                <!-- ID 'tabCreateTeam' -->
                 <button id="tabCreateTeam" class="flex-1 p-4 font-semibold text-center text-blue-600 border-b-2 border-blue-600" onclick="showOnboardingTab('create')">
                     <i data-feather="plus-circle" class="h-4 w-4 inline-block mr-2"></i> Criar Novo Time
                 </button>
-                <!-- ID 'tabJoinTeam' -->
                 <button id="tabJoinTeam" class="flex-1 p-4 font-medium text-center text-gray-500 hover:bg-gray-50" onclick="showOnboardingTab('join')">
                     <i data-feather="log-in" class="h-4 w-4 inline-block mr-2"></i> Entrar com Código
                 </button>
@@ -38,7 +35,6 @@
             <!-- Conteúdo das Abas -->
             <div class="p-8">
                 <!-- Aba 1: Criar Time -->
-                <!-- ID 'panelCreateTeam' -->
                 <div id="panelCreateTeam">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
@@ -61,7 +57,6 @@
                 </div>
 
                 <!-- Aba 2: Entrar com Código -->
-                <!-- ID 'panelJoinTeam' -->
                 <div id="panelJoinTeam" style="display: none;">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
@@ -86,12 +81,13 @@
 
         </div>
     </div>
+    <!-- FIM DO MODAL DE ONBOARDING -->
 
 
     <!-- Este é o container principal do seu sistema -->
     <div id="appShell" class="h-screen flex flex-col" style="display: none;"> <!-- Inicia escondido, JS mostra -->
 
-        <!-- 1. BARRA SUPERIOR (HEADER) - ATUALIZADO -->
+        <!-- 1. BARRA SUPERIOR (HEADER) -->
         <header id="topBar" class="flex-shrink-0">
             <div class="flex items-center gap-4">
                 <button id="sidebarToggle" class="btn-icon">
@@ -100,12 +96,10 @@
                 <img src="icon.png" class="h-8 w-8" alt="Logo JP">
                 <div class="separator"></div>
 
-                <!-- NOVO: Seletor de Times (Dropdown) -->
-                <!-- ID 'teamSelector' -->
+                <!-- Seletor de Times (Dropdown) -->
                 <div id="teamSelector" class="relative">
                     <button id="teamSelectorButton" class="flex items-center gap-2 rounded-md hover:bg-gray-700 p-2 transition-colors">
                         <div class="flex flex-col text-left">
-                            <!-- ID 'topBarProjectName' (para bater com o JS antigo) -->
                             <span class="text-sm font-semibold text-white" id="topBarProjectName">Carregando...</span>
                             <span class="text-xs text-gray-400">JProjects</span>
                         </div>
@@ -113,13 +107,11 @@
                     </button>
                     <!-- Menu Dropdown de Times -->
                     <div id="teamSelectorMenu" class="dropdown-menu" style="width: 280px; top: 110%; background: #1e293b;">
-                        <!-- ID 'teamSelectorList' -->
                         <div id="teamSelectorList" class="max-h-60 overflow-y-auto">
                             <!-- Times serão preenchidos pelo JS -->
                             <div class="p-4 text-center text-gray-400 text-sm">Carregando times...</div>
                         </div>
                         <div class="border-t border-gray-600 p-2">
-                             <!-- JS usa 'openCreateTeamModal' e 'openJoinTeamModal' -->
                              <a href="#" class="dropdown-item" onclick="openCreateTeamModal()">
                                 <i data-feather="plus-circle" class="h-4 w-4 mr-2"></i> Criar Novo Time
                             </a>
@@ -170,7 +162,6 @@
         </header>
 
         <!-- Container para Sidebar + Main Content -->
-        <!-- ID 'mainSystem' RESTAURADO -->
         <div id="mainSystem" class="flex flex-1 overflow-hidden">
 
             <!-- 2. BARRA LATERAL (SIDEBAR) -->
@@ -182,7 +173,6 @@
                     <a href="#projetos" class="nav-item" title="Projetos (Kanban)" onclick="showView('projetosView', this)">
                         <i data-feather="trello" class="h-5 w-5 mr-3"></i> <span class="nav-text">Projetos (Kanban)</span>
                     </a>
-                    <!-- href '#lista' deve bater com o JS ('listView') -->
                     <a href="#lista" class="nav-item" title="Lista de Tarefas" onclick="showView('listView', this)">
                         <i data-feather="list" class="h-5 w-5 mr-3"></i> <span class="nav-text">Lista</span>
                     </a>
@@ -210,7 +200,6 @@
             </aside>
 
             <!-- 3. CONTEÚDO PRINCIPAL (MAIN) -->
-            <!-- ID 'mainContent' RESTAURADO -->
             <main id="mainContent" class="main-content">
                 <div class="container mx-auto px-6 py-8">
 
@@ -249,7 +238,6 @@
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Lista de Tarefas</h1>
                         </div>
-                        <!-- ID 'taskListContainer' (para o JS encontrar) -->
                         <div id="taskListContainer" class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
                             <div class="loading p-8"><div class="spinner"></div> Carregando lista...</div>
                         </div>
@@ -295,7 +283,6 @@
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
                             <div class="flex gap-2">
-                                <!-- NOVO: Input + Botão para Código de Convite -->
                                 <div class="form-group flex-1" style="margin-bottom: 0;">
                                     <input type="text" id="teamInviteCodeDisplay" class="w-full bg-gray-100" value="Carregando..." readonly style="text-transform: uppercase; letter-spacing: 1px; text-align: center; font-weight: 600;">
                                 </div>
