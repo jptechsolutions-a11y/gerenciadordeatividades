@@ -213,6 +213,88 @@ async function initializeApp(session) {
 // 3. LÓGICA DE ONBOARDING E NAVEGAÇÃO
 // ========================================
 
+// --- FUNÇÕES MOVIDAS PARA CORRIGIR O ERRO 'is not defined' ---
+// Estas funções são chamadas por showMainSystem/redirectToDashboard
+// e precisam ser declaradas antes.
+
+// NOVO: Atualiza a UI do seletor de time
+function updateActiveTeamUI() {
+    if (currentOrg) {
+        document.getElementById('topBarProjectName').textContent = currentOrg.nome || 'Projeto Pessoal';
+    } else {
+        document.getElementById('topBarProjectName').textContent = 'Espaço Pessoal';
+    }
+    // Atualiza o menu dropdown
+    document.querySelectorAll('#teamSelectorList .team-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.orgId === currentOrg?.id) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// NOVO: Popula o dropdown do seletor de times
+function populateTeamSelector() {
+    const list = document.getElementById('teamSelectorList');
+    if (!list) return;
+
+    list.innerHTML = ''; // Limpa
+    
+    // Adiciona todos os times do usuário
+    currentUser.organizacoes.forEach(org => {
+        const item = document.createElement('a');
+        item.href = '#';
+        item.className = 'dropdown-item team-item';
+        item.dataset.orgId = org.id;
+        item.innerHTML = `<i data-feather="users" class="h-4 w-4 mr-2"></i> ${escapeHTML(org.nome)}`;
+        if (org.id === currentOrg?.id) {
+            item.classList.add('active');
+        }
+        item.onclick = (e) => {
+            e.preventDefault();
+            switchActiveTeam(org.id);
+        };
+        list.appendChild(item);
+    });
+
+    feather.replace();
+}
+
+// NOVO: Troca o time ativo
+async function switchActiveTeam(orgId) {
+    const newOrg = currentUser.organizacoes.find(org => org.id === orgId);
+    if (!newOrg || newOrg.id === currentOrg?.id) {
+        // Fecha o dropdown se clicar no mesmo time
+        document.getElementById('teamSelectorMenu').classList.remove('open');
+        document.getElementById('teamSelector').classList.remove('open');
+        return;
+    }
+
+    currentOrg = newOrg;
+    localStorage.setItem('current_org_id', currentOrg.id);
+    
+    console.log(`Trocando para o time: ${currentOrg.nome}`);
+    
+    // Atualiza a UI imediatamente
+    updateActiveTeamUI();
+    document.getElementById('teamSelectorMenu').classList.remove('open');
+    document.getElementById('teamSelector').classList.remove('open');
+
+    // Recarrega os dados do dashboard/kanban para o novo time
+    try {
+        await loadActiveProject(); // Carrega o projeto principal DESTE time
+        // Recarrega a view atual com os dados do novo time
+        const activeView = document.querySelector('.view-content.active')?.id || 'dashboardView';
+        const activeLink = document.querySelector(`.sidebar .nav-item[href="#${activeView.replace('View', '')}"]`);
+        showView(activeView, activeLink);
+    } catch (err) {
+        console.error("Erro ao trocar de time:", err);
+        showNotification(`Erro ao carregar dados do time: ${err.message}`, 'error');
+    }
+}
+// --- FIM DAS FUNÇÕES MOVIDAS ---
+
+
 function redirectToDashboard() {
     if (!currentUser || !currentUser.organizacoes) {
         console.error("Erro fatal: Dados do usuário incompletos.");
@@ -1768,7 +1850,9 @@ async function loadListView(forceReload = false) { // ATUALIZADO
         
         // Query ÚNICA: Pega os grupos e, aninhado, pega as tarefas de cada grupo
         // CORREÇÃO: Movida a ordenação de tarefas para DENTRO do select aninhado.
-        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome),order=created_at.desc)&order=ordem.asc`;
+        // CORREÇÃO 2 (Erro 'Failed to parse select'): Removido o filtro \${projectFilter} de dentro do select aninhado
+        // e movido o 'order' para um parâmetro de URL separado.
+        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=created_at.desc`;
         const groupsWithTasks = await supabaseRequest(query, 'GET');
 
         // Pega tarefas SEM grupo
@@ -2115,4 +2199,15 @@ async function showMainSystem() {
     }
 }
 
-// (DUPLICATA DE `createDefaultColumns` REMOVIDA)
+// NOVO: Atualiza a UI do seletor de time
+// (DEFINIÇÃO MOVIDA PARA CIMA)
+
+// NOVO: Popula o dropdown do seletor de times
+// (DEFINIÇÃO MOVIDA PARA CIMA)
+
+// NOVO: Troca o time ativo
+// (DEFINIÇÃO MOVIDA PARA CIMA)
+
+// ========================================
+// 4. NAVEGAÇÃO E UI (Restante do seu código)
+
