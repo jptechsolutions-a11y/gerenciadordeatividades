@@ -576,12 +576,14 @@ async function loadActiveProject() {
         console.log("Projeto ativo:", currentProject);
 
         // Carrega Colunas (Status)
-        currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+       let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+currentColumns = (cols || []).filter(Boolean); // <-- Este filtro .filter(Boolean) é a correção
 
         if (!currentColumns || currentColumns.length === 0) {
             console.warn("Nenhuma coluna encontrada. Criando padrão.");
             await createDefaultColumns(currentProject.id);
-            currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+            let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+currentColumns = (cols || []).filter(Boolean); // <-- Este filtro .filter(Boolean) é a correção
              if (!currentColumns || currentColumns.length === 0){
                   throw new Error("Falha ao criar ou buscar colunas padrão.");
              }
@@ -589,7 +591,8 @@ async function loadActiveProject() {
         console.log("Colunas carregadas:", currentColumns.map(c => `${c.nome} (${c.id})`));
 
         // NOVO: Carrega Grupos de Tarefas
-        currentGroups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+       let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+currentGroups = (groups || []).filter(Boolean); // <-- Adicionamos o filtro por segurança
         if (!currentGroups) {
             currentGroups = [];
         }
