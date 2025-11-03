@@ -635,9 +635,9 @@ async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
     
     // Destrói gráficos ANTES de recarregar o HTML
-    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
-        chartInstances.statusChart.destroy();
-        chartInstances.statusChart = null;
+   if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
     }
     if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
         chartInstances.ganttChart.destroy();
