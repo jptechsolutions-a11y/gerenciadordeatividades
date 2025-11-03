@@ -559,8 +559,10 @@ function showNotification(message, type = 'info', timeout = 4000) {
 // ========================================
 // 5. Carregar Projeto Ativo e Colunas
 // ========================================
+// Substitua a função loadActiveProject completa por esta versão corrigida:
+
 async function loadActiveProject() {
-    console.log("Carregando projeto ativo...");
+    console.log("🔄 Carregando projeto ativo...");
     currentProject = null;
     currentColumns = [];
     currentGroups = [];
@@ -575,7 +577,7 @@ async function loadActiveProject() {
         const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
 
         if (projetosValidos.length === 0) {
-            console.warn("Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
+            console.warn("⚠️ Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
             
             // Cria projeto padrão
             const newProject = {
@@ -588,24 +590,70 @@ async function loadActiveProject() {
             
             // Valida resposta da criação
             if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
-                console.error("Resposta inválida ao criar projeto:", createResponse);
+                console.error("❌ Resposta inválida ao criar projeto:", createResponse);
                 throw new Error("Falha ao criar projeto padrão. Verifique as permissões RLS da tabela 'projetos'.");
             }
             
             currentProject = createResponse[0];
-            console.log("Projeto criado com sucesso:", currentProject);
+            console.log("✅ Projeto criado com sucesso:", currentProject);
         } else {
             currentProject = projetosValidos[0];
-            console.log("Projeto encontrado:", currentProject);
+            console.log("✅ Projeto encontrado:", currentProject);
         }
 
         // VERIFICAÇÃO FINAL DE SEGURANÇA
         if (!currentProject || !currentProject.id) {
-            console.error("Erro fatal: currentProject inválido:", currentProject);
+            console.error("❌ Erro fatal: currentProject inválido:", currentProject);
             throw new Error("Não foi possível carregar ou criar um projeto válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'.");
         }
 
-        console.log("✓ Projeto ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
+        console.log("✅ Projeto ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
+
+        // Carrega Colunas (Status)
+        let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+        currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
+
+        if (currentColumns.length === 0) {
+            console.warn("⚠️ Nenhuma coluna encontrada. Criando colunas padrão...");
+            await createDefaultColumns(currentProject.id);
+            
+            // Busca novamente
+            cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+            currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
+            
+            if (currentColumns.length === 0) {
+                throw new Error("Falha ao criar ou buscar colunas padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
+            }
+        }
+        
+        console.log("✅ Colunas carregadas:", currentColumns.length);
+
+        // Carrega Grupos de Tarefas
+        let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+        currentGroups = Array.isArray(groups) ? groups.filter(g => g && g.id) : [];
+        
+        console.log("✅ Grupos carregados:", currentGroups.length);
+
+    } catch (error) {
+        console.error("❌ Erro fatal ao carregar projeto/colunas:", error);
+        throw error;
+    }
+} // <--- ESTE FECHAMENTO ESTAVA FALTANDO!
+
+// AGORA SIM, define createDefaultColumns
+async function createDefaultColumns(projectId) {
+     const defaultCols = [
+          { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
+          { projeto_id: projectId, nome: 'Em Andamento', ordem: 1 },
+          { projeto_id: projectId, nome: 'Concluído', ordem: 2 }
+     ];
+     try {
+          await supabaseRequest('colunas_kanban', 'POST', defaultCols);
+          console.log("✅ Colunas padrão criadas");
+     } catch (error) {
+          console.error("❌ Erro ao criar colunas padrão:", error);
+     }
+}
         
 async function createDefaultColumns(projectId) {
      const defaultCols = [
