@@ -716,10 +716,7 @@ async function renderStatusChart() {
         return;
     }
    
-    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { 
-        chartInstances.statusChart.destroy();
-        chartInstances.statusChart = null;
-    }
+   
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -753,10 +750,7 @@ async function renderGanttChart() {
         return;
      }
 
-    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-        chartInstances.ganttChart.destroy();
-        chartInstances.ganttChart = null;
-    }
+
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
