@@ -475,6 +475,7 @@ function showView(viewId, element = null) {
         switch (viewId) {
             case 'dashboardView': loadDashboardView(); break;
             case 'projetosView': loadKanbanView(); break;
+            case 'listView': loadListView(); break; // <-- MUDANÇA
             case 'timelineView': loadTimelineView(); break;
             case 'calendarioView': loadCalendarView(); break;
             case 'notasView': loadNotasView(); break;
@@ -924,15 +925,17 @@ async function handleDrop(e, newColunaId) {
 // 8. LÓGICA DO MODAL DE TAREFAS
 // ========================================
 // ... (Sem alterações nesta seção, o código é o mesmo) ...
-function openTaskModal(task = null, defaultColunaId = null) {
+async function openTaskModal(task = null, defaultColunaId = null) {
      if (!currentProject || currentColumns.length === 0) {
           showNotification("Crie ou selecione um projeto e suas colunas primeiro.", "error");
           return;
      }
+
     const modal = document.getElementById('taskModal');
     const form = document.getElementById('taskForm');
     form.reset();
     document.getElementById('taskAlert').innerHTML = '';
+
     let colunaIdInput = document.getElementById('taskColunaId');
     if (!colunaIdInput) {
         colunaIdInput = document.createElement('input');
@@ -940,21 +943,25 @@ function openTaskModal(task = null, defaultColunaId = null) {
         colunaIdInput.id = 'taskColunaId';
         form.appendChild(colunaIdInput);
     }
+
     if (task) {
         document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
         document.getElementById('taskDescription').value = task.descricao || '';
-        document.getElementById('taskStartDate').value = task.data_inicio || ''; 
-        document.getElementById('taskDueDate').value = task.data_entrega || ''; 
+        document.getElementById('taskStartDate').value = task.data_inicio || '';
+        document.getElementById('taskDueDate').value = task.data_entrega || '';
         document.getElementById('taskPriority').value = task.prioridade || 'media';
         colunaIdInput.value = task.coluna_id;
+        // Preenche o responsável salvo
+        document.getElementById('taskAssignee').value = task.assignee_id || ''; // <-- MUDANÇA
     } else {
         document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
         document.getElementById('taskId').value = '';
-        document.getElementById('taskStartDate').value = ''; 
-        document.getElementById('taskDueDate').value = ''; 
-        document.getElementById('taskPriority').value = 'media'; 
+        document.getElementById('taskStartDate').value = '';
+        document.getElementById('taskDueDate').value = '';
+        document.getElementById('taskPriority').value = 'media';
+
         const primeiraColunaId = currentColumns[0]?.id;
         colunaIdInput.value = defaultColunaId || primeiraColunaId || '';
         if (!colunaIdInput.value) {
@@ -962,35 +969,48 @@ function openTaskModal(task = null, defaultColunaId = null) {
             document.getElementById('taskAlert').innerHTML = '<div class="alert alert-error">Erro: Colunas não carregadas. Não é possível criar tarefa.</div>';
         }
     }
+
+    // --- NOVO: Preenche o dropdown de Responsáveis ---
+    await loadTeamMembersForSelect('taskAssignee', task ? task.assignee_id : null); // <-- MUDANÇA
+    // --- FIM DA ATUALIZAÇÃO ---
+
     modal.style.display = 'flex';
     feather.replace();
 }
+
 async function handleTaskFormSubmit(e) {
     e.preventDefault();
      if (!currentProject || !currentUser || !document.getElementById('taskColunaId').value) {
          showNotification("Erro: Projeto, usuário ou coluna inválida.", "error");
          return;
      }
+
     const alert = document.getElementById('taskAlert');
     alert.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Salvando...</div>';
+
     const taskId = document.getElementById('taskId').value;
+
     let colunaIdFinal = document.getElementById('taskColunaId').value;
     if (colunaIdFinal === '') {
         console.warn("Nenhuma coluna ID encontrada no form, tentando fallback para a primeira coluna...");
-        colunaIdFinal = currentColumns[0]?.id || null;
+        colunaIdFinal = currentColumns[0]?.id || null; // Pega a primeira coluna de novo, ou define null
     }
+
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
         data_inicio: document.getElementById('taskStartDate').value || null,
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
-        org_id: currentOrg.id, // ATUALIZADO: Garante que a org_id está correta
+        assignee_id: document.getElementById('taskAssignee').value || null, // <-- MUDANÇA
+        org_id: currentOrg?.id || null,
         projeto_id: currentProject.id,
         coluna_id: colunaIdFinal,
         updated_at: new Date().toISOString()
     };
-    if (!taskId) { taskData.created_by = currentUser.id; } 
+
+    if (!taskId) { taskData.created_by = currentUser.id; }
+
     try {
         if (taskId) {
             await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', taskData);
@@ -999,9 +1019,10 @@ async function handleTaskFormSubmit(e) {
         }
         showNotification(`Tarefa ${taskId ? 'atualizada' : 'criada'}!`, 'success');
         closeModal('taskModal');
-        loadKanbanView(); 
-        loadDashboardView(); 
-        loadTimelineView(); 
+        loadKanbanView();
+        loadDashboardView();
+        loadTimelineView();
+        loadListView(); // <-- MUDANÇA
     } catch (error) {
         console.error("Erro ao salvar tarefa:", error);
         alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
@@ -1564,4 +1585,175 @@ function timeAgo(timestamp) {
     if (diffInDays === 1) return `ontem`;
     if (diffInDays < 7) return `${diffInDays} dias atrás`;
     return past.toLocaleDateString('pt-BR');
+}
+
+// --- NOVA FUNÇÃO HELPER ---
+// (Pode adicionar perto da 'openTaskModal')
+async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    // Limpa opções antigas, exceto a primeira ("Ninguém atribuído")
+    while (select.options.length > 1) {
+        select.remove(1);
+    }
+    select.value = ''; // Reseta a seleção
+
+    if (!currentOrg?.id) {
+        console.warn("Não é possível carregar membros, não há time (org) selecionado.");
+        return;
+    }
+
+    try {
+        // Busca usuários vinculados a esta organização
+        const membersData = await supabaseRequest(`usuario_orgs?org_id=eq.${currentOrg.id}&select=usuarios(id,nome)`, 'GET');
+        
+        if (membersData && membersData.length > 0) {
+            membersData.forEach(member => {
+                if (member.usuarios) { // Garante que o join funcionou
+                    const user = member.usuarios;
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.nome;
+                    select.appendChild(option);
+                }
+            });
+        }
+        // Resseleciona o usuário correto (se estiver editando)
+        if (selectedUserId) {
+            select.value = selectedUserId;
+        }
+
+    } catch (error) {
+        console.error("Erro ao carregar membros do time para o select:", error);
+        showNotification("Não foi possível carregar os membros do time.", "error");
+    }
+}
+
+
+// ========================================
+// 15. NOVA LÓGICA: Lista de Tarefas (View)
+// (Pode adicionar no final do script.js)
+// ========================================
+async function loadListView() {
+    const container = document.getElementById('taskListContainer');
+    container.innerHTML = `<div class="loading p-8"><div class="spinner"></div> Carregando lista...</div>`;
+
+    if (!currentProject) {
+        container.innerHTML = '<p class="text-center text-gray-500 p-8">Nenhum projeto ativo selecionado.</p>';
+        return;
+    }
+
+    try {
+        const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        
+        // Query com JOIN para buscar o nome do responsável (assignee) e o nome do status (coluna)
+        const tasks = await supabaseRequest(
+            `tarefas?${projectFilter}&select=*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=created_at.desc`,
+            'GET'
+        );
+
+        if (!tasks || tasks.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500 p-8">Nenhuma tarefa encontrada neste projeto.</p>';
+            return;
+        }
+
+        // Construir a tabela
+        container.innerHTML = `
+            <table class="task-list-table">
+                <thead>
+                    <tr>
+                        <th>Tarefa</th>
+                        <th>Responsável</th>
+                        <th>Status</th>
+                        <th>Data Entrega</th>
+                        <th>Prioridade</th>
+                    </tr>
+                </thead>
+                <tbody id="taskListBody">
+                    <!-- Linhas serão inseridas pelo JS -->
+                </tbody>
+            </table>
+        `;
+
+        const tbody = document.getElementById('taskListBody');
+        tbody.innerHTML = ''; // Limpa
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        tasks.forEach(task => {
+            const tr = document.createElement('tr');
+            tr.dataset.taskId = task.id;
+
+            // Célula: Tarefa (clicável para editar)
+            const taskNameCell = document.createElement('td');
+            taskNameCell.className = 'task-name-cell';
+            taskNameCell.textContent = task.titulo;
+            taskNameCell.onclick = () => {
+                // Precisamos da tarefa completa para o modal, então buscamos de novo
+                // (ou encontramos no array 'tasks' - mais eficiente)
+                openTaskModal(task);
+            };
+            
+            // Célula: Responsável
+            const assigneeCell = document.createElement('td');
+            assigneeCell.className = 'assignee-cell';
+            if (task.assignee) {
+                assigneeCell.innerHTML = `
+                    <img src="${escapeHTML(task.assignee.profile_picture_url || 'icon.png')}" alt="${escapeHTML(task.assignee.nome)}">
+                    <span>${escapeHTML(task.assignee.nome)}</span>
+                `;
+            } else {
+                assigneeCell.innerHTML = `
+                    <div class="no-assignee" title="Ninguém atribuído">
+                        <i data-feather="user" class="h-4 w-4"></i>
+                    </div>
+                `;
+            }
+
+            // Célula: Status
+            const statusCell = document.createElement('td');
+            statusCell.className = 'status-cell';
+            if (task.status) {
+                const statusSlug = task.status.nome.toLowerCase().replace(/ /g, '-').replace(/ç/g, 'c').replace(/ã/g, 'a').replace(/í/g, 'i');
+                statusCell.innerHTML = `<span class="status-${statusSlug}">${escapeHTML(task.status.nome)}</span>`;
+            } else {
+                 statusCell.innerHTML = `<span class="status-default">Sem Status</span>`;
+            }
+
+            // Célula: Data Entrega
+            const dateCell = document.createElement('td');
+            dateCell.className = 'date-cell';
+            if (task.data_entrega) {
+                const dueDate = new Date(task.data_entrega + 'T00:00:00'); // Garante data local
+                dateCell.textContent = dueDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                
+                // Verifica se está atrasado (e não está "Concluído")
+                if (dueDate < today && task.status?.nome.toLowerCase() !== 'concluído') {
+                    dateCell.classList.add('is-late');
+                    dateCell.title = `Atrasado (Venceu em ${dateCell.textContent})`;
+                }
+            } else {
+                dateCell.textContent = '—';
+            }
+
+            // Célula: Prioridade
+            const priorityCell = document.createElement('td');
+            priorityCell.innerHTML = `<span class="kanban-card-priority priority-${task.prioridade}">${escapeHTML(task.prioridade)}</span>`;
+
+            tr.appendChild(taskNameCell);
+            tr.appendChild(assigneeCell);
+            tr.appendChild(statusCell);
+            tr.appendChild(dateCell);
+            tr.appendChild(priorityCell);
+            tbody.appendChild(tr);
+        });
+
+        feather.replace();
+
+    } catch (error) {
+        console.error("Erro ao carregar lista de tarefas:", error);
+        container.innerHTML = `<div class="alert alert-error m-4">Erro ao carregar lista: ${escapeHTML(error.message)}</div>`;
+    }
 }
