@@ -1817,7 +1817,7 @@ async function loadListView(forceReload = false) { // ATUALIZADO
         
         // Query ÚNICA: Pega os grupos e, aninhado, pega as tarefas de cada grupo
         // CORREÇÃO: Movida a ordenação de tarefas para DENTRO do select aninhado.
-        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)!order=created_at.desc)&order=ordem.asc`;
+        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome),order=created_at.desc)&order=ordem.asc`;
         const groupsWithTasks = await supabaseRequest(query, 'GET');
 
         // Pega tarefas SEM grupo
