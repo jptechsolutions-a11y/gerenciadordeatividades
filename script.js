@@ -560,19 +560,28 @@ async function loadActiveProject() {
     try {
         const projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
 
-        if (!projetos || projetos.length === 0) {
-            console.warn("Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
+       if (!projetos || projetos.length === 0 || !projetos[0]) { // <-- MUDANÇA AQUI
+            console.warn("Nenhum projeto encontrado ou projeto inválido. Criando 'Meu Primeiro Quadro'...");
             const newProject = {
                  nome: 'Meu Primeiro Quadro',
                  created_by: currentUser.id,
                  org_id: currentOrg?.id || null
             };
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
-            if (!createResponse || !createResponse[0]) throw new Error("Falha ao criar projeto padrão.");
+            if (!createResponse || !createResponse[0]) {
+                throw new Error("Falha ao criar projeto padrão.");
+            }
             currentProject = createResponse[0];
         } else {
             currentProject = projetos[0];
         }
+
+        // VERIFICAÇÃO FINAL DE SEGURANÇA
+        if (!currentProject || !currentProject.id) {
+            console.error("Erro fatal: currentProject ainda é inválido após a lógica.", currentProject);
+            throw new Error("Não foi possível carregar ou criar um projeto válido para este time.");
+        }
+
         console.log("Projeto ativo:", currentProject);
 
         // Carrega Colunas (Status)
