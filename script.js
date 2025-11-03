@@ -2098,4 +2098,3 @@ function toggleGroup(groupId) {
         if(addRow) addRow.style.display = 'table-row';
     }
 }
-
