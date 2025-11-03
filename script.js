@@ -647,10 +647,10 @@ async function loadDashboardView() {
    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
-    }
-    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-        chartInstances.ganttChart.destroy();
-        chartInstances.ganttChart = null;
+   }
+    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') { // <-- CORRIGIDO
+        chartInstances.statusChart.destroy(); // <-- CORRIGIDO
+        chartInstances.statusChart = null;
     }
 
     view.innerHTML = `<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
@@ -718,6 +718,12 @@ async function loadDashboardView() {
 }
 
 async function renderStatusChart() {
+    
+    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+    }
+    
     if (!currentProject || currentColumns.length === 0) return;
     const ctx = document.getElementById('statusChart')?.getContext('2d');
     if (!ctx) {
@@ -752,6 +758,12 @@ async function renderStatusChart() {
     }
 }
 async function renderGanttChart() {
+    
+    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
+    }
+    
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
      if (!ctx) {
