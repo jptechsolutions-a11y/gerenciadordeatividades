@@ -735,10 +735,8 @@ async function loadDashboardView() {
     
 async function renderStatusChart() {
     
-    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
-        chartInstances.statusChart.destroy();
-        chartInstances.statusChart = null;
-    }
+    // CORREÇÃO: Removido o bloco "destroy" daqui.
+    // A função loadDashboardView() já destrói o gráfico ANTES de recarregar o HTML.
     
     if (!currentProject || currentColumns.length === 0) return;
     const ctx = document.getElementById('statusChart')?.getContext('2d');
@@ -775,10 +773,8 @@ async function renderStatusChart() {
 }
 async function renderGanttChart() {
     
-    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-        chartInstances.ganttChart.destroy();
-        chartInstances.ganttChart = null;
-    }
+    // CORREÇÃO: Removido o bloco "destroy" daqui.
+    // A função loadDashboardView() já destrói o gráfico ANTES de recarregar o HTML.
     
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
@@ -2221,5 +2217,6 @@ async function showMainSystem() {
 
 // ========================================
 // 4. NAVEGAÇÃO E UI (Restante do seu código)
+
 
 
