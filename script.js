@@ -66,40 +66,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DOS DROPDOWNS (Perfil e Seletor de Time) ---
+    // --- CORREÇÃO: LÓGICA DOS DROPDOWNS (Perfil e Seletor de Time) ---
     function setupDropdown(buttonId, dropdownId) {
         const button = document.getElementById(buttonId);
         const dropdown = document.getElementById(dropdownId);
         if (!button || !dropdown) return;
+        const dropdownParent = dropdown.parentElement; // Pega o container '.relative'
 
         button.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Fecha outros dropdowns
+            
+            // Verifica se este dropdown já está aberto
+            const isOpen = dropdownParent.classList.contains('open');
+
+            // 1. Fecha TODOS os dropdowns abertos
             document.querySelectorAll('.dropdown-menu.open, .relative.open').forEach(dd => {
-                // CORREÇÃO: Verifique se o elemento pai (o 'relative') é o mesmo
-                if (dd.id !== dropdownId && dd.id !== dropdown.parentElement.id) {
-                    dd.classList.remove('open');
-                }
+                dd.classList.remove('open');
             });
-            // Alterna o atual
-            dropdown.classList.toggle('open');
-            // ATUALIZADO: Adiciona/Remove 'open' do elemento pai (o 'relative')
-            dropdown.parentElement.classList.toggle('open');
+
+            // 2. Se o dropdown clicado estava fechado, abre ele
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                dropdownParent.classList.add('open');
+            }
+            // Se estava aberto, o passo 1 já o fechou.
         });
     }
 
     setupDropdown('profileDropdownButton', 'profileDropdownMenu');
     setupDropdown('teamSelectorButton', 'teamSelectorMenu');
     
-    // Clica em qualquer lugar para fechar os dropdowns
+    // CORREÇÃO: Clica em qualquer lugar para fechar os dropdowns
     document.addEventListener('click', (e) => {
-        document.querySelectorAll('.dropdown-menu.open, .relative.open').forEach(dd => {
-             if (!dd.contains(e.target)) {
-                dd.classList.remove('open');
+        // Encontra todos os PAIS de dropdown abertos
+        document.querySelectorAll('.relative.open').forEach(dropdownParent => {
+            // Se o clique foi FORA do pai
+            if (!dropdownParent.contains(e.target)) {
+                dropdownParent.classList.remove('open');
+                const menu = dropdownParent.querySelector('.dropdown-menu');
+                if (menu) {
+                    menu.classList.remove('open');
+                }
             }
         });
     });
-    // --- FIM DAS NOVAS LÓGICAS ---
+    // --- FIM DAS CORREÇÕES DE DROPDOWN ---
 
 
     // Pega a função 'createClient' da biblioteca Supabase
@@ -2210,4 +2221,5 @@ async function showMainSystem() {
 
 // ========================================
 // 4. NAVEGAÇÃO E UI (Restante do seu código)
+
 
