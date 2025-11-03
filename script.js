@@ -563,67 +563,50 @@ async function loadActiveProject() {
     console.log("Carregando projeto ativo...");
     currentProject = null;
     currentColumns = [];
-    currentGroups = []; // NOVO
+    currentGroups = [];
+    
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
-       let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
-        if (projetos) projetos = projetos.filter(Boolean); // Filtra valores nulos retornados pelo RLS
+        // Tenta buscar projetos existentes
+        let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
+        
+        // CORREÇÃO: Validação mais robusta
+        const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
 
-       if (!projetos || projetos.length === 0 || !projetos[0]) { // <-- MUDANÇA AQUI
-            console.warn("Nenhum projeto encontrado ou projeto inválido. Criando 'Meu Primeiro Quadro'...");
+        if (projetosValidos.length === 0) {
+            console.warn("Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
+            
+            // Cria projeto padrão
             const newProject = {
-                 nome: 'Meu Primeiro Quadro',
-                 created_by: currentUser.id,
-                 org_id: currentOrg?.id || null
+                nome: 'Meu Primeiro Quadro',
+                created_by: currentUser.id,
+                org_id: currentOrg?.id || null
             };
+            
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
-            if (!createResponse || !createResponse[0]) {
-                throw new Error("Falha ao criar projeto padrão.");
+            
+            // Valida resposta da criação
+            if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
+                console.error("Resposta inválida ao criar projeto:", createResponse);
+                throw new Error("Falha ao criar projeto padrão. Verifique as permissões RLS da tabela 'projetos'.");
             }
+            
             currentProject = createResponse[0];
+            console.log("Projeto criado com sucesso:", currentProject);
         } else {
-            currentProject = projetos[0];
+            currentProject = projetosValidos[0];
+            console.log("Projeto encontrado:", currentProject);
         }
 
         // VERIFICAÇÃO FINAL DE SEGURANÇA
         if (!currentProject || !currentProject.id) {
-            console.error("Erro fatal: currentProject ainda é inválido após a lógica.", currentProject);
-            throw new Error("Não foi possível carregar ou criar um projeto válido para este time.");
+            console.error("Erro fatal: currentProject inválido:", currentProject);
+            throw new Error("Não foi possível carregar ou criar um projeto válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'.");
         }
 
-        console.log("Projeto ativo:", currentProject);
-
-        // Carrega Colunas (Status)
-       let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-currentColumns = (cols || []).filter(Boolean); // <-- Este filtro .filter(Boolean) é a correção
-
-        if (!currentColumns || currentColumns.length === 0) {
-            console.warn("Nenhuma coluna encontrada. Criando padrão.");
-            await createDefaultColumns(currentProject.id);
-            let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-currentColumns = (cols || []).filter(Boolean); // <-- Este filtro .filter(Boolean) é a correção
-             if (!currentColumns || currentColumns.length === 0){
-                  throw new Error("Falha ao criar ou buscar colunas padrão.");
-             }
-        }
-        console.log("Colunas carregadas:", currentColumns.map(c => `${c.nome} (${c.id})`));
-
-        // NOVO: Carrega Grupos de Tarefas
-       let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-currentGroups = (groups || []).filter(Boolean); // <-- Adicionamos o filtro por segurança
-        if (!currentGroups) {
-            currentGroups = [];
-        }
-        console.log("Grupos carregados:", currentGroups.map(g => `${g.nome} (${g.id})`));
-
-
-    } catch (error) {
-        console.error("Erro fatal ao carregar projeto/colunas:", error);
-        throw error;
-    }
-}
-
+        console.log("✓ Projeto ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
+        
 async function createDefaultColumns(projectId) {
      const defaultCols = [
           { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
