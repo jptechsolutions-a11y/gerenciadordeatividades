@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('joinTeamForm')?.addEventListener('submit', handleJoinTeamFormSubmit);
     
     // --- LÓGICA DA BARRA LATERAL RECOLHÍVEL ---
-// ... (código existente da sidebar) ...
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.querySelector('.sidebar');
     const appShell = document.getElementById('appShell');
@@ -68,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LÓGICA DOS DROPDOWNS (Perfil e Seletor de Time) ---
-// ... (código existente dos dropdowns) ...
     function setupDropdown(buttonId, dropdownId) {
         const button = document.getElementById(buttonId);
         const dropdown = document.getElementById(dropdownId);
@@ -78,12 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             // Fecha outros dropdowns
             document.querySelectorAll('.dropdown-menu.open, .relative.open').forEach(dd => {
+                // CORREÇÃO: Verifique se o elemento pai (o 'relative') é o mesmo
                 if (dd.id !== dropdownId && dd.id !== dropdown.parentElement.id) {
                     dd.classList.remove('open');
                 }
             });
             // Alterna o atual
             dropdown.classList.toggle('open');
+            // ATUALIZADO: Adiciona/Remove 'open' do elemento pai (o 'relative')
             dropdown.parentElement.classList.toggle('open');
         });
     }
@@ -103,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Pega a função 'createClient' da biblioteca Supabase
-// ... (código existente do supabaseClient e onAuthStateChange) ...
     const { createClient } = supabase;
     
     // Inicializa o cliente Supabase AQUI DENTRO
@@ -136,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Adiciona a função logout ao window para ser acessível pelo onclick=""
-// ... (código existente da função logout) ...
     window.logout = async () => {
         console.log("Deslogando usuário...");
         currentUser = null;
@@ -154,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Inicializa o App com a sessão
-// ... (código existente da função initializeApp) ...
 async function initializeApp(session) {
     
     localStorage.setItem('auth_token', session.access_token);
@@ -167,7 +164,6 @@ async function initializeApp(session) {
         let profileResponse = await supabaseRequest(endpoint, 'GET');
 
         // Se não tem perfil, cria um
-// ... (código existente de criação de perfil) ...
         if (!profileResponse || !profileResponse[0]) {
              console.warn("Perfil não encontrado. Tentando criar...");
              const newProfile = {
@@ -189,13 +185,11 @@ async function initializeApp(session) {
         }
 
         // Mapeia as organizações
-// ... (código existente de mapeamento de orgs) ...
         const userOrgs = (currentUser.usuario_orgs || []).map(uo => uo.organizacoes).filter(Boolean);
         currentUser.organizacoes = userOrgs;
         delete currentUser.usuario_orgs;
 
         // Bloco de correção (se o auth_user_id estiver faltando)
-// ... (código existente de correção de auth_user_id) ...
         if (!currentUser.auth_user_id && authUser.id) {
             console.log(`Corrigindo auth_user_id (NULL) para o usuário: ${currentUser.id}`);
             await supabaseRequest(`usuarios?id=eq.${currentUser.id}`, 'PATCH', {
@@ -219,7 +213,6 @@ async function initializeApp(session) {
 // 3. LÓGICA DE ONBOARDING E NAVEGAÇÃO
 // ========================================
 
-// ... (código existente de redirectToDashboard, openCreateTeamModal, openJoinTeamModal, showOnboardingTab) ...
 function redirectToDashboard() {
     if (!currentUser || !currentUser.organizacoes) {
         console.error("Erro fatal: Dados do usuário incompletos.");
@@ -285,7 +278,6 @@ function showOnboardingTab(tabName) {
 }
 
 // Handler para o formulário de CRIAÇÃO de time
-// ... (código existente da função handleCreateTeamFormSubmit) ...
 async function handleCreateTeamFormSubmit(event) {
     event.preventDefault();
     const alert = document.getElementById('createTeamAlert');
@@ -341,7 +333,6 @@ async function handleCreateTeamFormSubmit(event) {
 }
 
 // Handler para o formulário de ENTRAR com código
-// ... (código existente da função handleJoinTeamFormSubmit) ...
 async function handleJoinTeamFormSubmit(event) {
     event.preventDefault();
     const alert = document.getElementById('joinTeamAlert');
@@ -399,7 +390,6 @@ async function handleJoinTeamFormSubmit(event) {
 
 
 // Mostra o sistema principal (App)
-// ... (código existente da função showMainSystem) ...
 function showMainSystem() {
     document.getElementById('appShell').style.display = 'flex';
     document.body.classList.add('system-active');
@@ -430,7 +420,6 @@ function showMainSystem() {
 }
 
 // NOVO: Atualiza a UI do seletor de time
-// ... (código existente da função updateActiveTeamUI) ...
 function updateActiveTeamUI() {
     if (currentOrg) {
         document.getElementById('topBarProjectName').textContent = currentOrg.nome || 'Projeto Pessoal';
@@ -447,7 +436,6 @@ function updateActiveTeamUI() {
 }
 
 // NOVO: Popula o dropdown do seletor de times
-// ... (código existente da função populateTeamSelector) ...
 function populateTeamSelector() {
     const list = document.getElementById('teamSelectorList');
     if (!list) return;
@@ -475,7 +463,6 @@ function populateTeamSelector() {
 }
 
 // NOVO: Troca o time ativo
-// ... (código existente da função switchActiveTeam) ...
 async function switchActiveTeam(orgId) {
     const newOrg = currentUser.organizacoes.find(org => org.id === orgId);
     if (!newOrg || newOrg.id === currentOrg?.id) {
@@ -513,7 +500,6 @@ async function switchActiveTeam(orgId) {
 // ========================================
 
 function showView(viewId, element = null) {
-// ... (código existente da função showView) ...
     document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
     const viewEl = document.getElementById(viewId);
     if(viewEl) viewEl.classList.add('active');
@@ -537,13 +523,11 @@ function showView(viewId, element = null) {
 }
 
 function closeModal(modalId) {
-// ... (código existente da função closeModal) ...
     const modal = document.getElementById(modalId);
     if (modal) modal.style.display = 'none';
 }
 
 function showNotification(message, type = 'info', timeout = 4000) {
-// ... (código existente da função showNotification) ...
     const container = document.getElementById('notificationContainer');
     if (!container) return;
     const notification = document.createElement('div');
@@ -567,7 +551,6 @@ function showNotification(message, type = 'info', timeout = 4000) {
 // 5. Carregar Projeto Ativo e Colunas
 // ========================================
 async function loadActiveProject() {
-// ... (código existente da função loadActiveProject) ...
     console.log("Carregando projeto ativo...");
     currentProject = null;
     currentColumns = [];
@@ -578,7 +561,6 @@ async function loadActiveProject() {
         const projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
 
         if (!projetos || projetos.length === 0) {
-// ... (código existente de criação de projeto padrão) ...
             console.warn("Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
             const newProject = {
                  nome: 'Meu Primeiro Quadro',
@@ -594,7 +576,6 @@ async function loadActiveProject() {
         console.log("Projeto ativo:", currentProject);
 
         // Carrega Colunas (Status)
-// ... (código existente de carregamento/criação de colunas) ...
         currentColumns = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
 
         if (!currentColumns || currentColumns.length === 0) {
@@ -622,7 +603,6 @@ async function loadActiveProject() {
 }
 
 async function createDefaultColumns(projectId) {
-// ... (código existente da função createDefaultColumns) ...
      const defaultCols = [
           { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
           { projeto_id: projectId, nome: 'Em Andamento', ordem: 1 },
@@ -638,7 +618,6 @@ async function createDefaultColumns(projectId) {
 // ========================================
 // 6. LÓGICA DO DASHBOARD (CORRIGIDA)
 // ========================================
-// ... (código existente de loadDashboardView, renderStatusChart, renderGanttChart) ...
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
     
@@ -717,7 +696,6 @@ async function loadDashboardView() {
 }
 
 async function renderStatusChart() {
-// ... (código existente da função renderStatusChart) ...
     if (!currentProject || currentColumns.length === 0) return;
     const ctx = document.getElementById('statusChart')?.getContext('2d');
     if (!ctx) {
@@ -755,7 +733,6 @@ async function renderStatusChart() {
     }
 }
 async function renderGanttChart() {
-// ... (código existente da função renderGanttChart) ...
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
      if (!ctx) {
@@ -840,7 +817,6 @@ async function renderGanttChart() {
 // ========================================
 // 7. LÓGICA DO KANBAN (CORRIGIDA)
 // ========================================
-// ... (código existente de loadKanbanView, createTaskCard, drag/drop handlers) ...
 let draggedTask = null;
 
 async function loadKanbanView() {
@@ -919,7 +895,6 @@ async function loadKanbanView() {
 }
 
 function createTaskCard(task) {
-// ... (código existente da função createTaskCard) ...
     const card = document.createElement('div');
     card.id = `task-${task.id}`;
     card.className = `kanban-card priority-${task.prioridade}`;
@@ -974,7 +949,6 @@ function createTaskCard(task) {
 }
 
 function handleDragStart(e) {
-// ... (código existente da função handleDragStart) ...
     draggedTask = e.target.closest('.kanban-card');
     if(!draggedTask) return;
     e.dataTransfer.effectAllowed = 'move';
@@ -982,7 +956,6 @@ function handleDragStart(e) {
 }
 
 function handleDragOver(e) {
-// ... (código existente da função handleDragOver) ...
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     const columnContent = e.target.closest('.kanban-column-content');
@@ -993,13 +966,11 @@ function handleDragOver(e) {
 }
 
 document.querySelectorAll('.kanban-column-content').forEach(col => {
-// ... (código existente do listener) ...
     col.addEventListener('dragleave', (e) => col.classList.remove('drag-over'));
     col.addEventListener('drop', (e) => col.classList.remove('drag-over'));
 });
 
 async function handleDrop(e, newColunaId) {
-// ... (código existente da função handleDrop) ...
     e.preventDefault();
     document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over')); 
 
@@ -1093,7 +1064,7 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
 
     // Preenche os dropdowns de Responsáveis e Grupos
     await loadTeamMembersForSelect('taskAssignee', task ? task.assignee_id : null);
-    await loadGroupsForSelect('taskGroup', task ? task.grupo_id : defaultGrupoId); // ATUALIZADO
+    await loadGroupsForSelect('taskGroup', task ? task.grupo_id : (defaultGrupoId || '')); // ATUALIZADO
 
     modal.style.display = 'flex';
     feather.replace();
@@ -1101,7 +1072,6 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
 
 // --- ATUALIZADO: Carrega membros E grupos ---
 async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
-// ... (código existente da função loadTeamMembersForSelect) ...
     const select = document.getElementById(selectId);
     if (!select) return;
 
@@ -1232,7 +1202,6 @@ async function handleTaskFormSubmit(e) {
 // 9. LÓGICA DO TIME (Convites)
 // ========================================
 async function loadTimeView() {
-// ... (código existente da função loadTimeView) ...
     const teamBody = document.getElementById('teamTableBody');
     const inviteCodeInput = document.getElementById('teamInviteCodeDisplay');
     teamBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div> Carregando membros...</td></tr>';
@@ -1268,7 +1237,6 @@ async function loadTimeView() {
 
 
         // Busca os membros
-// ... (código existente de busca de membros) ...
         const members = await supabaseRequest(`usuario_orgs?org_id=eq.${orgId}&select=role,joined_at,usuarios(id,nome,email,ativo,profile_picture_url)`, 'GET');
 
         if (!members || members.length === 0) {
@@ -1308,7 +1276,6 @@ async function loadTimeView() {
 }
 
 function openInviteModal() {
-// ... (código existente da função openInviteModal) ...
     if (!currentOrg?.id) {
          showNotification("Você precisa estar em um time para convidar.", "error");
          return;
@@ -1320,7 +1287,6 @@ function openInviteModal() {
 }
 
 async function handleInviteFormSubmit(e) {
-// ... (código existente da função handleInviteFormSubmit) ...
     e.preventDefault();
     const alert = document.getElementById('inviteAlert');
     alert.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Enviando convite...</div>';
@@ -1359,7 +1325,6 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
-// ... (código existente da função removeMember) ...
      const confirmation = prompt(`Tem certeza que deseja remover este membro do time? Digite 'REMOVER' para confirmar.`);
      if (confirmation !== 'REMOVER') {
         showNotification("Remoção cancelada.", "info");
@@ -1377,7 +1342,6 @@ async function removeMember(userIdToRemove) {
 }
 
 // NOVO: Copiar código de convite
-// ... (código existente da função copyInviteCode) ...
 function copyInviteCode() {
     const code = document.getElementById('teamInviteCodeDisplay').value;
     if (!code || code === 'Carregando...' || code === 'Erro' || code === 'N/A') {
@@ -1405,7 +1369,6 @@ function copyInviteCode() {
 // ========================================
 // 10. LÓGICA DO BLOCO DE NOTAS
 // ========================================
-// ... (código existente de loadNotasView, createNewNote, openNote, saveNote) ...
 async function loadNotasView() {
     const list = document.getElementById('noteList');
     list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>
@@ -1525,7 +1488,6 @@ async function saveNote() {
 // ========================================
 // 11. LÓGICA DO CALENDÁRIO
 // ========================================
-// ... (código existente da função loadCalendarView) ...
 async function loadCalendarView() {
     const container = document.getElementById('calendarContainer');
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Carregando tarefas...</div>`;
@@ -1566,7 +1528,6 @@ async function loadCalendarView() {
 // ========================================
 // 12. UTILITÁRIOS (Sua API Proxy)
 // ========================================
-// ... (código existente da função supabaseRequest e escapeHTML) ...
 async function supabaseRequest(endpoint, method = 'GET', body = null, headers = {}) {
     const authToken = localStorage.getItem('auth_token');
     if (!authToken) {
@@ -1623,7 +1584,6 @@ function escapeHTML(str) {
 // ========================================
 // 13. FUNÇÕES: PERFIL
 // ========================================
-// ... (código existente de loadPerfilView, previewProfilePicture, handlePerfilFormSubmit) ...
 function loadPerfilView() {
     const form = document.getElementById('perfilForm');
     const alertContainer = document.getElementById('perfilAlert');
@@ -1748,7 +1708,6 @@ async function handlePerfilFormSubmit(event) {
 // ========================================
 // 14. FUNÇÕES: TIMELINE
 // ========================================
-// ... (código existente da função loadTimelineView e timeAgo) ...
 async function loadTimelineView() {
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando timeline...</div>';
@@ -1857,7 +1816,8 @@ async function loadListView(forceReload = false) { // ATUALIZADO
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         
         // Query ÚNICA: Pega os grupos e, aninhado, pega as tarefas de cada grupo
-        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc,tarefas.created_at.desc`;
+        // CORREÇÃO: Movida a ordenação de tarefas para DENTRO do select aninhado.
+        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)!order=created_at.desc)&order=ordem.asc`;
         const groupsWithTasks = await supabaseRequest(query, 'GET');
 
         // Pega tarefas SEM grupo
@@ -1926,10 +1886,14 @@ async function loadListView(forceReload = false) { // ATUALIZADO
             const statusCell = document.createElement('td');
             statusCell.className = 'status-cell';
             if (task.status) {
+                // CORREÇÃO: Usar o nome da coluna de status para o slug
                 const statusSlug = task.status.nome.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
                 statusCell.innerHTML = `<span class="status-badge status-${statusSlug}">${escapeHTML(task.status.nome)}</span>`;
             } else {
-                 statusCell.innerHTML = `<span class="status-badge status-default">Sem Status</span>`;
+                 // Fallback para colunas não encontradas (ex: tarefas antigas)
+                 const defaultStatus = currentColumns[0];
+                 const statusSlug = defaultStatus ? defaultStatus.nome.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '') : 'default';
+                 statusCell.innerHTML = `<span class="status-badge status-${statusSlug}">${defaultStatus ? escapeHTML(defaultStatus.nome) : 'A Fazer'}</span>`;
             }
 
             // Célula: Esforço Previsto
@@ -2050,16 +2014,42 @@ async function loadListView(forceReload = false) { // ATUALIZADO
             noGroupTR.className = 'task-group-header expanded';
             noGroupTR.dataset.groupId = 'none';
             noGroupTR.onclick = () => toggleGroup('none');
+
+            // Cálculos de Resumo para "Sem Grupo"
+            let totalPrevisto = 0;
+            let totalUtilizado = 0;
+            tasksWithoutGroup.forEach(t => {
+                totalPrevisto += t.esforco_previsto || 0;
+                totalUtilizado += t.esforco_utilizado || 0;
+            });
+
             noGroupTR.innerHTML = `
-                <td colspan="7">
+                <td colspan="3">
                     <span class="group-toggle">
                         <i data-feather="chevron-down" class="h-5 w-5"></i>
                         <i data-feather="chevron-right" class="h-5 w-5"></i>
                     </span>
                     Tarefas sem Grupo
-                </td>`;
+                    <span class="text-gray-400 font-normal ml-2">(${tasksWithoutGroup.length} tarefas)</span>
+                </td>
+                <td class="esforco-cell">${totalPrevisto}h</td>
+                <td class="esforco-cell">${totalUtilizado}h</td>
+                <td colspan="2"></td>
+            `;
             tbody.appendChild(noGroupTR);
             
+            // Linha de Resumo (escondida)
+            const summaryTR = document.createElement('tr');
+            summaryTR.className = 'task-group-summary';
+            summaryTR.dataset.groupId = 'none';
+            summaryTR.innerHTML = `
+                <td colspan="3"><span class="summary-label ml-8">Tarefas sem Grupo (Resumo)</span></td>
+                <td class="esforco-cell">${totalPrevisto}h</td>
+                <td class="esforco-cell">${totalUtilizado}h</td>
+                <td colspan="2"></td>
+            `;
+            tbody.appendChild(summaryTR);
+
             // Tarefas
             tasksWithoutGroup.forEach(task => {
                 tbody.appendChild(renderTaskRow(task));
