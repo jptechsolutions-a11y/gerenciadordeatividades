@@ -19,17 +19,17 @@
     <!-- ====================================================== -->
     <!-- MODAL DE ONBOARDING (CRIAR OU ENTRAR) - NOVO -->
     <!-- ====================================================== -->
-    <!-- CORREÇÃO DE ID: Mudado de 'onboardingModal' para 'teamOnboardingModal' para bater com o JS -->
+    <!-- ID 'teamOnboardingModal' para bater com o JS -->
     <div id="teamOnboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
         <div class="modal-content" style="max-width: 550px; width: 100%; padding: 0; overflow: hidden;">
             
             <!-- Abas de Navegação -->
             <div class="flex border-b border-gray-200">
-                <!-- CORREÇÃO DE ID: Mudado de 'tabCriarTime' para 'tabCreateTeam' -->
+                <!-- ID 'tabCreateTeam' -->
                 <button id="tabCreateTeam" class="flex-1 p-4 font-semibold text-center text-blue-600 border-b-2 border-blue-600" onclick="showOnboardingTab('create')">
                     <i data-feather="plus-circle" class="h-4 w-4 inline-block mr-2"></i> Criar Novo Time
                 </button>
-                <!-- CORREÇÃO DE ID: Mudado de 'tabEntrarTime' para 'tabJoinTeam' -->
+                <!-- ID 'tabJoinTeam' -->
                 <button id="tabJoinTeam" class="flex-1 p-4 font-medium text-center text-gray-500 hover:bg-gray-50" onclick="showOnboardingTab('join')">
                     <i data-feather="log-in" class="h-4 w-4 inline-block mr-2"></i> Entrar com Código
                 </button>
@@ -38,7 +38,7 @@
             <!-- Conteúdo das Abas -->
             <div class="p-8">
                 <!-- Aba 1: Criar Time -->
-                <!-- CORREÇÃO DE ID: Mudado de 'onboardingTabCriar' para 'panelCreateTeam' -->
+                <!-- ID 'panelCreateTeam' -->
                 <div id="panelCreateTeam">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
@@ -61,7 +61,7 @@
                 </div>
 
                 <!-- Aba 2: Entrar com Código -->
-                <!-- CORREÇÃO DE ID: Mudado de 'onboardingTabEntrar' para 'panelJoinTeam' -->
+                <!-- ID 'panelJoinTeam' -->
                 <div id="panelJoinTeam" style="display: none;">
                     <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
                         <img src="icon.png" class="w-16 h-16 mb-4 mx-auto object-contain" alt="Logo JP Tech">
@@ -101,11 +101,11 @@
                 <div class="separator"></div>
 
                 <!-- NOVO: Seletor de Times (Dropdown) -->
-                <!-- CORREÇÃO DE ID: Mudado de 'teamSelectorDropdown' para 'teamSelector' -->
+                <!-- ID 'teamSelector' -->
                 <div id="teamSelector" class="relative">
                     <button id="teamSelectorButton" class="flex items-center gap-2 rounded-md hover:bg-gray-700 p-2 transition-colors">
                         <div class="flex flex-col text-left">
-                            <!-- CORREÇÃO DE ID: Mudado de 'topBarOrgName' para 'topBarProjectName' (para bater com o JS antigo) -->
+                            <!-- ID 'topBarProjectName' (para bater com o JS antigo) -->
                             <span class="text-sm font-semibold text-white" id="topBarProjectName">Carregando...</span>
                             <span class="text-xs text-gray-400">JProjects</span>
                         </div>
@@ -113,13 +113,13 @@
                     </button>
                     <!-- Menu Dropdown de Times -->
                     <div id="teamSelectorMenu" class="dropdown-menu" style="width: 280px; top: 110%; background: #1e293b;">
-                        <!-- CORREÇÃO DE ID: Mudado de 'teamListContainer' para 'teamSelectorList' -->
+                        <!-- ID 'teamSelectorList' -->
                         <div id="teamSelectorList" class="max-h-60 overflow-y-auto">
                             <!-- Times serão preenchidos pelo JS -->
                             <div class="p-4 text-center text-gray-400 text-sm">Carregando times...</div>
                         </div>
                         <div class="border-t border-gray-600 p-2">
-                             <!-- CORREÇÃO: JS usa 'openCreateTeamModal' e 'openJoinTeamModal' -->
+                             <!-- JS usa 'openCreateTeamModal' e 'openJoinTeamModal' -->
                              <a href="#" class="dropdown-item" onclick="openCreateTeamModal()">
                                 <i data-feather="plus-circle" class="h-4 w-4 mr-2"></i> Criar Novo Time
                             </a>
@@ -182,7 +182,7 @@
                     <a href="#projetos" class="nav-item" title="Projetos (Kanban)" onclick="showView('projetosView', this)">
                         <i data-feather="trello" class="h-5 w-5 mr-3"></i> <span class="nav-text">Projetos (Kanban)</span>
                     </a>
-                    <!-- CORREÇÃO: href '#lista' deve bater com o JS ('listView') -->
+                    <!-- href '#lista' deve bater com o JS ('listView') -->
                     <a href="#lista" class="nav-item" title="Lista de Tarefas" onclick="showView('listView', this)">
                         <i data-feather="list" class="h-5 w-5 mr-3"></i> <span class="nav-text">Lista</span>
                     </a>
@@ -249,6 +249,7 @@
                         <div class="flex justify-between items-center mb-6">
                             <h1 class="text-3xl font-bold text-gray-800">Lista de Tarefas</h1>
                         </div>
+                        <!-- ID 'taskListContainer' (para o JS encontrar) -->
                         <div id="taskListContainer" class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
                             <div class="loading p-8"><div class="spinner"></div> Carregando lista...</div>
                         </div>
@@ -387,7 +388,7 @@
     <!-- MODAIS (Pop-ups) -->
     <!-- ====================================================== -->
   
-    <!-- #taskModal (Atualizado com 'Responsável') -->
+    <!-- #taskModal (Atualizado com 'Responsável', 'Grupo' e 'Esforço') -->
     <div id="taskModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="flex justify-between items-center mb-4">
@@ -426,7 +427,7 @@
                         </select>
                     </div>
                 </div>
-                <!-- NOVO CAMPO: Responsável -->
+                <!-- CAMPO: Responsável -->
                 <div class="form-group mb-4">
                     <label for="taskAssignee">Responsável:</label>
                     <select id="taskAssignee" class="w-full">
@@ -434,6 +435,32 @@
                         <!-- Membros do time serão preenchidos pelo JS -->
                     </select>
                 </div>
+                <!-- NOVO: Grupo e Esforço -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label for="taskGroup">Grupo:</label>
+                        <select id="taskGroup" class="w-full">
+                            <option value="">Nenhum grupo</option>
+                            <!-- Grupos serão preenchidos pelo JS -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDataConclusaoReal">Data Real Conclusão (Opcional):</label>
+                        <input type="date" id="taskDataConclusaoReal" class="w-full">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label for="taskEsforcoPrevisto">Esforço Previsto (horas):</label>
+                        <input type="number" id="taskEsforcoPrevisto" class="w-full" placeholder="Ex: 8">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskEsforcoUtilizado">Esforço Utilizado (horas):</label>
+                        <input type="number" id="taskEsforcoUtilizado" class="w-full" placeholder="Ex: 4">
+                    </div>
+                </div>
+                <!-- FIM: Grupo e Esforço -->
+
                 <div id="taskAlert" class="mt-4"></div>
                 <div class="flex gap-4 mt-6 justify-end">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('taskModal')">Cancelar</button>
