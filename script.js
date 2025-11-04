@@ -377,13 +377,14 @@ async function showMainSystem() {
                         <i data-feather="alert-circle" class="h-6 w-6 text-red-500 mr-3"></i>
                         <h2 class="text-xl font-bold text-red-900">Erro na Inicialização</h2>
                     </div>
-                    <p class="text-red-700 mb-4">${escapeHTML(err.message)}</p>
+                    <!-- Mensagem de erro atualizada para refletir o problema de script -->
+                    <p class="text-red-700 mb-4">Falha ao carregar dados do quadro: ${escapeHTML(err.message)}</p>
                     <div class="bg-white p-4 rounded border border-red-200 mb-4">
                         <h3 class="font-semibold text-red-900 mb-2">Possíveis causas:</h3>
                         <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
-                            <li>Políticas RLS (Row Level Security) não configuradas corretamente no Supabase</li>
-                            <li>Usuário sem permissão para criar ou visualizar projetos/quadros</li>
-                            <li>Problema de conexão com o banco de dados</li>
+                            <li>Ocorreu um erro no script ao processar os dados do banco.</li>
+                            <li>Políticas RLS (Row Level Security) podem estar retornando dados inesperados (como 'null').</li>
+                            <li>Problema de conexão com o banco de dados.</li>
                         </ul>
                     </div>
                     <div class="flex gap-3">
@@ -565,14 +566,29 @@ async function loadActiveProject() {
         console.log("✅ Quadro ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
 
         let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-        currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
+        
+        // --- CORREÇÃO DE TYPEERROR (Linha ~537) ---
+        // Filtra com segurança caso 'cols' seja [null] ou contenha null
+        if (Array.isArray(cols)) {
+            currentColumns = cols.filter(c => c && c.id);
+        } else {
+            currentColumns = [];
+        }
+        // --- FIM DA CORREÇÃO ---
 
         if (currentColumns.length === 0) {
             console.warn("⚠️ Nenhuma coluna (status) encontrada. Criando colunas padrão...");
             await createDefaultColumns(currentProject.id);
             
             cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-            currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
+            
+            // --- CORREÇÃO DE TYPEERROR (REPETIDA) ---
+            if (Array.isArray(cols)) {
+                currentColumns = cols.filter(c => c && c.id);
+            } else {
+                currentColumns = [];
+            }
+            // --- FIM DA CORREÇÃO ---
             
             if (currentColumns.length === 0) {
                 throw new Error("Falha ao criar ou buscar colunas (status) padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
@@ -582,7 +598,15 @@ async function loadActiveProject() {
         console.log("✅ Colunas (Status) carregadas:", currentColumns.length);
 
         let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem,prioridade&order=ordem.asc`, 'GET');
-        currentGroups = Array.isArray(groups) ? groups.filter(g => g && g.id) : [];
+        
+        // --- CORREÇÃO DE TYPEERROR (Linha ~560) ---
+        // Filtra com segurança caso 'groups' seja [null] ou contenha null
+        if (Array.isArray(groups)) {
+            currentGroups = groups.filter(g => g && g.id);
+        } else {
+            currentGroups = [];
+        }
+        // --- FIM DA CORREÇÃO ---
         
         console.log("✅ Projetos (grupos_tarefas) carregados:", currentGroups.length);
 
