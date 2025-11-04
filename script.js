@@ -1956,7 +1956,7 @@ async function loadProjectListView(forceReload = false) {
 
     const loadingHTML = `
         <tr id="projectListLoading">
-            <td colspan="6">
+            <td colspan="12"> <!-- Ação: Colspan atualizado para 12 -->
                 <div class="loading" style="color: #94a3b8; background: #1e293b; padding: 40px 0;">
                     <div class="spinner" style="border-top-color: var(--primary);"></div>
                     Carregando projetos...
@@ -1977,12 +1977,14 @@ async function loadProjectListView(forceReload = false) {
 
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
 
-        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(id,titulo,data_inicio,data_entrega,esforco_previsto,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
+        // Ação: Adicionado 'esforco_utilizado' na query principal
+        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(id,titulo,data_inicio,data_entrega,esforco_previsto,esforco_utilizado,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
         
         console.log("Query Lista de Projetos:", query);
         const projectsList = await supabaseRequest(query, 'GET');
 
-        const tasksWithoutGroupQuery = `tarefas?${projectFilter}&grupo_id=is.null&select=id,titulo,data_inicio,data_entrega,esforco_previsto,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`;
+        // Ação: Adicionado 'esforco_utilizado' na query de tarefas sem grupo
+        const tasksWithoutGroupQuery = `tarefas?${projectFilter}&grupo_id=is.null&select=id,titulo,data_inicio,data_entrega,esforco_previsto,esforco_utilizado,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`;
         
         console.log("Query Tarefas Sem Grupo:", tasksWithoutGroupQuery);
         const tasksWithoutGroup = await supabaseRequest(tasksWithoutGroupQuery, 'GET');
@@ -2020,14 +2022,14 @@ async function loadProjectListView(forceReload = false) {
         }
         
         if (tbody.innerHTML === '') {
-             tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Nenhum projeto ou tarefa encontrada. Clique em "Novo Projeto" para começar.</td></tr>`;
+             tbody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-gray-400">Nenhum projeto ou tarefa encontrada. Clique em "Novo Grupo" para começar.</td></tr>`;
         }
 
         feather.replace();
 
     } catch (error) {
         console.error("Erro ao carregar lista de projetos:", error);
-        tbody.innerHTML = `<tr><td colspan="6"><div class="alert alert-error m-4">Erro ao carregar lista: ${escapeHTML(error.message)}</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12"><div class="alert alert-error m-4">Erro ao carregar lista: ${escapeHTML(error.message)}</div></td></tr>`;
     }
 }
 
@@ -2036,7 +2038,7 @@ function createProjectHeaderRow(project) {
     tr.className = 'project-header-row expanded'; 
     tr.dataset.projectId = project.id;
     tr.onclick = (e) => {
-        if (e.target.closest('.btn-icon-task')) return;
+        if (e.target.closest('.btn-icon-task') || e.target.closest('.table-checkbox')) return; // Ação: Não colapsar ao clicar no checkbox ou botão
         toggleProjectGroup(project.id);
     };
 
@@ -2044,7 +2046,7 @@ function createProjectHeaderRow(project) {
     const priority = project.prioridade || 'baixa';
 
     tr.innerHTML = `
-        <td colspan="6">
+        <td colspan="12"> <!-- Ação: Colspan atualizado para 12 -->
             <div class="project-header-content">
                 <i data-feather="chevron-down" class="h-5 w-5 project-toggle"></i>
                 <span class="project-priority-dot priority-${priority}" title="Prioridade: ${priority}"></span>
@@ -2059,43 +2061,59 @@ function createProjectHeaderRow(project) {
     return tr;
 }
 
+// AÇÃO: Função TOTALMENTE REESCRITA
 function createTaskDataRow(task) {
     const tr = document.createElement('tr');
     tr.className = 'task-data-row';
     tr.dataset.taskId = task.id;
     tr.dataset.projectId = task.grupo_id || 'no-group';
     
+    // 1. Checkbox
+    const checkboxHtml = `<td><input type="checkbox" class="table-checkbox" onclick="event.stopPropagation();" /></td>`;
+
+    // 2. Tarefa (Clicável para abrir modal)
+    const taskTitleHtml = `
+        <td class="task-title-cell" onclick='openTaskModal(${JSON.stringify(task)})'>
+            <i data-feather="file-text" class="h-4 w-4"></i> ${escapeHTML(task.titulo)}
+        </td>`;
+
+    // 3. Responsável
     let assigneeHtml = '';
     if (task.assignee) {
         assigneeHtml = `
-        <div class="person-cell" onclick="openAssigneeModal('${task.id}')">
-            <img src="${escapeHTML(task.assignee.profile_picture_url || 'https://placehold.co/24x24/00D4AA/023047?text=JP')}" alt="${escapeHTML(task.assignee.nome)}">
+        <div class="person-cell" onclick="event.stopPropagation(); openAssigneeModal('${task.id}')">
+            <img src="${escapeHTML(task.assignee.profile_picture_url || 'https://placehold.co/20x20/00D4AA/023047?text=JP')}" alt="${escapeHTML(task.assignee.nome)}">
             <span>${escapeHTML(task.assignee.nome)}</span>
         </div>`;
     } else {
         assigneeHtml = `
-        <div class="person-cell person-unassigned" onclick="openAssigneeModal('${task.id}')">
+        <div class="person-cell person-unassigned" onclick="event.stopPropagation(); openAssigneeModal('${task.id}')">
             <i data-feather="user-plus" class="h-4 w-4"></i>
         </div>`;
     }
+    const assigneeCell = `<td>${assigneeHtml}</td>`;
 
+    // 4. Status (Clicável)
     const status = task.status ? task.status.nome.toLowerCase().replace(/ /g, '-') : 'a-fazer';
     const statusText = task.status ? task.status.nome : 'A Fazer';
     let statusHtml = `
         <div class="status-box status-${status}" onclick="openStatusModal(event, '${task.id}', '${status}')">
             ${escapeHTML(statusText)}
         </div>`;
+    const statusCell = `<td>${statusHtml}</td>`;
 
-    let timelineHtml = '<div class="timeline-box" onclick="openTimelineModal(\''+task.id+'\')">';
+    // 5. Timeline (Clicável)
+    let timelineHtml = '<div class="timeline-box" onclick="event.stopPropagation(); openTimelineModal(\''+task.id+'\')">';
     if (task.data_inicio && task.data_entrega) {
         const start = new Date(task.data_inicio).getTime();
         const end = new Date(task.data_entrega).getTime();
         const today = new Date().getTime();
-        const totalDuration = (end - start) > 0 ? (end - start) : 1; 
+        const totalDuration = (end - start) > 0 ? (end - start) : (24 * 60 * 60 * 1000); // Evita divisão por zero, assume 1 dia
         const elapsed = today - start;
         let progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
 
-        const color = (status === 'concluído' || status === 'feito') ? '#059669' : '#f59e0b';
+        // Define a cor da barra
+        const color = (status === 'concluído' || status === 'feito') ? 'var(--primary)' : '#f59e0b'; // Verde JP ou Laranja
         
         timelineHtml += `<div class="timeline-bar" style="background-color: ${color}; width: ${progress}%;"></div>`;
         timelineHtml += `<span class="timeline-text">${formatDateRange(task.data_inicio, task.data_entrega)}</span>`;
@@ -2103,9 +2121,36 @@ function createTaskDataRow(task) {
          timelineHtml += `<span class="timeline-text">-</span>`;
     }
     timelineHtml += '</div>';
+    const timelineCell = `<td>${timelineHtml}</td>`;
+    
+    // 6. Duração
+    let duracao = '-';
+    if (task.data_inicio && task.data_entrega) {
+        const start = new Date(task.data_inicio);
+        const end = new Date(task.data_entrega);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 para incluir o dia de início
+        duracao = `${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
+    }
+    const duracaoCell = `<td class="duration-cell">${duracao}</td>`;
 
-    const effort = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
+    // 7. Dependente de (Exemplo estático, idealmente viria do DB)
+    // TODO: Adicionar lógica de dependências se existir no 'task'
+    const dependenteCell = `<td class="dependency-cell"><span class="dependency-cell-empty">-</span></td>`;
 
+    // 8. Esforço Previsto
+    const esforcoPrevisto = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
+    const esforcoPrevistoCell = `<td class="effort-cell">${esforcoPrevisto}</td>`;
+
+    // 9. Esforço Utilizado
+    const esforcoUtilizado = task.esforco_utilizado ? `${task.esforco_utilizado}h` : '-';
+    const esforcoUtilizadoCell = `<td class="effort-cell">${esforcoUtilizado}</td>`;
+
+    // 10. Data de Conclusão
+    const dataConclusao = task.data_conclusao_real ? new Date(task.data_conclusao_real + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '-';
+    const dataConclusaoCell = `<td class="date-cell">${dataConclusao}</td>`;
+
+    // 11. Status de Conclusão
     const today = new Date(); today.setHours(0,0,0,0);
     const dueDate = task.data_entrega ? new Date(task.data_entrega + 'T00:00:00') : null;
     const doneDate = task.data_conclusao_real ? new Date(task.data_conclusao_real + 'T00:00:00') : null;
@@ -2121,17 +2166,26 @@ function createTaskDataRow(task) {
     } else if (dueDate && dueDate < today) {
          completionHtml = '<div class="completion-status status-atrasado"><i data-feather="clock" class="h-4 w-4"></i><span>Atrasado</span></div>';
     }
+    const completionCell = `<td>${completionHtml}</td>`;
 
-    tr.innerHTML = `
-        <td class="task-title-cell" onclick='openTaskModal(${JSON.stringify(task)})'>
-            <i data-feather="file-text" class="h-4 w-4"></i> ${escapeHTML(task.titulo)}
-        </td>
-        <td>${assigneeHtml}</td>
-        <td>${statusHtml}</td>
-        <td>${timelineHtml}</td>
-        <td><div class="effort-cell">${effort}</div></td>
-        <td>${completionHtml}</td>
-    `;
+    // 12. Mais Opções
+    const moreCell = `<td><button class="btn-icon-task" style="opacity: 0.5; margin: 0 auto; display: block;" onclick="event.stopPropagation();"><i data-feather="more-horizontal" class="h-4 w-4"></i></button></td>`;
+
+    // Monta a linha completa
+    tr.innerHTML = 
+        checkboxHtml +
+        taskTitleHtml +
+        assigneeCell +
+        statusCell +
+        timelineCell +
+        duracaoCell +
+        dependenteCell +
+        esforcoPrevistoCell +
+        esforcoUtilizadoCell +
+        dataConclusaoCell +
+        completionCell +
+        moreCell;
+
     return tr;
 }
 
@@ -2150,7 +2204,7 @@ function createAddTaskRow(projectId) {
     const groupId = (projectId === 'no-group' || !projectId) ? '' : projectId;
 
     tr.innerHTML = `
-        <td colspan="6">
+        <td colspan="12"> <!-- Ação: Colspan atualizado para 12 -->
             <div class="add-task-button-dark" onclick="openTaskModal(null, null, '${groupId}')">
                 <i data-feather="plus" class="h-4 w-4"></i> Adicionar Tarefa
             </div>
@@ -2245,3 +2299,4 @@ function openTimelineModal(taskId) {
     console.log("Abrir modal de Timeline para task:", taskId);
     showNotification("Modal de timeline ainda não implementado.", "info");
 }
+
