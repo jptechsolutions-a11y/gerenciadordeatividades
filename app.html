@@ -219,6 +219,10 @@
                       A lista de projetos estava aqui por engano. 
                       Ela foi movida para dentro da #listView abaixo.
                     -->
+                    <!-- 
+                      BUG FIX: 
+                      O </div> extra que estava aqui (fechando o <main> por engano) foi REMOVIDO.
+                    -->
                 </div>
 
                 <!-- #projetosView (Kanban) -->
@@ -463,7 +467,7 @@
                     </div>
                 </div>
 
-            </main>
+            </main> <!-- BUG FIX: Esta tag </main> agora fecha corretamente o <main> da linha 194 -->
         </div> <!-- Fim #mainSystem -->
     </div> <!-- Fim #appShell -->
 
