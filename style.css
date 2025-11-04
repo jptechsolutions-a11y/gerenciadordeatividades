@@ -4018,4 +4018,372 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     filter: brightness(1.2);
     transform: scale(1.02);
 }
+/* ========================================
+   ADIÇÕES E AJUSTES - ESTILO MONDAY.COM
+   (Adicione este bloco ao FINAL do seu style.css)
+   ======================================== */
+
+/* Ajuste na view #listView para ser escura e ocupar tudo */
+#listView {
+    background-color: #0f172a; /* Fundo principal (slate-900) */
+    color: #e2e8f0; /* Texto (slate-200) */
+    /* Remove padding da view-content se houver */
+    padding: 0 !important; 
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tira o padding do container de H1/Botão que existia antes */
+#listView .container {
+     padding-left: 0 !important;
+     padding-right: 0 !important;
+     max-width: 100% !important;
+     margin: 0 !important;
+}
+
+/* Adiciona padding de volta apenas ao header da view (H1/Botão) */
+#listView .view-header-dark {
+     padding: 1rem 1.5rem; /* 16px 24px */
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     border-bottom: 1px solid #334155; /* slate-700 */
+     background-color: #1e293b; /* Fundo (slate-800) */
+     flex-shrink: 0;
+}
+
+#listView .view-header-dark h1 {
+    color: #ffffff;
+    font-size: 1.25rem; /* Menor (20px) */
+    margin: 0;
+}
+
+/* Botão principal (ex: Criar Tarefa) */
+#listView .btn-primary {
+    background-color: var(--primary); /* Cor JP */
+    border: none;
+    font-size: 0.8rem; /* Menor */
+    padding: 8px 14px; /* Menor */
+    text-transform: none;
+}
+#listView .btn-primary:hover {
+    filter: brightness(1.1); /* Cor JP */
+}
+
+/* Container da Tabela (Fundo mais escuro que a view) */
+.project-table-container {
+    background-color: #0f172a; /* Fundo principal (slate-900) */
+    color: #e2e8f0; /* slate-200 */
+    width: 100%;
+    flex-grow: 1; /* Ocupa o espaço restante */
+    overflow: auto; /* Permite scroll na tabela (vertical e horizontal) */
+    border-top: 1px solid #334155; /* slate-700 */
+    /* Remove estilos antigos se houver */
+    border-bottom: none; 
+}
+
+/* Remove o antigo .project-table-controls */
+.project-table-controls {
+    display: none;
+}
+
+/* Tabela (Sobrescreve/Refina .project-table-dark) */
+.project-table-dark {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem; /* BEM MENOR (13px) */
+}
+
+/* Header da Tabela */
+.project-table-dark thead th {
+    background-color: #0f172a; /* slate-900 */
+    border-bottom: 2px solid #334155; /* slate-700 */
+    padding: 10px 12px; /* Menor padding */
+    text-align: left;
+    font-weight: 500;
+    color: #94a3b8; /* slate-400 */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+    text-transform: none; /* Sem uppercase */
+    font-size: 0.75rem; /* 12px */
+    letter-spacing: 0px;
+}
+.project-table-dark thead th:first-child {
+    padding-left: 10px;
+}
+.project-table-dark thead th .feather {
+    display: none; /* Esconde ícones do header (como na imagem) */
+}
+
+/* Checkbox da Tabela */
+.table-checkbox {
+    background-color: #334155; /* slate-700 */
+    border: 1px solid #64748b; /* slate-500 */
+    border-radius: 4px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+}
+
+/* Linha de Header do Projeto (Grupo) */
+.project-header-row {
+    background-color: #1e293b; /* slate-800 */
+    font-weight: 600;
+    color: white;
+    border-bottom: 1px solid #334155; /* slate-700 */
+    position: sticky;
+    top: 39px; /* Abaixo do header da tabela (38px + 1px border) */
+    z-index: 9;
+}
+.project-header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Menor gap */
+    padding: 12px 10px; /* Menor padding */
+    font-size: 0.85rem; /* Menor (14px) */
+}
+.project-toggle {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    color: #94a3b8; /* slate-400 */
+}
+.project-header-row:not(.expanded) .project-toggle {
+    transform: rotate(-90deg);
+}
+.project-priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.project-priority-dot.priority-urgente { background-color: #dc2626; }
+.project-priority-dot.priority-alta { background-color: #f59e0b; }
+.project-priority-dot.priority-media { background-color: var(--accent); }
+.project-priority-dot.priority-baixa { background-color: #6b7280; }
+.project-task-count {
+    color: #64748b; /* slate-500 */
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+.btn-icon-task {
+    background: transparent;
+    color: #94a3b8; /* slate-400 */
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+.project-header-row:hover .btn-icon-task {
+    opacity: 1;
+}
+.btn-icon-task:hover {
+    background-color: #334155; /* slate-700 */
+    color: white;
+}
+
+/* Linhas de Tarefa */
+.task-data-row {
+    border-bottom: 1px solid #334155; /* slate-700 */
+    transition: background-color 0.15s ease;
+}
+.task-data-row:hover {
+    background-color: #334155; /* slate-700 (Hover mais claro) */
+}
+.task-data-row td {
+    padding: 8px 12px; /* Menor padding */
+    vertical-align: middle;
+    height: 36px; /* Altura fixa (menor) */
+}
+.task-title-cell {
+    padding-left: 28px !important; /* Indentação menor */
+    gap: 6px;
+    /* NOVO: Garante que o texto não quebre e mostre reticências */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px; /* Limite máximo para a coluna de tarefa */
+}
+.task-title-cell .feather {
+    color: #64748b; /* slate-500 */
+    width: 14px; height: 14px; /* Ícone menor */
+}
+
+/* Célula de Pessoa (Responsável) */
+.person-cell {
+    gap: 6px;
+    padding: 2px; /* Menor padding */
+}
+.person-cell img {
+    width: 20px; /* Menor */
+    height: 20px; /* Menor */
+}
+.person-cell span {
+    font-size: 0.8rem; /* 13px */
+    /* NOVO: Garante que o texto não quebre e mostre reticências */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px; /* Limite máximo para nome */
+}
+.person-cell.person-unassigned .feather {
+    width: 16px; height: 16px;
+}
+
+/* Célula de Status (Interativa) */
+.status-box {
+    padding: 4px 8px; /* Menor */
+    border-radius: 4px; /* Menos redondo */
+    font-size: 0.75rem; /* 12px */
+}
+/* Cores (Exemplo da imagem - Verde, Azul, Laranja) */
+.status-box.status-feito { background-color: var(--primary); } /* Verde (JP) */
+.status-box.status-em-andamento { background-color: #f59e0b; } /* Laranja */
+.status-box.status-parado { background-color: #ef4444; } /* Vermelho */
+.status-box.status-planejamento { background-color: var(--accent); } /* Azul (JP) */
+.status-box.status-a-fazer { background-color: #64748b; } /* Cinza */
+.status-box.status-concluído { background-color: var(--primary); } /* Verde (JP) */
+.status-box.status-default { background-color: #64748b; } /* Cinza */
+
+/* Célula de Timeline (Interativa) */
+.timeline-box {
+    height: 24px; /* Menor */
+    border-radius: 4px;
+}
+.timeline-text {
+    font-size: 0.7rem; /* 11px */
+}
+
+/* NOVO: Célula de Duração */
+.duration-cell {
+    font-size: 0.8rem; /* 13px */
+    text-align: right;
+    color: #cbd5e1; /* slate-300 */
+    padding-right: 20px !important;
+}
+
+/* NOVO: Célula de Dependência */
+.dependency-cell {
+    font-size: 0.8rem; /* 13px */
+}
+/* Estilo para a tag de dependência (requer JS) */
+.dependency-tag {
+    background-color: var(--accent); /* Azul (JP) */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem; /* 12px */
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px; /* Limite da célula */
+}
+.dependency-cell-empty {
+    color: #64748b; /* slate-500 */
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* Célula de Esforço (Previsto e Utilizado) */
+.effort-cell {
+    font-size: 0.8rem; /* 13px */
+    text-align: right;
+    color: #cbd5e1; /* slate-300 */
+    padding-right: 20px !important;
+}
+
+/* NOVO: Célula de Data */
+.date-cell {
+    font-size: 0.8rem; /* 13px */
+    color: #cbd5e1; /* slate-300 */
+    font-weight: 500;
+}
+
+/* Célula de Status de Conclusão */
+.completion-status {
+    gap: 4px;
+    font-size: 0.75rem; /* 12px */
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+.completion-status .feather {
+    width: 14px; height: 14px;
+}
+
+/* Linha "Adicionar Tarefa" (Modo Dark) */
+.add-task-button-dark {
+    padding: 8px 12px; /* Menor */
+    padding-left: 28px; /* Alinha com tarefas */
+    font-size: 0.8rem; /* 13px */
+    gap: 6px;
+}
+.add-task-button-dark .feather {
+    width: 14px; height: 14px;
+}
+
+/* NOVO: Rodapé da Tabela (Adicionar Grupo) */
+.project-table-footer {
+    padding: 10px 1.5rem; /* 24px */
+    background-color: #0f172a; /* slate-900 */
+    border-top: 1px solid #334155; /* slate-700 */
+    position: sticky;
+    bottom: 0;
+    z-index: 8;
+}
+.add-group-button {
+    background: transparent;
+    border: none;
+    color: #64748b; /* slate-500 */
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+.add-group-button:hover {
+    background-color: #1e293b; /* slate-800 */
+    color: #94a3b8; /* slate-400 */
+}
+.add-group-button .feather {
+    width: 14px; height: 14px;
+}
+
+/* Pop-up de Status (flutuante) */
+.dropdown-menu-popup {
+    display: none; /* Controlado pelo JS */
+    position: absolute;
+    width: 200px;
+    background: #1e293b; /* slate-800 */
+    border: 1px solid #334155; /* slate-700 */
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1010;
+    padding: 8px;
+}
+.status-option {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+}
+.status-option:last-child {
+    margin-bottom: 0;
+}
+.status-option:hover {
+    filter: brightness(1.2);
+    transform: scale(1.02);
+}
+
 
