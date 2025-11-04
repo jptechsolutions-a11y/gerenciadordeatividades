@@ -2141,8 +2141,6 @@ function openTimelineModal(taskId) {
 }
 
 
-}
-
 {
 type: uploaded file
 fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-56342d6557fa323b4289f7b72888d59ed6c784a5/api/forgot-password.js
