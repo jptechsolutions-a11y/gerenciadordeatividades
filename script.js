@@ -2140,3 +2140,190 @@ function openTimelineModal(taskId) {
     showNotification("Modal de timeline ainda não implementado.", "info");
 }
 
+
+}
+
+{
+type: uploaded file
+fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-56342d6557fa323b4289f7b72888d59ed6c784a5/api/forgot-password.js
+fullText:
+// /api/forgot-password.js
+import { createClient } from '@supabase/supabase-js';
+
+// --- CARREGA CHAVES DAS VARIÁVEIS DE AMBIENTE (SEGURO) ---
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; // <-- Chave Secreta via process.env
+// IMPORTANTE: Defina a URL BASE da sua aplicação na Vercel (sem / ao final)
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || 'URL_DA_SUA_APP_AQUI'; // <-- Use a URL correta do seu site
+// --- FIM DO CARREGAMENTO SEGURO ---
+
+// Validação inicial das variáveis
+if (!supabaseUrl || !supabaseServiceKey || siteUrl === 'URL_DA_SUA_APP_AQUI') {
+    console.error('ERRO CRÍTICO [forgot-password]: Variáveis SUPABASE_URL, SUPABASE_SERVICE_KEY ou APP_URL/NEXT_PUBLIC_SITE_URL ausentes/incorretas.');
+}
+
+// Cria o cliente ADMIN do Supabase (APENAS se as chaves existirem)
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+}) : null;
+
+export default async (req, res) => {
+    // 1. Verifica se o cliente Admin foi inicializado
+    if (!supabaseAdmin) {
+        return res.status(500).json({ error: 'Configuração interna do servidor incompleta.' });
+    }
+    // 2. Verifica se a URL do site está configurada (necessária para generateLink)
+    if (siteUrl === 'URL_DA_SUA_APP_AQUI') {
+        console.error("ERRO CRÍTICO [forgot-password]: A variável de ambiente APP_URL ou NEXT_PUBLIC_SITE_URL precisa ser definida com a URL base da sua aplicação.");
+         return res.status(500).json({ error: 'Configuração interna do servidor incompleta (URL do site).' });
+    }
+
+
+    // 3. Permite apenas método POST
+    if (req.method !== 'POST') {
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).json({ error: 'Método não permitido.' });
+    }
+
+    try {
+        const { email } = req.body;
+
+        // 4. Validação básica do input
+        if (!email || typeof email !== 'string' || !email.includes('@')) {
+            return res.status(400).json({ error: 'E-mail inválido fornecido.' });
+        }
+
+        console.log(`[forgot-password] Recebida solicitação para o e-mail: ${email}`);
+
+        // 5. *** CORREÇÃO: Usa generateLink para criar o link de recuperação ***
+        const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery', // Tipo de link: recuperação de senha
+            email: email,
+            options: {
+                redirectTo: `${siteUrl}` // Para onde redirecionar APÓS o reset ser concluído no link do e-mail. Ajuste se precisar de uma página específica.
+            }
+        });
+
+        // 6. Tratamento de Erro do Supabase
+        if (error) {
+            console.error(`[forgot-password] Erro do Supabase ao tentar gerar link para ${email}:`, error.message);
+            // IMPORTANTE: Resposta genérica por segurança.
+        } else {
+             // O 'data' contém informações sobre o link gerado e o usuário, mas NÃO o enviamos ao cliente.
+             // O Supabase Auth cuidará de enviar o e-mail automaticamente se o template estiver ativo.
+             console.log(`[forgot-password] Supabase processou generateLink para ${email}. Link enviado se template ativo.`);
+        }
+
+        // 7. Resposta Genérica de Sucesso (Por Segurança)
+        return res.status(200).json({ message: 'Se o e-mail estiver cadastrado, um link de recuperação foi enviado.' });
+
+    } catch (error) {
+        // Erro inesperado no servidor
+        console.error('[forgot-password] Erro interno do servidor:', error);
+        return res.status(500).json({ error: 'Erro interno do servidor ao processar a solicitação.' });
+    }
+};
+
+}
+
+{
+type: uploaded file
+fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-56342d6557fa323b4289f7b72888d59ed6c784a5/api/login.js
+fullText:
+// /api/login.js
+import { createClient } from '@supabase/supabase-js';
+
+// Pega as credenciais das Variáveis de Ambiente
+const supabaseUrl = process.env.SUPABASE_URL;
+// IMPORTANTE: Aqui usamos a CHAVE ANÓNIMA, pois é a chave correta para LOGIN.
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY; 
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey); 
+
+export default async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Método não permitido.' });
+    }
+
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+        }
+        
+        // --- FUNÇÃO DE LOGIN SEGURA DO SUPABASE ---
+        // Esta função envia o e-mail/senha para o Supabase Auth,
+        // que verifica o hash da senha de forma segura.
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            console.error('Erro de Autenticação Supabase:', error.message);
+            // Retorna um erro genérico para não expor detalhes de segurança
+            return res.status(401).json({ error: 'Falha na autenticação. Usuário ou senha incorretos.' });
+        }
+        
+        // Retorna o objeto de sessão e usuário que o front-end espera
+        return res.status(200).json({ user: data.user, session: data.session });
+
+    } catch (error) {
+        console.error('Erro no endpoint /api/login:', error);
+        return res.status(500).json({ error: 'Erro interno do servidor durante o login.' });
+    }
+};
+
+}
+
+{
+type: uploaded file
+fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-4c670c348b337b8a6bd504e4d0139be919ef48d5/api/signup.js
+fullText:
+// /api/signup.js
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+// IMPORTANTE: Use a Service Key para criar usuários no backend!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+export default async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Método não permitido.' });
+    }
+
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+        }
+
+        // Cria o usuário no Supabase Auth
+        const { data, error } = await supabaseAdmin.auth.admin.createUser({
+            email: email,
+            password: password,
+            email_confirm: true, // Define como true para enviar e-mail de confirmação
+        });
+
+        if (error) {
+            console.error('Erro ao criar usuário:', error.message);
+            return res.status(400).json({ error: error.message });
+        }
+
+        return res.status(200).json({ user: data.user });
+
+    } catch (error) {
+        console.error('Erro no endpoint /api/signup:', error);
+        return res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+};
+
+}
+
