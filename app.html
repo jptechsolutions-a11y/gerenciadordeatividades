@@ -214,6 +214,11 @@
                             </div>
                         </div>
                     </div>
+                    <!-- 
+                      ERRO CORRIGIDO: 
+                      A lista de projetos estava aqui por engano. 
+                      Ela foi movida para dentro da #listView abaixo.
+                    -->
                 </div>
 
                 <!-- #projetosView (Kanban) -->
@@ -228,51 +233,74 @@
                     </div>
                 </div>
 
-                <!-- #listView (Projetos - REFORMULADO para Monday UI) -->
-                <div id="listView" class="view-content"> <!-- Fundo dark (slate-900) para a view inteira -->
-                    
-                    <!-- NOVO: Header da View (estilo Monday) -->
-                    <div class="view-header-dark">
-                        <div>
-                            <h1 id="viewProjectTitle">Projetos</h1>
-                            <!-- TODO: Adicionar abas aqui se o script suportar -->
+                <!-- #listView (Projetos - REFORMULADO) -->
+                <div id="listView" class="view-content">
+                    <!-- O container de padding foi movido para dentro da view -->
+                    <div class="view-header-dark"> <!-- NOVO HEADER ESCURO -->
+                        <div class="flex items-center gap-4">
+                            <h1 class="text-xl font-semibold text-white">Projetos</h1>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <!-- Botões de Ação (simplificado) -->
-                            <!-- TODO: Atualizar o onclick para o modal de tarefa correto -->
-                            <button class="btn btn-primary btn-small" onclick="openTaskModal(null)"> 
+                        <div class="flex items-center gap-4">
+                            <button class="btn btn-primary" onclick="openCreateProjectModal()">
                                 <i data-feather="plus" class="h-4 w-4 mr-2"></i>
                                 <span>Criar Tarefa</span>
                             </button>
                         </div>
                     </div>
-
-                    <!-- A tabela agora fica fora do container para ter largura total -->
+                    
+                    <!-- 
+                      CORREÇÃO: 
+                      A lista de projetos foi movida para cá, 
+                      dentro da sua view correta (#listView).
+                    -->
                     <div id="projectListContainer" class="project-table-container">
-                                                
                         <!-- Tabela de Projetos (Estilo Monday) -->
                         <table class="project-table-dark">
                             <thead>
                                 <tr>
-                                    <th style="width: 40px; padding-left: 10px;"><input type="checkbox" class="table-checkbox" /></th>
-                                    <th style="min-width: 250px;">Tarefa</th>
-                                    <th style="width: 120px;">Resp.</th>
-                                    <th style="width: 140px;">Status</th>
-                                    <th style="width: 180px;">Timeline</th>
-                                    <th style="width: 100px;">Duração</th>
-                                    <th style="width: 150px;">Dependente de</th>
-                                    <th style="width: 130px;">Esforço previsto</th>
-                                    <th style="width: 130px;">Esforço utilizado</th>
-                                    <th style="width: 150px;">Data de conclusão</th>
-                                    <th style="width: 150px;">Status de conclusão</th>
-                                    <th style="width: 50px;"><i data-feather="more-horizontal" class="h-4 w-4"></i></th>
+                                    <!-- Checkbox -->
+                                    <th style="width: 40px;"><input type="checkbox" class="table-checkbox-header" /></th>
+                                    <!-- Coluna de Projeto/Tarefa -->
+                                    <th style="min-width: 250px;">
+                                        Tarefa
+                                    </th>
+                                    <!-- Novas Colunas -->
+                                    <th style="width: 150px;">
+                                        Resp.
+                                    </th>
+                                    <th style="width: 140px;">
+                                        Status
+                                    </th>
+                                    <th style="width: 180px;">
+                                        Timeline
+                                    </th>
+                                    <th style="width: 100px;">
+                                        Duração
+                                    </th>
+                                    <th style="width: 150px;">
+                                        Dependente de
+                                    </th>
+                                    <th style="width: 120px;" class="esforco-header">
+                                        Esforço previsto
+                                    </th>
+                                    <th style="width: 120px;" class="esforco-header">
+                                        Esforço utilizado
+                                    </th>
+                                    <th style="width: 120px;">
+                                        Data de conclusão
+                                    </th>
+                                    <th style="width: 150px;">
+                                        Status de conclusão
+                                    </th>
+                                    <th style="width: 50px;"> <!-- Mais Opções -->
+                                    </th>
                                 </tr>
                             </thead>
-                            <!-- O JS (que o usuário ajustou) vai popular isso aqui -->
+                            <!-- O JS vai popular isso aqui -->
                             <tbody id="projectListBody">
                                 <!-- Exemplo Loading -->
                                 <tr id="projectListLoading">
-                                    <td colspan="12"> <!-- Colspan atualizado para 12 -->
+                                    <td colspan="12"> <!-- Colspan atualizado -->
                                         <div class="loading" style="color: #94a3b8; background: #1e293b; padding: 40px 0;">
                                             <div class="spinner" style="border-top-color: var(--primary);"></div>
                                             Carregando projetos...
@@ -281,14 +309,14 @@
                                 </tr>
                             </tbody>
                         </table>
-
-                        <!-- Botão de "Adicionar Novo Grupo" (Estilo Monday, no final) -->
+                        
+                        <!-- Rodapé da Tabela -->
                         <div class="project-table-footer">
-                            <button class="add-group-button" onclick="openCreateProjectModal()">
-                                <i data-feather="plus" class="h-4 w-4 mr-2"></i> Adicionar novo grupo
+                             <button class="add-group-button" onclick="openCreateProjectModal()">
+                                <i data-feather="plus" class="h-4 w-4 mr-2"></i>
+                                Adicionar novo grupo
                             </button>
                         </div>
-
                     </div>
                 </div>
 
@@ -620,3 +648,4 @@
     </script>
 </body>
 </html>
+
