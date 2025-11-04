@@ -1,13 +1,13 @@
 // Service Worker Otimizado (sw.js)
-const CACHE_NAME = 'jprojects-v3'; // <--- ALTERADO DE v2 PARA v3
+const CACHE_NAME = 'jprojects-v5'; // <--- ALTERADO DE v4 PARA v5
 const urlsToCache = [
    '/', 
     '/app.html', 
     '/login.html', 
-    '/style.css',
-    '/script.js',
+    '/style.css?v=5', // ATUALIZAÇÃO: Adicionado ?v=5
+    '/script.js?v=5', // ATUALIZAÇÃO: Adicionado ?v=5
     '/icon.png',
-    '/manifest.json' //
+    '/manifest.json'
     // Não precisamos cachear CDNs (tailwindcss, chart.js), o navegador já faz isso.
 ];
 
@@ -29,7 +29,7 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
-                    // Deleta todos os caches que NÃO sejam o novo (jprojects-v3)
+                    // Deleta todos os caches que NÃO sejam o novo (jprojects-v5)
                     if (cacheName !== CACHE_NAME) {
                         console.log('SW: Limpando cache antigo:', cacheName);
                         return caches.delete(cacheName);
@@ -50,7 +50,7 @@ self.addEventListener('fetch', event => {
 
     // --- ESTRATÉGIA 1: Cache First (para o App Shell) ---
     // Verifica se a URL é do mesmo host e está na lista de cache
-    const isAppShell = requestUrl.origin === self.location.origin && urlsToCache.includes(requestUrl.pathname);
+    const isAppShell = requestUrl.origin === self.location.origin && urlsToCache.includes(requestUrl.pathname + (requestUrl.search || ''));
 
     if (isAppShell) {
         event.respondWith(
