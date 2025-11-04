@@ -2050,19 +2050,20 @@ async function loadProjectListView(forceReload = false) { // Antiga loadListView
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
 
         // 2. Query ÚNICA: Pega os "Projetos" (grupos) e suas "Tarefas" aninhadas
-        // CORREÇÃO CRÍTICA: A sintaxe de ordenação estava errada.
-        // Mudei de &order=ordem.asc,tarefas.ordem_na_coluna.asc
-        // Para:   &order=ordem.asc&tarefas.order=ordem_na_coluna.asc
-        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
+        // CORREÇÃO CRÍTICA: A sintaxe de ordenação aninhada foi corrigida.
+        // O order para 'tarefas' deve ir *dentro* dos parênteses do select.
+        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc`;
         
         console.log("Query Lista de Projetos:", query);
         const projectsList = await supabaseRequest(query, 'GET');
 
         // 3. Pega tarefas SEM projeto (sem grupo)
-        const tasksWithoutGroup = await supabaseRequest(
-            `tarefas?${projectFilter}&grupo_id=is.null&select=*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`,
-            'GET'
-        );
+        // CORREÇÃO: A sintaxe de ordenação aninhada também estava errada aqui.
+        const tasksWithoutGroupQuery = `tarefas?${projectFilter}&grupo_id=is.null&select=*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`;
+        
+        console.log("Query Tarefas Sem Grupo:", tasksWithoutGroupQuery);
+        const tasksWithoutGroup = await supabaseRequest(tasksWithoutGroupQuery, 'GET');
+
 
         // 4. Limpa o body da tabela (exceto o loading, que será removido)
         tbody.innerHTML = '';
@@ -2070,6 +2071,11 @@ async function loadProjectListView(forceReload = false) { // Antiga loadListView
         // 5. Renderiza os "Projetos" (grupos)
         if (projectsList && projectsList.length > 0) {
             projectsList.forEach(project => {
+                // CORREÇÃO: Ordena as tarefas manualmente no JS, já que a query não faz mais isso
+                if (project.tarefas && project.tarefas.length > 0) {
+                    project.tarefas.sort((a, b) => (a.ordem_na_coluna || 0) - (b.ordem_na_coluna || 0));
+                }
+                
                 tbody.appendChild(createProjectHeaderRow(project));
                 if (project.tarefas && project.tarefas.length > 0) {
                     project.tarefas.forEach(task => {
@@ -2111,8 +2117,10 @@ async function loadProjectListView(forceReload = false) { // Antiga loadListView
     }
 }
 
+
 // NOVO: Helper para criar a linha de Header do Projeto
 function createProjectHeaderRow(project) {
+// ... (código restante da função sem alterações) ...
     const tr = document.createElement('tr');
     tr.className = 'project-header-row expanded'; // Começa expandido
     tr.dataset.projectId = project.id;
@@ -2143,6 +2151,7 @@ function createProjectHeaderRow(project) {
 
 // NOVO: Helper para criar a linha de Tarefa
 function createTaskDataRow(task) {
+// ... (código restante da função sem alterações) ...
     const tr = document.createElement('tr');
     tr.className = 'task-data-row';
     tr.dataset.taskId = task.id;
@@ -2226,14 +2235,17 @@ function createTaskDataRow(task) {
 
 // NOVO: Helper para formatar data
 function formatDateRange(start, end) {
+// ... (código restante da função sem alterações) ...
     const s = new Date(start + 'T00:00:00');
     const e = new Date(end + 'T00:00:00');
     const options = { month: 'short', day: 'numeric' };
     return `${s.toLocaleDateString('pt-BR', options)} - ${e.toLocaleDateString('pt-BR', options)}`;
 }
 
+
 // NOVO: Helper para criar "Adicionar Tarefa"
 function createAddTaskRow(projectId) {
+// ... (código restante da função sem alterações) ...
     const tr = document.createElement('tr');
     tr.className = 'add-task-row';
     tr.dataset.projectId = projectId || 'no-group';
@@ -2251,6 +2263,7 @@ function createAddTaskRow(projectId) {
 
 // NOVO: Função para expandir/recolher grupos (agora "Projetos")
 function toggleProjectGroup(projectId) {
+// ... (código restante da função sem alterações) ...
     const headerRow = document.querySelector(`.project-header-row[data-project-id="${projectId}"]`);
     const taskRows = document.querySelectorAll(`.task-data-row[data-project-id="${projectId}"]`);
     const addRow = document.querySelector(`.add-task-row[data-project-id="${projectId}"]`);
@@ -2270,6 +2283,7 @@ function toggleProjectGroup(projectId) {
 
 // NOVO: Funções stub para os modais interativos (só para o HTML funcionar)
 function openAssigneeModal(taskId) {
+// ... (código restante da função sem alterações) ...
     console.log("Abrir modal de Responsável para task:", taskId);
     showNotification("Modal de responsável ainda não implementado.", "info");
     // Futuro: Abrir um pop-up de seleção de usuário
@@ -2277,6 +2291,7 @@ function openAssigneeModal(taskId) {
 
 // ATUALIZADO: Lógica do Modal de Status
 function openStatusModal(event, taskId, currentStatus) {
+// ... (código restante da função sem alterações) ...
     event.stopPropagation(); // Impede que o clique feche o modal imediatamente
     console.log("Abrir modal de Status para task:", taskId, "Status atual:", currentStatus);
     
@@ -2316,6 +2331,7 @@ function openStatusModal(event, taskId, currentStatus) {
 
 // NOVO: Função para atualizar o status
 async function updateTaskStatus(taskId, newColunaId) {
+// ... (código restante da função sem alterações) ...
      console.log(`Atualizando task ${taskId} para coluna ${newColunaId}`);
      
      const overlay = document.querySelector('.modal-overlay-transparent');
@@ -2336,6 +2352,7 @@ async function updateTaskStatus(taskId, newColunaId) {
 }
 
 function openTimelineModal(taskId) {
+// ... (código restante da função sem alterações) ...
     console.log("Abrir modal de Timeline para task:", taskId);
     showNotification("Modal de timeline ainda não implementado.", "info");
     // Futuro: Abrir um pop-up de seleção de data (calendário)
