@@ -1819,7 +1819,7 @@ function loadPerfilView() {
     document.getElementById('perfilDescription').value = currentUser.description || '';
     document.getElementById('perfilSector').value = currentUser.sector || '';
     document.getElementById('perfilSkills').value = (currentUser.skills || []).join(', ');
-    document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'https.placehold.co/96x96/00D4AA/023047?text=JP';
+    document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'https://placehold.co/96x96/00D4AA/023047?text=JP';
 
     feather.replace();
 }
@@ -2017,17 +2017,24 @@ async function loadProjectListView(forceReload = false) { // Antiga loadListView
     console.log("CARREGANDO VIEW DE PROJETOS (LISTA)");
     const container = document.getElementById('projectListContainer');
     const tbody = document.getElementById('projectListBody');
-    const loadingRow = document.getElementById('projectListLoading');
     
-    if (!tbody || !loadingRow || !container) {
+    if (!tbody || !container) {
         console.error("Erro fatal: Elementos da tabela de projeto não encontrados no app.html.");
         return;
     }
 
     // Mostra o loading
-    tbody.innerHTML = ''; // Limpa tudo
-    tbody.appendChild(loadingRow); // Adiciona o loading
-    loadingRow.style.display = 'table-row';
+    // CORREÇÃO: Define o HTML do loading diretamente para evitar erros de DOM
+    const loadingHTML = `
+        <tr id="projectListLoading">
+            <td colspan="6">
+                <div class="loading" style="color: #94a3b8; background: #1e293b; padding: 40px 0;">
+                    <div class="spinner" style="border-top-color: var(--primary);"></div>
+                    Carregando projetos...
+                </div>
+            </td>
+        </tr>`;
+    tbody.innerHTML = loadingHTML;
 
     try {
         // 1. Garante que os "Projetos" (grupos_tarefas) estão carregados
@@ -2043,7 +2050,10 @@ async function loadProjectListView(forceReload = false) { // Antiga loadListView
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
 
         // 2. Query ÚNICA: Pega os "Projetos" (grupos) e suas "Tarefas" aninhadas
-        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc,tarefas.ordem_na_coluna.asc`;
+        // CORREÇÃO CRÍTICA: A sintaxe de ordenação estava errada.
+        // Mudei de &order=ordem.asc,tarefas.ordem_na_coluna.asc
+        // Para:   &order=ordem.asc&tarefas.order=ordem_na_coluna.asc
+        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
         
         console.log("Query Lista de Projetos:", query);
         const projectsList = await supabaseRequest(query, 'GET');
@@ -2091,7 +2101,8 @@ async function loadProjectListView(forceReload = false) { // Antiga loadListView
         }
 
         // 8. Remove o loading (que não está mais no tbody)
-        loadingRow.style.display = 'none';
+        // CORREÇÃO: A linha de loading já foi removida pelo tbody.innerHTML = ''
+        // Apenas garantimos que o feather.replace() seja chamado.
         feather.replace();
 
     } catch (error) {
