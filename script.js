@@ -531,92 +531,54 @@ async function loadActiveProject() {
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
+        // ETAPA 1: Buscar projetos existentes
+        console.log("📋 Buscando projetos com filtro:", orgFilter);
         let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
         
-        // 🔧 CORREÇÃO 1: Filtra projetos válidos
+        console.log("📦 Resposta da busca:", projetos);
+        
+        // ETAPA 2: Validar resposta
         const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
 
         if (projetosValidos.length === 0) {
-            console.warn("⚠️ Nenhum Quadro (projeto) encontrado. Criando 'Meu Primeiro Quadro'...");
+            console.warn("⚠️ Nenhum Quadro encontrado. Criando quadro padrão...");
             
+            // ETAPA 3: Criar projeto padrão
             const newProject = {
                 nome: 'Meu Primeiro Quadro',
                 created_by: currentUser.id,
                 org_id: currentOrg?.id || null
             };
             
+            console.log("🆕 Tentando criar quadro:", newProject);
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
+            console.log("📬 Resposta da criação:", createResponse);
             
-            // 🔧 CORREÇÃO 2: Valida a resposta de criação ANTES de atribuir
-            if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
-                console.error("❌ Resposta inválida ao criar quadro:", createResponse);
-                throw new Error("Falha ao criar quadro padrão. Verifique as permissões RLS da tabela 'projetos'. A resposta foi: " + JSON.stringify(createResponse));
+            // ETAPA 4: Validar criação ANTES de usar
+            if (!createResponse || !Array.isArray(createResponse) || createResponse.length === 0) {
+                console.error("❌ ERRO: Resposta vazia ou inválida");
+                throw new Error("Falha ao criar quadro: Resposta vazia do servidor. Verifique: 1) Políticas RLS da tabela 'projetos', 2) Campo 'created_by' está NULL no banco?, 3) Console do Supabase > Logs para erros SQL.");
+            }
+            
+            if (!createResponse[0] || !createResponse[0].id) {
+                console.error("❌ ERRO: Objeto criado sem ID:", createResponse[0]);
+                throw new Error("Falha ao criar quadro: Objeto retornado sem 'id'. Resposta: " + JSON.stringify(createResponse));
             }
             
             currentProject = createResponse[0];
-            console.log("✅ Quadro criado com sucesso:", currentProject);
+            console.log("✅ Quadro criado:", currentProject);
         } else {
             currentProject = projetosValidos[0];
-            console.log("✅ Quadro encontrado:", currentProject);
+            console.log("✅ Quadro existente encontrado:", currentProject);
         }
 
-        // 🔧 CORREÇÃO 3: Valida currentProject (agora com mensagem mais clara)
+        // ETAPA 5: Validação final (NUNCA deveria chegar aqui com null)
         if (!currentProject || !currentProject.id) {
-            console.error("❌ Erro fatal: currentProject (Quadro) inválido após lógica de carregamento/criação:", currentProject);
-            console.error("❌ Isso indica que o Supabase retornou 'null' em vez de dados. Verifique:");
-            console.error("   1. As políticas RLS da tabela 'projetos' permitem SELECT/INSERT para o usuário?");
-            console.error("   2. O usuário tem 'id' e 'org_id' corretos no banco?");
-            console.error("   3. No Dashboard do Supabase > Authentication > Policies, as regras estão ativas?");
-            throw new Error("Não foi possível carregar ou criar um quadro válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'. O servidor retornou 'null' em vez de dados.");
+            console.error("❌ ERRO FATAL: currentProject ainda é null após todas as tentativas!");
+            console.error("Dados do usuário:", { id: currentUser?.id, email: currentUser?.email });
+            console.error("Dados da org:", { id: currentOrg?.id, nome: currentOrg?.nome });
+            throw new Error("ERRO CRÍTICO: Não foi possível obter um quadro válido. Verifique as políticas RLS do Supabase (Dashboard > Authentication > Policies > Tabela 'projetos').");
         }
-
-        console.log("✅ Quadro ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
-
-        // 🔧 CORREÇÃO 4: Filtra colunas com segurança
-        let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-        
-        if (Array.isArray(cols)) {
-            currentColumns = cols.filter(c => c && c.id);
-        } else {
-            currentColumns = [];
-        }
-
-        if (currentColumns.length === 0) {
-            console.warn("⚠️ Nenhuma coluna (status) encontrada. Criando colunas padrão...");
-            await createDefaultColumns(currentProject.id);
-            
-            cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
-            
-            // 🔧 CORREÇÃO 5: Filtra colunas novamente após criar
-            if (Array.isArray(cols)) {
-                currentColumns = cols.filter(c => c && c.id);
-            } else {
-                currentColumns = [];
-            }
-            
-            if (currentColumns.length === 0) {
-                throw new Error("Falha ao criar ou buscar colunas (status) padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
-            }
-        }
-        
-        console.log("✅ Colunas (Status) carregadas:", currentColumns.length);
-
-        // 🔧 CORREÇÃO 6: Filtra grupos com segurança
-        let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem,prioridade&order=ordem.asc`, 'GET');
-        
-        if (Array.isArray(groups)) {
-            currentGroups = groups.filter(g => g && g.id);
-        } else {
-            currentGroups = [];
-        }
-        
-        console.log("✅ Projetos (grupos_tarefas) carregados:", currentGroups.length);
-
-    } catch (error) {
-        console.error("❌ Erro fatal ao carregar quadro/colunas/projetos:", error);
-        throw error;
-    }
-}
 
 async function createDefaultColumns(projectId) {
      const defaultCols = [
