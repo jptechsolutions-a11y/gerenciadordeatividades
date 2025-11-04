@@ -12,14 +12,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Suas variáveis globais
 let currentUser = null;
 let currentOrg = null; 
-let currentProject = null; 
-let currentColumns = []; 
+let currentProject = null; // Este é o "Quadro" (ex: "Meu Primeiro Quadro")
+let currentColumns = []; // Status (A Fazer, Em Andamento, etc.)
 let chartInstances = {}; 
 let currentNoteId = null; 
-let currentGroups = []; // NOVO: Cache para os grupos
+let currentGroups = []; // Este é o "Projeto" (ex: "Planejamento")
 
 // ========================================
-// 2. INICIALIZAÇÃO E AUTENTICAÇÃO (BLOCO CORRIGIDO)
+// 2. INICIALIZAÇÃO E AUTENTICAÇÃO
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Adiciona os listeners dos formulários DO APP
@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
     document.getElementById('createTeamForm')?.addEventListener('submit', handleCreateTeamFormSubmit);
     document.getElementById('joinTeamForm')?.addEventListener('submit', handleJoinTeamFormSubmit);
+    // NOVO: Listener para o modal de criar projeto
+    document.getElementById('projectForm')?.addEventListener('submit', handleProjectFormSubmit);
     
     // --- LÓGICA DA BARRA LATERAL RECOLHÍVEL ---
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -66,51 +68,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- CORREÇÃO: LÓGICA DOS DROPDOWNS (Perfil e Seletor de Time) ---
+    // --- LÓGICA DOS DROPDOWNS (Perfil e Seletor de Time) ---
+    // (Função corrigida na última interação)
     function setupDropdown(buttonId, dropdownId) {
         const button = document.getElementById(buttonId);
         const dropdown = document.getElementById(dropdownId);
         if (!button || !dropdown) return;
-        const dropdownParent = dropdown.parentElement; // Pega o container '.relative'
 
         button.addEventListener('click', (e) => {
             e.stopPropagation();
-            
-            // Verifica se este dropdown já está aberto
-            const isOpen = dropdownParent.classList.contains('open');
+            const isAlreadyOpen = dropdown.classList.contains('open');
 
-            // 1. Fecha TODOS os dropdowns abertos
+            // Fecha todos os outros dropdowns
             document.querySelectorAll('.dropdown-menu.open, .relative.open').forEach(dd => {
                 dd.classList.remove('open');
             });
 
-            // 2. Se o dropdown clicado estava fechado, abre ele
-            if (!isOpen) {
-                dropdown.classList.add('open');
-                dropdownParent.classList.add('open');
+            // Abre ou fecha o atual
+            if (!isAlreadyOpen) {
+                dropdown.classList.toggle('open');
+                dropdown.parentElement?.classList.toggle('open');
             }
-            // Se estava aberto, o passo 1 já o fechou.
         });
     }
-
     setupDropdown('profileDropdownButton', 'profileDropdownMenu');
     setupDropdown('teamSelectorButton', 'teamSelectorMenu');
     
-    // CORREÇÃO: Clica em qualquer lugar para fechar os dropdowns
+    // Clica em qualquer lugar para fechar os dropdowns
     document.addEventListener('click', (e) => {
-        // Encontra todos os PAIS de dropdown abertos
-        document.querySelectorAll('.relative.open').forEach(dropdownParent => {
-            // Se o clique foi FORA do pai
-            if (!dropdownParent.contains(e.target)) {
-                dropdownParent.classList.remove('open');
-                const menu = dropdownParent.querySelector('.dropdown-menu');
-                if (menu) {
-                    menu.classList.remove('open');
-                }
-            }
-        });
+        // Verifica se o clique foi fora de um menu aberto
+        const openDropdown = document.querySelector('.dropdown-menu.open');
+        if (openDropdown && !openDropdown.parentElement.contains(e.target)) {
+            openDropdown.classList.remove('open');
+            openDropdown.parentElement?.classList.remove('open');
+        }
     });
-    // --- FIM DAS CORREÇÕES DE DROPDOWN ---
+    // --- FIM DA LÓGICA DE DROPDOWNS ---
 
 
     // Pega a função 'createClient' da biblioteca Supabase
@@ -152,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentOrg = null;
         currentProject = null;
         currentColumns = [];
-        currentGroups = []; // NOVO
+        currentGroups = [];
         localStorage.removeItem('user');
         localStorage.removeItem('auth_token'); 
         localStorage.removeItem('current_org_id'); // Limpa o time salvo
@@ -223,88 +216,6 @@ async function initializeApp(session) {
 // ========================================
 // 3. LÓGICA DE ONBOARDING E NAVEGAÇÃO
 // ========================================
-
-// --- FUNÇÕES MOVIDAS PARA CORRIGIR O ERRO 'is not defined' ---
-// Estas funções são chamadas por showMainSystem/redirectToDashboard
-// e precisam ser declaradas antes.
-
-// NOVO: Atualiza a UI do seletor de time
-function updateActiveTeamUI() {
-    if (currentOrg) {
-        document.getElementById('topBarProjectName').textContent = currentOrg.nome || 'Projeto Pessoal';
-    } else {
-        document.getElementById('topBarProjectName').textContent = 'Espaço Pessoal';
-    }
-    // Atualiza o menu dropdown
-    document.querySelectorAll('#teamSelectorList .team-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.orgId === currentOrg?.id) {
-            item.classList.add('active');
-        }
-    });
-}
-
-// NOVO: Popula o dropdown do seletor de times
-function populateTeamSelector() {
-    const list = document.getElementById('teamSelectorList');
-    if (!list) return;
-
-    list.innerHTML = ''; // Limpa
-    
-    // Adiciona todos os times do usuário
-    currentUser.organizacoes.forEach(org => {
-        const item = document.createElement('a');
-        item.href = '#';
-        item.className = 'dropdown-item team-item';
-        item.dataset.orgId = org.id;
-        item.innerHTML = `<i data-feather="users" class="h-4 w-4 mr-2"></i> ${escapeHTML(org.nome)}`;
-        if (org.id === currentOrg?.id) {
-            item.classList.add('active');
-        }
-        item.onclick = (e) => {
-            e.preventDefault();
-            switchActiveTeam(org.id);
-        };
-        list.appendChild(item);
-    });
-
-    feather.replace();
-}
-
-// NOVO: Troca o time ativo
-async function switchActiveTeam(orgId) {
-    const newOrg = currentUser.organizacoes.find(org => org.id === orgId);
-    if (!newOrg || newOrg.id === currentOrg?.id) {
-        // Fecha o dropdown se clicar no mesmo time
-        document.getElementById('teamSelectorMenu').classList.remove('open');
-        document.getElementById('teamSelector').classList.remove('open');
-        return;
-    }
-
-    currentOrg = newOrg;
-    localStorage.setItem('current_org_id', currentOrg.id);
-    
-    console.log(`Trocando para o time: ${currentOrg.nome}`);
-    
-    // Atualiza a UI imediatamente
-    updateActiveTeamUI();
-    document.getElementById('teamSelectorMenu').classList.remove('open');
-    document.getElementById('teamSelector').classList.remove('open');
-
-    // Recarrega os dados do dashboard/kanban para o novo time
-    try {
-        await loadActiveProject(); // Carrega o projeto principal DESTE time
-        // Recarrega a view atual com os dados do novo time
-        const activeView = document.querySelector('.view-content.active')?.id || 'dashboardView';
-        const activeLink = document.querySelector(`.sidebar .nav-item[href="#${activeView.replace('View', '')}"]`);
-        showView(activeView, activeLink);
-    } catch (err) {
-        console.error("Erro ao trocar de time:", err);
-        showNotification(`Erro ao carregar dados do time: ${err.message}`, 'error');
-    }
-}
-// --- FIM DAS FUNÇÕES MOVIDAS ---
-
 
 function redirectToDashboard() {
     if (!currentUser || !currentUser.organizacoes) {
@@ -481,8 +392,160 @@ async function handleJoinTeamFormSubmit(event) {
     }
 }
 
+
+// Mostra o sistema principal (App)
+async function showMainSystem() {
+    document.getElementById('appShell').style.display = 'flex';
+    document.body.classList.add('system-active');
+
+    // Popula a nova barra superior
+    document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
+    document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
+    document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
+    document.getElementById('dropdownUserEmail').textContent = currentUser.email || '...';
+    
+    // Popula o seletor de times
+    populateTeamSelector();
+    updateActiveTeamUI();
+
+    try {
+        console.log("🔄 Carregando projeto ativo (Quadro)...");
+        await loadActiveProject(); // Carrega o "Quadro" (currentProject) e os "Projetos" (currentGroups)
+        
+        // Validação final antes de mostrar o dashboard
+        if (!currentProject || !currentProject.id) {
+            throw new Error("Quadro (projeto) inválido após carregamento");
+        }
+        if (!currentColumns || currentColumns.length === 0) {
+            throw new Error("Nenhuma coluna (status) carregada");
+        }
+        
+        console.log("✅ Quadro carregado com sucesso!");
+        console.log("   - Quadro ID (projeto):", currentProject.id);
+        console.log("   - Colunas (status):", currentColumns.length);
+        console.log("   - Projetos (grupos):", currentGroups.length);
+        
+        // ALTERADO: Inicia na nova view de Projetos (Lista) em vez do Dashboard
+        showView('listView', document.querySelector('a[href="#lista"]')); 
+        feather.replace();
+        
+    } catch (err) {
+        console.error("❌ Erro ao carregar projeto ativo:", err);
+        
+        // Mostra erro amigável na tela
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = `
+            <div class="container mx-auto px-6 py-8">
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <i data-feather="alert-circle" class="h-6 w-6 text-red-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-red-900">Erro na Inicialização</h2>
+                    </div>
+                    <p class="text-red-700 mb-4">${escapeHTML(err.message)}</p>
+                    <div class="bg-white p-4 rounded border border-red-200 mb-4">
+                        <h3 class="font-semibold text-red-900 mb-2">Possíveis causas:</h3>
+                        <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+                            <li>Políticas RLS (Row Level Security) não configuradas corretamente no Supabase</li>
+                            <li>Usuário sem permissão para criar ou visualizar projetos/quadros</li>
+                            <li>Problema de conexão com o banco de dados</li>
+                        </ul>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="btn btn-danger" onclick="logout()">
+                            <i data-feather="log-out" class="h-4 w-4 mr-2"></i>
+                            Sair e Tentar Novamente
+                        </button>
+                        <button class="btn btn-secondary" onclick="location.reload()">
+                            <i data-feather="refresh-cw" class="h-4 w-4 mr-2"></i>
+                            Recarregar Página
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        feather.replace();
+    }
+}
+
+// NOVO: Atualiza a UI do seletor de time
+function updateActiveTeamUI() {
+    if (currentOrg) {
+        // ATUALIZADO: Mostra o nome do Time (Org)
+        document.getElementById('topBarProjectName').textContent = currentOrg.nome || 'Time Pessoal';
+    } else {
+        document.getElementById('topBarProjectName').textContent = 'Espaço Pessoal';
+    }
+    // Atualiza o menu dropdown
+    document.querySelectorAll('#teamSelectorList .team-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.orgId === currentOrg?.id) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// NOVO: Popula o dropdown do seletor de times
+function populateTeamSelector() {
+    const list = document.getElementById('teamSelectorList');
+    if (!list) return;
+
+    list.innerHTML = ''; // Limpa
+    
+    // Adiciona todos os times do usuário
+    currentUser.organizacoes.forEach(org => {
+        const item = document.createElement('a');
+        item.href = '#';
+        item.className = 'dropdown-item team-item';
+        item.dataset.orgId = org.id;
+        item.innerHTML = `<i data-feather="users" class="h-4 w-4 mr-2"></i> ${escapeHTML(org.nome)}`;
+        if (org.id === currentOrg?.id) {
+            item.classList.add('active');
+        }
+        item.onclick = (e) => {
+            e.preventDefault();
+            switchActiveTeam(org.id);
+        };
+        list.appendChild(item);
+    });
+
+    feather.replace();
+}
+
+// NOVO: Troca o time ativo
+async function switchActiveTeam(orgId) {
+    const newOrg = currentUser.organizacoes.find(org => org.id === orgId);
+    if (!newOrg || newOrg.id === currentOrg?.id) {
+        // Fecha o dropdown se clicar no mesmo time
+        document.getElementById('teamSelectorMenu').classList.remove('open');
+        document.getElementById('teamSelectorButton').parentElement?.classList.remove('open');
+        return;
+    }
+
+    currentOrg = newOrg;
+    localStorage.setItem('current_org_id', currentOrg.id);
+    
+    console.log(`Trocando para o time: ${currentOrg.nome}`);
+    
+    // Atualiza a UI imediatamente
+    updateActiveTeamUI();
+    document.getElementById('teamSelectorMenu').classList.remove('open');
+    document.getElementById('teamSelectorButton').parentElement?.classList.remove('open');
+
+    // Recarrega os dados do dashboard/kanban para o novo time
+    try {
+        await loadActiveProject(); // Carrega o projeto principal DESTE time
+        // Recarrega a view atual com os dados do novo time
+        const activeView = document.querySelector('.view-content.active')?.id || 'listView'; // Padrão é a lista de projetos
+        const activeLink = document.querySelector(`.sidebar .nav-item[href="#${activeView.replace('View', '')}"]`);
+        showView(activeView, activeLink);
+    } catch (err) {
+        console.error("Erro ao trocar de time:", err);
+        showNotification(`Erro ao carregar dados do time: ${err.message}`, 'error');
+    }
+}
+
 // ========================================
-// 4. NAVEGAÇÃO E UI (Restante do seu código)
+// 4. NAVEGAÇÃO E UI
 // ========================================
 
 function showView(viewId, element = null) {
@@ -497,7 +560,7 @@ function showView(viewId, element = null) {
         switch (viewId) {
             case 'dashboardView': loadDashboardView(); break;
             case 'projetosView': loadKanbanView(); break;
-            case 'listView': loadListView(true); break; // ATUALIZADO: Força recarga
+            case 'listView': loadProjectListView(true); break; // ATUALIZADO: Chama a nova função
             case 'timelineView': loadTimelineView(); break;
             case 'calendarioView': loadCalendarView(); break;
             case 'notasView': loadNotasView(); break;
@@ -534,15 +597,11 @@ function showNotification(message, type = 'info', timeout = 4000) {
 }
 
 // ========================================
-// 5. Carregar Projeto Ativo e Colunas
+// 5. Carregar "Quadro" (Projeto) Ativo e Colunas
 // ========================================
 
-// (PRIMEIRA DEFINIÇÃO DE `loadActiveProject` REMOVIDA)
-
-// (PRIMEIRA DEFINIÇÃO DE `loadDashboardView` REMOVIDA)
-
 async function loadActiveProject() {
-    console.log("🔄 Carregando projeto ativo...");
+    console.log("🔄 Carregando Quadro ativo (projeto)...");
     currentProject = null;
     currentColumns = [];
     currentGroups = [];
@@ -550,16 +609,15 @@ async function loadActiveProject() {
     const orgFilter = currentOrg?.id ? `org_id=eq.${currentOrg.id}` : `org_id=is.null&created_by=eq.${currentUser.id}`;
 
     try {
-        // Tenta buscar projetos existentes
+        // Tenta buscar "Quadros" (projetos) existentes
         let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
         
-        // CORREÇÃO: Validação mais robusta
         const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
 
         if (projetosValidos.length === 0) {
-            console.warn("⚠️ Nenhum projeto encontrado. Criando 'Meu Primeiro Quadro'...");
+            console.warn("⚠️ Nenhum Quadro (projeto) encontrado. Criando 'Meu Primeiro Quadro'...");
             
-            // Cria projeto padrão
+            // Cria "Quadro" (projeto) padrão
             const newProject = {
                 nome: 'Meu Primeiro Quadro',
                 created_by: currentUser.id,
@@ -568,58 +626,57 @@ async function loadActiveProject() {
             
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
             
-            // Valida resposta da criação
             if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
-                console.error("❌ Resposta inválida ao criar projeto:", createResponse);
-                throw new Error("Falha ao criar projeto padrão. Verifique as permissões RLS da tabela 'projetos'.");
+                console.error("❌ Resposta inválida ao criar quadro:", createResponse);
+                throw new Error("Falha ao criar quadro padrão. Verifique as permissões RLS da tabela 'projetos'.");
             }
             
             currentProject = createResponse[0];
-            console.log("✅ Projeto criado com sucesso:", currentProject);
+            console.log("✅ Quadro criado com sucesso:", currentProject);
         } else {
             currentProject = projetosValidos[0];
-            console.log("✅ Projeto encontrado:", currentProject);
+            console.log("✅ Quadro encontrado:", currentProject);
         }
 
-        // VERIFICAÇÃO FINAL DE SEGURANÇA
         if (!currentProject || !currentProject.id) {
-            console.error("❌ Erro fatal: currentProject inválido:", currentProject);
-            throw new Error("Não foi possível carregar ou criar um projeto válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'.");
+            console.error("❌ Erro fatal: currentProject (Quadro) inválido:", currentProject);
+            throw new Error("Não foi possível carregar ou criar um quadro válido. Verifique as políticas RLS do Supabase para a tabela 'projetos'.");
         }
 
-        console.log("✅ Projeto ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
+        console.log("✅ Quadro ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
 
         // Carrega Colunas (Status)
         let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
         currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
 
         if (currentColumns.length === 0) {
-            console.warn("⚠️ Nenhuma coluna encontrada. Criando colunas padrão...");
+            console.warn("⚠️ Nenhuma coluna (status) encontrada. Criando colunas padrão...");
             await createDefaultColumns(currentProject.id);
             
-            // Busca novamente
             cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
             currentColumns = Array.isArray(cols) ? cols.filter(c => c && c.id) : [];
             
             if (currentColumns.length === 0) {
-                throw new Error("Falha ao criar ou buscar colunas padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
+                throw new Error("Falha ao criar ou buscar colunas (status) padrão. Verifique as políticas RLS da tabela 'colunas_kanban'.");
             }
         }
         
-        console.log("✅ Colunas carregadas:", currentColumns.length);
+        console.log("✅ Colunas (Status) carregadas:", currentColumns.length);
 
-        // Carrega Grupos de Tarefas
-        let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
+        // Carrega "Projetos" (grupos_tarefas)
+        // ATUALIZADO: Busca a nova coluna 'prioridade'
+        let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem,prioridade&order=ordem.asc`, 'GET');
         currentGroups = Array.isArray(groups) ? groups.filter(g => g && g.id) : [];
         
-        console.log("✅ Grupos carregados:", currentGroups.length);
+        console.log("✅ Projetos (grupos_tarefas) carregados:", currentGroups.length);
 
     } catch (error) {
-        console.error("❌ Erro fatal ao carregar projeto/colunas:", error);
+        console.error("❌ Erro fatal ao carregar quadro/colunas/projetos:", error);
         throw error;
     }
-} // <--- CHAVE DE FECHAMENTO ADICIONADA AQUI
+}
 
+// Cria colunas padrão (A Fazer, Em Andamento, Concluído)
 async function createDefaultColumns(projectId) {
      const defaultCols = [
           { projeto_id: projectId, nome: 'A Fazer', ordem: 0 },
@@ -633,65 +690,69 @@ async function createDefaultColumns(projectId) {
           console.error("❌ Erro ao criar colunas padrão:", error);
      }
 }
-
+        
 // ========================================
-// 6. LÓGICA DO DASHBOARD (CORRIGIDA)
+// 6. LÓGICA DO DASHBOARD
 // ========================================
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
     
+    // Destrói gráficos ANTES de recarregar o HTML
+    if (chartInstances.ganttChart) {
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
+    }
+    if (chartInstances.statusChart) {
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+    }
+    
     // VALIDAÇÃO CRÍTICA NO INÍCIO
     if (!currentProject || !currentProject.id) {
-        console.error("❌ loadDashboardView: currentProject inválido:", currentProject);
+        console.error("❌ loadDashboardView: currentProject (Quadro) inválido:", currentProject);
         view.innerHTML = `
-            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
-            <div class="alert alert-error">
-                <p>Erro: Projeto não carregado corretamente.</p>
-                <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+            <div class="container mx-auto px-6 py-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+                <div class="alert alert-error">
+                    <p>Erro: Quadro não carregado corretamente.</p>
+                    <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+                </div>
             </div>`;
         return;
     }
     
     if (!currentColumns || currentColumns.length === 0) {
-        console.error("❌ loadDashboardView: Colunas não carregadas");
+        console.error("❌ loadDashboardView: Colunas (Status) não carregadas");
         view.innerHTML = `
-            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
-            <div class="alert alert-error">
-                <p>Erro: Colunas não carregadas.</p>
-                <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+            <div class="container mx-auto px-6 py-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+                <div class="alert alert-error">
+                    <p>Erro: Colunas (Status) não carregadas.</p>
+                    <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+                </div>
             </div>`;
         return;
     }
     
-    console.log("📊 Carregando dashboard para projeto:", currentProject.nome);
+    console.log("📊 Carregando dashboard para quadro:", currentProject.nome);
     
-    // Destrói gráficos ANTES de recarregar o HTML
-    if (chartInstances.ganttChart && typeof chartInstances.ganttChart.destroy === 'function') {
-        chartInstances.ganttChart.destroy();
-        chartInstances.ganttChart = null;
-    }
-    if (chartInstances.statusChart && typeof chartInstances.statusChart.destroy === 'function') {
-        chartInstances.statusChart.destroy();
-        chartInstances.statusChart = null;
-    }
-
-    // (REMOVIDA a definição incompleta de `loadDashboardView`)
-
     view.innerHTML = `
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">...</span><span class="stat-label">Tarefas Ativas</span></div>
-            <div class="stat-card-dash"><span class="stat-number" id="dashCompletedTasks">...</span><span class="stat-label">Tarefas Concluídas (Mês)</span></div>
-            <div class="stat-card-dash"><span class="stat-number" id="dashDueTasks">...</span><span class="stat-label">Tarefas Vencendo Hoje</span></div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-lg shadow-md chart-card">
-                <h3 class="text-xl font-semibold mb-4">Progresso do Projeto (Gantt)</h3>
-                <div class="relative h-96"><canvas id="ganttChart"></canvas></div>
+        <div class="container mx-auto px-6 py-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">...</span><span class="stat-label">Tarefas Ativas</span></div>
+                <div class="stat-card-dash"><span class="stat-number" id="dashCompletedTasks">...</span><span class="stat-label">Tarefas Concluídas (Mês)</span></div>
+                <div class="stat-card-dash"><span class="stat-number" id="dashDueTasks">...</span><span class="stat-label">Tarefas Vencendo Hoje</span></div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md chart-card">
-                <h3 class="text-xl font-semibold mb-4">Tarefas por Status</h3>
-                <div class="relative h-96"><canvas id="statusChart"></canvas></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md chart-card">
+                    <h3 class="text-xl font-semibold mb-4">Progresso do Projeto (Gantt)</h3>
+                    <div class="relative h-96"><canvas id="ganttChart"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md chart-card">
+                    <h3 class="text-xl font-semibold mb-4">Tarefas por Status</h3>
+                    <div class="relative h-96"><canvas id="statusChart"></canvas></div>
+                </div>
             </div>
         </div>
      `;
@@ -732,11 +793,12 @@ async function loadDashboardView() {
     renderStatusChart();
     renderGanttChart();
 }
-    
+
 async function renderStatusChart() {
-    
-    // CORREÇÃO: Removido o bloco "destroy" daqui.
-    // A função loadDashboardView() já destrói o gráfico ANTES de recarregar o HTML.
+    if (chartInstances.statusChart) {
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+    }
     
     if (!currentProject || currentColumns.length === 0) return;
     const ctx = document.getElementById('statusChart')?.getContext('2d');
@@ -744,8 +806,6 @@ async function renderStatusChart() {
         console.warn("Canvas 'statusChart' não encontrado para renderizar.");
         return;
     }
-   
-   
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -771,10 +831,12 @@ async function renderStatusChart() {
         console.error("Erro ao renderizar gráfico de status:", error);
     }
 }
+
 async function renderGanttChart() {
-    
-    // CORREÇÃO: Removido o bloco "destroy" daqui.
-    // A função loadDashboardView() já destrói o gráfico ANTES de recarregar o HTML.
+    if (chartInstances.ganttChart) {
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
+    }
     
     if (!currentProject) return;
     const ctx = document.getElementById('ganttChart')?.getContext('2d');
@@ -782,8 +844,6 @@ async function renderGanttChart() {
         console.warn("Canvas 'ganttChart' não encontrado para renderizar.");
         return;
      }
-
-
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
@@ -855,17 +915,30 @@ async function renderGanttChart() {
 }
 
 // ========================================
-// 7. LÓGICA DO KANBAN (CORRIGIDA)
+// 7. LÓGICA DO KANBAN
 // ========================================
 let draggedTask = null;
 
 async function loadKanbanView() {
+    const kanbanView = document.getElementById('projetosView'); // ID da view
+    if (!kanbanView) return;
+    
+    // Adiciona o container de padding se não estiver lá (para centralizar)
+    if (!kanbanView.querySelector('.container')) {
+         kanbanView.innerHTML = `<div class="container mx-auto px-6 py-8">${kanbanView.innerHTML}</div>`;
+    }
+    
+    const kanbanBoard = document.getElementById('kanbanBoard');
+    if (!kanbanBoard) {
+        console.error("Elemento #kanbanBoard não encontrado!");
+        return;
+    }
+
     if (!currentProject || currentColumns.length === 0) {
-         document.getElementById('kanbanBoard').innerHTML = '<div class="alert alert-error col-span-3">Projeto ou colunas não carregados.</div>';
+         kanbanBoard.innerHTML = '<div class="alert alert-error col-span-3">Quadro ou colunas não carregados.</div>';
          return;
     }
 
-    const kanbanBoard = document.getElementById('kanbanBoard');
     kanbanBoard.innerHTML = `<div class="loading col-span-${currentColumns.length}"><div class="spinner"></div> Carregando tarefas...</div>`;
 
     try {
@@ -880,8 +953,6 @@ async function loadKanbanView() {
              console.warn("[Kanban] NENHUMA TAREFA encontrada.");
         }
         
-        // --- FIM DA CORREÇÃO ---
-
         kanbanBoard.innerHTML = '';
         
         const fallbackColumnId = currentColumns[0]?.id || null;
@@ -897,12 +968,14 @@ async function loadKanbanView() {
             columnContentEl.ondragover = handleDragOver;
             columnContentEl.ondrop = (e) => handleDrop(e, coluna.id);
             
+            // ATUALIZADO: Estilo do botão de adicionar
             const addTaskBtn = `<button class="btn btn-secondary btn-small w-full" style="border-style: dashed; text-transform: none; font-weight: 500;" onclick="openTaskModal(null, '${coluna.id}')">
                                     <i data-feather="plus" class="h-4 w-4 mr-1"></i> Adicionar Tarefa
                                 </button>`;
 
             columnEl.innerHTML = `<h3 class="kanban-column-title">${escapeHTML(coluna.nome)}</h3>`;
             columnEl.appendChild(columnContentEl);
+            // ATUALIZADO: Adiciona padding ao redor do botão
             columnEl.innerHTML += `<div class="p-2 mt-auto">${addTaskBtn}</div>`;
 
             if (tasks && tasks.length > 0) {
@@ -937,6 +1010,7 @@ async function loadKanbanView() {
 function createTaskCard(task) {
     const card = document.createElement('div');
     card.id = `task-${task.id}`;
+    // ATUALIZADO: Adiciona classe de prioridade ao card
     card.className = `kanban-card priority-${task.prioridade}`;
     card.draggable = true;
     card.dataset.taskId = task.id;
@@ -958,7 +1032,7 @@ function createTaskCard(task) {
     let assigneeHtml = '';
     if (task.assignee) {
         assigneeHtml = `
-            <img src="${escapeHTML(task.assignee.profile_picture_url || 'icon.png')}"
+            <img src="${escapeHTML(task.assignee.profile_picture_url || 'https://placehold.co/24x24/00D4AA/023047?text=JP')}"
                  alt="${escapeHTML(task.assignee.nome)}"
                  title="Atribuído a: ${escapeHTML(task.assignee.nome)}"
                  class="w-5 h-5 rounded-full object-cover border border-gray-200 shadow-sm">
@@ -975,6 +1049,7 @@ function createTaskCard(task) {
         <div class="kanban-card-title">${escapeHTML(task.titulo)}</div>
         <div class="kanban-card-footer">
             <div class="flex items-center gap-2">
+                 <!-- ATUALIZADO: Mostra a prioridade como texto -->
                  <span class"kanban-card-priority priority-${task.prioridade}" title="Prioridade ${task.prioridade}">${escapeHTML(task.prioridade)}</span>
                  ${dateHtml}
             </div>
@@ -1000,15 +1075,27 @@ function handleDragOver(e) {
     e.dataTransfer.dropEffect = 'move';
     const columnContent = e.target.closest('.kanban-column-content');
     if (columnContent) {
+        // Remove de todos e adiciona apenas no atual
         document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
         columnContent.classList.add('drag-over');
     }
 }
 
-document.querySelectorAll('.kanban-column-content').forEach(col => {
-    col.addEventListener('dragleave', (e) => col.classList.remove('drag-over'));
-    col.addEventListener('drop', (e) => col.classList.remove('drag-over'));
+// Adiciona listeners globais para limpar o 'drag-over'
+document.addEventListener('dragend', () => {
+    document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
+    if (draggedTask) {
+        draggedTask.classList.remove('dragging');
+        draggedTask = null;
+    }
 });
+document.addEventListener('dragover', (e) => {
+    // Limpa se estiver fora de uma zona de drop válida
+    if (!e.target.closest('.kanban-column-content')) {
+         document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
+    }
+});
+
 
 async function handleDrop(e, newColunaId) {
     e.preventDefault();
@@ -1030,11 +1117,13 @@ async function handleDrop(e, newColunaId) {
                     coluna_id: newColunaId,
                     updated_at: new Date().toISOString()
                 });
-                showNotification(`Tarefa #${taskId} movida.`, 'success');
+                showNotification(`Tarefa movida.`, 'success');
                 loadTimelineView(); 
-                loadDashboardView(); 
+                loadDashboardView();
+                loadProjectListView(false); // ATUALIZADO: Sincroniza a lista
             } catch (error) {
                 console.error("Falha ao atualizar task:", error);
+                // Devolve o card se falhar
                 document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask); 
                 draggedTask.dataset.colunaId = oldColunaId;
                 showNotification('Falha ao mover tarefa.', 'error');
@@ -1048,9 +1137,9 @@ async function handleDrop(e, newColunaId) {
 // ========================================
 // 8. LÓGICA DO MODAL DE TAREFAS (ATUALIZADO)
 // ========================================
-async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId = null) { // ATUALIZADO
+async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId = null) { // defaultGrupoId é o "Projeto"
      if (!currentProject || currentColumns.length === 0) {
-          showNotification("Crie ou selecione um projeto e suas colunas primeiro.", "error");
+          showNotification("Crie ou selecione um quadro e suas colunas primeiro.", "error");
           return;
      }
 
@@ -1059,11 +1148,13 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
     form.reset();
     document.getElementById('taskAlert').innerHTML = '';
 
+    // Garante que o input hidden da coluna existe
     let colunaIdInput = document.getElementById('taskColunaId');
     if (!colunaIdInput) {
         colunaIdInput = document.createElement('input');
         colunaIdInput.type = 'hidden';
         colunaIdInput.id = 'taskColunaId';
+        colunaIdInput.name = 'coluna_id'; // Adiciona nome para debugging
         form.appendChild(colunaIdInput);
     }
 
@@ -1080,7 +1171,7 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
         
         // Preenche os novos campos
         document.getElementById('taskAssignee').value = task.assignee_id || '';
-        document.getElementById('taskGroup').value = task.grupo_id || '';
+        document.getElementById('taskGroup').value = task.grupo_id || ''; // "Projeto" (Grupo)
         document.getElementById('taskEsforcoPrevisto').value = task.esforco_previsto || '';
         document.getElementById('taskEsforcoUtilizado').value = task.esforco_utilizado || '';
         document.getElementById('taskDataConclusaoReal').value = task.data_conclusao_real || '';
@@ -1093,24 +1184,24 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
         const primeiraColunaId = currentColumns[0]?.id;
         colunaIdInput.value = defaultColunaId || primeiraColunaId || '';
         
-        // Preenche o grupo padrão (se vindo do botão "+ Adicionar")
+        // Preenche o "Projeto" (Grupo) padrão (se vindo do botão "+ Adicionar")
         document.getElementById('taskGroup').value = defaultGrupoId || '';
         
         if (!colunaIdInput.value) {
-            console.error("CRÍTICO: Não foi possível determinar a coluna padrão para a nova tarefa!");
-            document.getElementById('taskAlert').innerHTML = '<div class="alert alert-error">Erro: Colunas não carregadas. Não é possível criar tarefa.</div>';
+            console.error("CRÍTICO: Não foi possível determinar a coluna (status) padrão para a nova tarefa!");
+            document.getElementById('taskAlert').innerHTML = '<div class="alert alert-error">Erro: Colunas (Status) não carregadas. Não é possível criar tarefa.</div>';
         }
     }
 
-    // Preenche os dropdowns de Responsáveis e Grupos
+    // Preenche os dropdowns de Responsáveis e "Projetos" (Grupos)
     await loadTeamMembersForSelect('taskAssignee', task ? task.assignee_id : null);
-    await loadGroupsForSelect('taskGroup', task ? task.grupo_id : (defaultGrupoId || '')); // ATUALIZADO
+    await loadGroupsForSelect('taskGroup', task ? task.grupo_id : (defaultGrupoId || ''));
 
     modal.style.display = 'flex';
     feather.replace();
 }
 
-// --- ATUALIZADO: Carrega membros E grupos ---
+// Carrega membros do time para o select
 async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -1152,22 +1243,27 @@ async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
     }
 }
 
-// --- NOVA FUNÇÃO HELPER ---
+// Carrega "Projetos" (Grupos) para o select
 async function loadGroupsForSelect(selectId, selectedGroupId = null) {
     const select = document.getElementById(selectId);
     if (!select) return;
 
-    while (select.options.length > 1) {
+    // ATUALIZADO: Muda a label do select
+    const label = document.querySelector(`label[for="${selectId}"]`);
+    if (label) label.textContent = 'Projeto:';
+
+    while (select.options.length > 1) { // Mantém "Nenhum grupo"
         select.remove(1);
     }
+    select.options[0].textContent = 'Nenhum projeto'; // Atualiza o texto padrão
     select.value = '';
 
-    // Usa o cache 'currentGroups' que foi carregado no 'loadActiveProject'
+    // Usa o cache 'currentGroups' (que são os "Projetos")
     if (currentGroups && currentGroups.length > 0) {
         currentGroups.forEach(group => {
             const option = document.createElement('option');
             option.value = group.id;
-            option.textContent = group.nome;
+            option.textContent = group.nome; // Ex: "Planejamento"
             select.appendChild(option);
         });
     }
@@ -1181,7 +1277,7 @@ async function loadGroupsForSelect(selectId, selectedGroupId = null) {
 async function handleTaskFormSubmit(e) {
     e.preventDefault();
      if (!currentProject || !currentUser || !document.getElementById('taskColunaId').value) {
-         showNotification("Erro: Projeto, usuário ou coluna inválida.", "error");
+         showNotification("Erro: Quadro, usuário ou status inválido.", "error");
          return;
      }
 
@@ -1192,7 +1288,7 @@ async function handleTaskFormSubmit(e) {
     
     let colunaIdFinal = document.getElementById('taskColunaId').value;
     if (colunaIdFinal === '') {
-        console.warn("Nenhuma coluna ID encontrada no form, tentando fallback para a primeira coluna...");
+        console.warn("Nenhum ID de coluna (status) encontrado no form, tentando fallback para a primeira coluna...");
         colunaIdFinal = currentColumns[0]?.id || null;
     }
 
@@ -1204,13 +1300,13 @@ async function handleTaskFormSubmit(e) {
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
         assignee_id: document.getElementById('taskAssignee').value || null,
-        grupo_id: document.getElementById('taskGroup').value || null, // NOVO
-        esforco_previsto: parseInt(document.getElementById('taskEsforcoPrevisto').value) || null, // NOVO
-        esforco_utilizado: parseInt(document.getElementById('taskEsforcoUtilizado').value) || null, // NOVO
-        data_conclusao_real: document.getElementById('taskDataConclusaoReal').value || null, // NOVO
+        grupo_id: document.getElementById('taskGroup').value || null, // "Projeto" (Grupo)
+        esforco_previsto: parseInt(document.getElementById('taskEsforcoPrevisto').value) || null,
+        esforco_utilizado: parseInt(document.getElementById('taskEsforcoUtilizado').value) || null,
+        data_conclusao_real: document.getElementById('taskDataConclusaoReal').value || null,
         org_id: currentOrg?.id || null,
-        projeto_id: currentProject.id,
-        coluna_id: colunaIdFinal,
+        projeto_id: currentProject.id, // O "Quadro"
+        coluna_id: colunaIdFinal, // O "Status"
         updated_at: new Date().toISOString()
     };
 
@@ -1220,6 +1316,7 @@ async function handleTaskFormSubmit(e) {
         if (taskId) {
             await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', taskData);
         } else {
+            // TODO: Adicionar lógica para 'ordem_na_coluna'
             await supabaseRequest('tarefas', 'POST', taskData);
         }
         showNotification(`Tarefa ${taskId ? 'atualizada' : 'criada'}!`, 'success');
@@ -1229,7 +1326,7 @@ async function handleTaskFormSubmit(e) {
         loadKanbanView(); 
         loadDashboardView(); 
         loadTimelineView(); 
-        loadListView(true); // ATUALIZADO: Força recarga
+        loadProjectListView(false); // ATUALIZADO
 
     } catch (error) {
         console.error("Erro ao salvar tarefa:", error);
@@ -1237,11 +1334,68 @@ async function handleTaskFormSubmit(e) {
     }
 }
 
+// ========================================
+// 9. NOVO: Modal de Projeto (antigo Grupo)
+// ========================================
+
+// NOVO: Abre o modal de criação de Projeto (antigo Grupo)
+function openCreateProjectModal() {
+    document.getElementById('projectForm').reset();
+    document.getElementById('projectAlert').innerHTML = '';
+    document.getElementById('projectModal').style.display = 'flex';
+    feather.replace();
+}
+
+// NOVO: Salva o novo Projeto (antigo Grupo)
+async function handleProjectFormSubmit(e) {
+    e.preventDefault();
+    const alert = document.getElementById('projectAlert');
+    const button = e.target.querySelector('button[type="submit"]');
+    alert.innerHTML = '<div class="loading"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin-right:5px;"></div>Salvando...</div>';
+    button.disabled = true;
+
+    const projectName = document.getElementById('projectName').value;
+    const projectPriority = document.getElementById('projectPriority').value;
+
+    // Pega a ordem atual
+    const newOrder = currentGroups.length;
+
+    const projectData = {
+        projeto_id: currentProject.id, // ID do "Quadro"
+        org_id: currentOrg?.id || null,
+        nome: projectName,
+        prioridade: projectPriority,
+        ordem: newOrder
+    };
+
+    try {
+        const newProject = await supabaseRequest('grupos_tarefas', 'POST', projectData);
+        
+        if (newProject && newProject[0]) {
+            currentGroups.push(newProject[0]); // Adiciona ao cache local
+        }
+
+        showNotification(`Projeto "${projectName}" criado!`, 'success');
+        closeModal('projectModal');
+        loadProjectListView(false); // Recarrega a lista
+    } catch (error) {
+        console.error("Erro ao criar projeto (grupo):", error);
+        alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
+    } finally {
+        button.disabled = false;
+    }
+}
+
 
 // ========================================
-// 9. LÓGICA DO TIME (Convites)
+// 10. LÓGICA DO TIME (Convites)
 // ========================================
 async function loadTimeView() {
+    const teamView = document.getElementById('timeView');
+    if (!teamView.querySelector('.container')) {
+         teamView.innerHTML = `<div class="container mx-auto px-6 py-8">${teamView.innerHTML}</div>`;
+    }
+    
     const teamBody = document.getElementById('teamTableBody');
     const inviteCodeInput = document.getElementById('teamInviteCodeDisplay');
     teamBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div> Carregando membros...</td></tr>';
@@ -1260,12 +1414,9 @@ async function loadTimeView() {
              if(inviteButton) inviteButton.style.display = 'inline-flex';
         }
 
-        // Busca o código de convite
-        // ATUALIZADO: Pega o código do 'currentOrg' em cache
         if (currentOrg && currentOrg.invite_code) {
             inviteCodeInput.value = currentOrg.invite_code;
         } else {
-            // Se não estiver no cache, busca no banco
             const orgData = await supabaseRequest(`organizacoes?id=eq.${orgId}&select=invite_code`, 'GET');
             if (orgData && orgData[0] && orgData[0].invite_code) {
                 inviteCodeInput.value = orgData[0].invite_code;
@@ -1275,8 +1426,6 @@ async function loadTimeView() {
             }
         }
 
-
-        // Busca os membros
         const members = await supabaseRequest(`usuario_orgs?org_id=eq.${orgId}&select=role,joined_at,usuarios(id,nome,email,ativo,profile_picture_url)`, 'GET');
 
         if (!members || members.length === 0) {
@@ -1287,13 +1436,14 @@ async function loadTimeView() {
         teamBody.innerHTML = members.map(m => {
             const user = m.usuarios;
             if (!user) return '';
-            const statusClass = user.ativo ? 'status-finalizada' : 'status-negada';
+            // ATUALIZADO: Usando classes de status do Kanban/Lista
+            const statusClass = user.ativo ? 'status-concluído' : 'status-parado';
             const statusText = user.ativo ? 'Ativo' : 'Inativo'; 
             return `
                 <tr>
                     <td>
                         <div class="flex items-center gap-3">
-                            <img src="${escapeHTML(user.profile_picture_url || 'icon.png')}" alt="Foto" class="w-8 h-8 rounded-full object-cover">
+                            <img src="${escapeHTML(user.profile_picture_url || 'https://placehold.co/32x32/00D4AA/023047?text=JP')}" alt="Foto" class="w-8 h-8 rounded-full object-cover">
                             ${escapeHTML(user.nome)}
                         </div>
                     </td>
@@ -1365,8 +1515,9 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
-     const confirmation = prompt(`Tem certeza que deseja remover este membro do time? Digite 'REMOVER' para confirmar.`);
-     if (confirmation !== 'REMOVER') {
+     // ATUALIZADO: Modal customizado em vez de prompt
+     const confirmation = window.confirm(`Tem certeza que deseja remover este membro do time? Esta ação não pode ser desfeita.`);
+     if (!confirmation) {
         showNotification("Remoção cancelada.", "info");
         return;
      }
@@ -1381,7 +1532,6 @@ async function removeMember(userIdToRemove) {
      }
 }
 
-// NOVO: Copiar código de convite
 function copyInviteCode() {
     const code = document.getElementById('teamInviteCodeDisplay').value;
     if (!code || code === 'Carregando...' || code === 'Erro' || code === 'N/A') {
@@ -1389,7 +1539,6 @@ function copyInviteCode() {
         return;
     }
     
-    // Solução alternativa para clipboard
     try {
         const textArea = document.createElement("textarea");
         textArea.value = code;
@@ -1407,9 +1556,14 @@ function copyInviteCode() {
 
 
 // ========================================
-// 10. LÓGICA DO BLOCO DE NOTAS
+// 11. LÓGICA DO BLOCO DE NOTAS
 // ========================================
 async function loadNotasView() {
+    const notasView = document.getElementById('notasView');
+    if (!notasView.querySelector('.container')) {
+         notasView.innerHTML = `<div class="container mx-auto px-6 py-8">${notasView.innerHTML}</div>`;
+    }
+    
     const list = document.getElementById('noteList');
     list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>
                       <div class="loading"><div class="spinner"></div> Carregando notas...</div>`;
@@ -1448,7 +1602,6 @@ async function loadNotasView() {
     }
 }
 
-
 function createNewNote() {
     currentNoteId = null;
     document.getElementById('noteTitle').value = '';
@@ -1483,7 +1636,6 @@ async function openNote(noteId) {
          currentNoteId = null;
     }
 }
-
 
 async function saveNote() {
     const title = document.getElementById('noteTitle').value;
@@ -1524,16 +1676,20 @@ async function saveNote() {
     }
 }
 
-
 // ========================================
-// 11. LÓGICA DO CALENDÁRIO
+// 12. LÓGICA DO CALENDÁRIO
 // ========================================
 async function loadCalendarView() {
+    const calView = document.getElementById('calendarioView');
+    if (!calView.querySelector('.container')) {
+         calView.innerHTML = `<div class="container mx-auto px-6 py-8">${calView.innerHTML}</div>`;
+    }
+    
     const container = document.getElementById('calendarContainer');
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Carregando tarefas...</div>`;
 
     if (!currentProject) {
-        container.innerHTML = '<p class="text-center text-gray-500">Nenhum projeto ativo selecionado.</p>';
+        container.innerHTML = '<p class="text-center text-gray-500">Nenhum quadro ativo selecionado.</p>';
         return;
     }
 
@@ -1542,7 +1698,7 @@ async function loadCalendarView() {
         const tasksWithDate = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=not.is.null&select=id,titulo,data_entrega,prioridade&order=data_entrega.asc`, 'GET');
 
         if (!tasksWithDate || tasksWithDate.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500">Nenhuma tarefa com data de entrega definida neste projeto.</p>';
+            container.innerHTML = '<p class="text-center text-gray-500">Nenhuma tarefa com data de entrega definida neste quadro.</p>';
             return;
         }
 
@@ -1566,7 +1722,7 @@ async function loadCalendarView() {
 }
 
 // ========================================
-// 12. UTILITÁRIOS (Sua API Proxy)
+// 13. UTILITÁRIOS (API Proxy)
 // ========================================
 async function supabaseRequest(endpoint, method = 'GET', body = null, headers = {}) {
     const authToken = localStorage.getItem('auth_token');
@@ -1575,34 +1731,55 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
         logout();
         throw new Error("Sessão expirada. Faça login novamente.");
     }
-    const url = `${SUPABASE_PROXY_URL}?endpoint=${encodeURIComponent(endpoint)}`;
+    
+    // Assegura que o endpoint está codificado corretamente
+    const encodedEndpoint = encodeURIComponent(endpoint);
+    const url = `${SUPABASE_PROXY_URL}?endpoint=${encodedEndpoint}`;
+
     const config = {
         method: method,
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
-            'Prefer': 'return=representation',
-            ...headers
+            ...headers // Permite sobrescrever, ex: 'Prefer': 'count=exact'
         }
     };
-    if (body && (method === 'POST' || method === 'PATCH')) {
+
+    // Adiciona 'Prefer: return=representation' por padrão para POST/PATCH
+    if (['POST', 'PATCH'].includes(method) && !config.headers['Prefer']) {
+        config.headers['Prefer'] = 'return=representation';
+    }
+
+    if (body && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
         config.body = JSON.stringify(body);
     }
+
     try {
         const response = await fetch(url, config);
+        
+        // Tratamento de contagem (count)
+        if (headers['Prefer'] === 'count=exact' && response.ok) {
+             const countRange = response.headers.get('content-range');
+             const count = countRange ? countRange.split('/')[1] : '0';
+             return { count: parseInt(count || '0', 10) };
+        }
+        
+        // Tratamento de resposta vazia (ex: DELETE)
+        if (response.status === 204 || response.headers.get('content-length') === '0') {
+             return null;
+        }
+
+        const responseData = await response.json();
+
         if (!response.ok) {
-             let errorData = { message: `Erro ${response.status}: ${response.statusText}` };
-             try { errorData = await response.json(); } catch(e) {}
+             let errorData = responseData;
             console.error("Erro Supabase:", errorData);
             const detailedError = errorData.message || errorData.error || `Erro na requisição Supabase (${response.status})`;
             throw new Error(detailedError);
         }
-        if (response.status === 204 || response.headers.get('content-length') === '0' ) return null;
-        if (headers['Prefer'] === 'count=exact') {
-             const count = response.headers.get('content-range')?.split('/')[1];
-             return { count: parseInt(count || '0', 10) };
-        }
-        return await response.json();
+
+        return responseData;
+
     } catch (error) {
         console.error("Erro em supabaseRequest:", error);
         if (error.message.includes("401") || error.message.includes("Unauthorized") || error.message.includes("JWT expired")) {
@@ -1622,9 +1799,14 @@ function escapeHTML(str) {
 }
 
 // ========================================
-// 13. FUNÇÕES: PERFIL
+// 14. FUNÇÕES: PERFIL
 // ========================================
 function loadPerfilView() {
+    const perfilView = document.getElementById('perfilView');
+    if (!perfilView.querySelector('.container')) {
+         perfilView.innerHTML = `<div class="container mx-auto px-6 py-8">${perfilView.innerHTML}</div>`;
+    }
+    
     const form = document.getElementById('perfilForm');
     const alertContainer = document.getElementById('perfilAlert');
     if (!form || !alertContainer) return; 
@@ -1637,7 +1819,7 @@ function loadPerfilView() {
     document.getElementById('perfilDescription').value = currentUser.description || '';
     document.getElementById('perfilSector').value = currentUser.sector || '';
     document.getElementById('perfilSkills').value = (currentUser.skills || []).join(', ');
-    document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
+    document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'https.placehold.co/96x96/00D4AA/023047?text=JP';
 
     feather.replace();
 }
@@ -1651,7 +1833,7 @@ function previewProfilePicture(event) {
     if (event.target.files[0]) {
         reader.readAsDataURL(event.target.files[0]);
     } else {
-         document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
+         document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'https://placehold.co/96x96/00D4AA/023047?text=JP';
     }
 }
 
@@ -1720,11 +1902,11 @@ async function handlePerfilFormSubmit(event) {
             localStorage.setItem('user', JSON.stringify(currentUser));
             
             document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
-            document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
+            document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'https://placehold.co/32x32/00D4AA/023047?text=JP';
             document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
             
             if (!newPictureUploaded) {
-                 document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'icon.png';
+                 document.getElementById('perfilPicturePreview').src = currentUser.profile_picture_url || 'https://placehold.co/96x96/00D4AA/023047?text=JP';
             }
             
             showNotification('Perfil atualizado com sucesso!', 'success');
@@ -1744,16 +1926,20 @@ async function handlePerfilFormSubmit(event) {
     }
 }
 
-
 // ========================================
-// 14. FUNÇÕES: TIMELINE
+// 15. FUNÇÕES: TIMELINE
 // ========================================
 async function loadTimelineView() {
+    const timelineView = document.getElementById('timelineView');
+    if (!timelineView.querySelector('.container')) {
+         timelineView.innerHTML = `<div class="container mx-auto px-6 py-8">${timelineView.innerHTML}</div>`;
+    }
+    
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando timeline...</div>';
 
      if (!currentProject) {
-        container.innerHTML = '<p class="text-center text-gray-500">Nenhum projeto ativo selecionado.</p>';
+        container.innerHTML = '<p class="text-center text-gray-500">Nenhum quadro ativo selecionado.</p>';
         return;
     }
 
@@ -1766,7 +1952,7 @@ async function loadTimelineView() {
         );
 
         if (!events || events.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500">Nenhuma atividade recente encontrada neste projeto.</p>';
+            container.innerHTML = '<p class="text-center text-gray-500">Nenhuma atividade recente encontrada neste quadro.</p>';
             return;
         }
 
@@ -1780,7 +1966,7 @@ async function loadTimelineView() {
             const itemClass = isCreation ? 'created' : (statusName.toLowerCase() === 'concluído' ? 'completed' : 'updated');
             
             const userName = event.created_by?.nome || 'Usuário desconhecido';
-            const userPic = event.created_by?.profile_picture_url || 'icon.png'; 
+            const userPic = event.created_by?.profile_picture_url || 'https://placehold.co/32x32/00D4AA/023047?text=JP';
 
             return `
                 <div class="timeline-item ${itemClass}">
@@ -1825,398 +2011,322 @@ function timeAgo(timestamp) {
 
 
 // ========================================
-// 15. NOVA LÓGICA: Lista de Tarefas (View)
+// 16. NOVA LÓGICA: Lista de Projetos (View)
 // ========================================
-async function loadListView(forceReload = false) { // ATUALIZADO
-    const container = document.getElementById('taskListContainer');
-    if (!container) {
-        console.error("Erro fatal: Elemento #taskListContainer não encontrado no app.html.");
-        return;
-    }
+async function loadProjectListView(forceReload = false) { // Antiga loadListView
+    console.log("CARREGANDO VIEW DE PROJETOS (LISTA)");
+    const container = document.getElementById('projectListContainer');
+    const tbody = document.getElementById('projectListBody');
+    const loadingRow = document.getElementById('projectListLoading');
     
-    // ATUALIZADO: Verifica se os grupos já foram carregados
-    if (forceReload || currentGroups.length === 0) {
-        container.innerHTML = `<div class="loading p-8"><div class="spinner"></div> Carregando grupos e tarefas...</div>`;
-        try {
-            await loadActiveProject(); // Recarrega grupos e colunas
-        } catch (err) {
-            container.innerHTML = `<div class="alert alert-error m-4">Erro ao recarregar dados do projeto.</div>`;
-            return;
-        }
-    } else {
-         container.innerHTML = `<div class="loading p-8"><div class="spinner"></div> Carregando tarefas...</div>`;
+    if (!tbody || !loadingRow || !container) {
+        console.error("Erro fatal: Elementos da tabela de projeto não encontrados no app.html.");
+        return;
     }
 
-    if (!currentProject) {
-        container.innerHTML = '<p class="text-center text-gray-500 p-8">Nenhum projeto ativo selecionado.</p>';
-        return;
-    }
+    // Mostra o loading
+    tbody.innerHTML = ''; // Limpa tudo
+    tbody.appendChild(loadingRow); // Adiciona o loading
+    loadingRow.style.display = 'table-row';
 
     try {
-        const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        
-        // Query ÚNICA: Pega os grupos e, aninhado, pega as tarefas de cada grupo
-        // CORREÇÃO: Movida a ordenação de tarefas para DENTRO do select aninhado.
-        // CORREÇÃO 2 (Erro 'Failed to parse select'): Removido o filtro \${projectFilter} de dentro do select aninhado
-        // e movido o 'order' para um parâmetro de URL separado.
-        const query = `grupos_tarefas?${projectFilter}&select=*,tarefas(*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=created_at.desc`;
-        const groupsWithTasks = await supabaseRequest(query, 'GET');
+        // 1. Garante que os "Projetos" (grupos_tarefas) estão carregados
+        if (forceReload || currentGroups.length === 0) {
+            console.log("Forçando recarga de grupos/projetos...");
+            await loadActiveProject(); // Recarrega `currentGroups` (com prioridade)
+        }
 
-        // Pega tarefas SEM grupo
+        if (!currentProject) {
+            throw new Error("Nenhum quadro ativo selecionado.");
+        }
+
+        const projectFilter = `projeto_id=eq.${currentProject.id}`;
+
+        // 2. Query ÚNICA: Pega os "Projetos" (grupos) e suas "Tarefas" aninhadas
+        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(${projectFilter},*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc,tarefas.ordem_na_coluna.asc`;
+        
+        console.log("Query Lista de Projetos:", query);
+        const projectsList = await supabaseRequest(query, 'GET');
+
+        // 3. Pega tarefas SEM projeto (sem grupo)
         const tasksWithoutGroup = await supabaseRequest(
-            `tarefas?${projectFilter}&grupo_id=is.null&select=*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=created_at.desc`,
+            `tarefas?${projectFilter}&grupo_id=is.null&select=*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`,
             'GET'
         );
 
-        if ((!groupsWithTasks || groupsWithTasks.length === 0) && (!tasksWithoutGroup || tasksWithoutGroup.length === 0)) {
-            container.innerHTML = '<p class="text-center text-gray-500 p-8">Nenhuma tarefa encontrada. Comece criando um grupo ou tarefa.</p>';
-            // TODO: Adicionar um botão "Criar Grupo"
-            return;
-        }
+        // 4. Limpa o body da tabela (exceto o loading, que será removido)
+        tbody.innerHTML = '';
 
-        // Construir a tabela
-        container.innerHTML = `
-            <table class="task-list-table w-full">
-                <thead>
-                    <tr>
-                        <th class="w-1/2">Tarefa</th>
-                        <th>Responsável</th>
-                        <th>Status</th>
-                        <th class="esforco-header">Previsto (h)</th>
-                        <th class="esforco-header">Utilizado (h)</th>
-                        <th>Data Entrega</th>
-                        <th>Conclusão Real</th>
-                    </tr>
-                </thead>
-                <tbody id="taskListBody">
-                    <!-- Linhas serão inseridas pelo JS -->
-                </tbody>
-            </table>
-        `;
-
-        const tbody = document.getElementById('taskListBody');
-        tbody.innerHTML = ''; // Limpa
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Função helper para renderizar uma linha de tarefa
-        const renderTaskRow = (task) => {
-            const tr = document.createElement('tr');
-            tr.className = 'task-row';
-            tr.dataset.taskId = task.id;
-            tr.dataset.groupId = task.grupo_id || 'none';
-
-            // Célula: Tarefa
-            const taskNameCell = document.createElement('td');
-            taskNameCell.className = 'task-name-cell';
-            taskNameCell.innerHTML = `<div style="padding-left: 20px;">${escapeHTML(task.titulo)}</div>`; // Indentação
-            taskNameCell.onclick = () => openTaskModal(task);
-            
-            // Célula: Responsável
-            const assigneeCell = document.createElement('td');
-            assigneeCell.className = 'assignee-cell';
-            if (task.assignee) {
-                assigneeCell.innerHTML = `
-                    <img src="${escapeHTML(task.assignee.profile_picture_url || 'icon.png')}" alt="${escapeHTML(task.assignee.nome)}">
-                    <span>${escapeHTML(task.assignee.nome)}</span>`;
-            } else {
-                assigneeCell.innerHTML = `<div class="no-assignee" title="Ninguém atribuído"><i data-feather="user" class="h-4 w-4"></i></div>`;
-            }
-
-            // Célula: Status
-            const statusCell = document.createElement('td');
-            statusCell.className = 'status-cell';
-            if (task.status) {
-                // CORREÇÃO: Usar o nome da coluna de status para o slug
-                const statusSlug = task.status.nome.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
-                statusCell.innerHTML = `<span class="status-badge status-${statusSlug}">${escapeHTML(task.status.nome)}</span>`;
-            } else {
-                 // Fallback para colunas não encontradas (ex: tarefas antigas)
-                 const defaultStatus = currentColumns[0];
-                 const statusSlug = defaultStatus ? defaultStatus.nome.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '') : 'default';
-                 statusCell.innerHTML = `<span class="status-badge status-${statusSlug}">${defaultStatus ? escapeHTML(defaultStatus.nome) : 'A Fazer'}</span>`;
-            }
-
-            // Célula: Esforço Previsto
-            const esforcoPrevCell = document.createElement('td');
-            esforcoPrevCell.className = 'esforco-cell';
-            esforcoPrevCell.textContent = task.esforco_previsto || '—';
-
-            // Célula: Esforço Utilizado
-            const esforcoUtilCell = document.createElement('td');
-            esforcoUtilCell.className = 'esforco-cell';
-            esforcoUtilCell.textContent = task.esforco_utilizado || '—';
-
-            // Célula: Data Entrega
-            const dateCell = document.createElement('td');
-            dateCell.className = 'date-cell';
-            if (task.data_entrega) {
-                const dueDate = new Date(task.data_entrega + 'T00:00:00');
-                dateCell.textContent = dueDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-                if (dueDate < today && task.status?.nome.toLowerCase() !== 'concluído') {
-                    dateCell.classList.add('is-late');
-                    dateCell.title = `Atrasado (Venceu em ${dateCell.textContent})`;
+        // 5. Renderiza os "Projetos" (grupos)
+        if (projectsList && projectsList.length > 0) {
+            projectsList.forEach(project => {
+                tbody.appendChild(createProjectHeaderRow(project));
+                if (project.tarefas && project.tarefas.length > 0) {
+                    project.tarefas.forEach(task => {
+                        tbody.appendChild(createTaskDataRow(task));
+                    });
                 }
-            } else {
-                dateCell.textContent = '—';
-            }
-
-            // Célula: Conclusão Real
-            const conclusaoCell = document.createElement('td');
-            conclusaoCell.className = 'date-cell';
-            if (task.data_conclusao_real) {
-                conclusaoCell.textContent = new Date(task.data_conclusao_real + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-            } else {
-                conclusaoCell.textContent = '—';
-            }
-
-            tr.appendChild(taskNameCell);
-            tr.appendChild(assigneeCell);
-            tr.appendChild(statusCell);
-            tr.appendChild(esforcoPrevCell);
-            tr.appendChild(esforcoUtilCell);
-            tr.appendChild(dateCell);
-            tr.appendChild(conclusaoCell);
-            return tr;
-        };
-        
-        // Função helper para renderizar linha de "Adicionar Tarefa"
-        const renderAddTaskRow = (groupId) => {
-            const tr = document.createElement('tr');
-            tr.className = 'add-task-row';
-            tr.dataset.groupId = groupId || 'none';
-            tr.innerHTML = `
-                <td colspan="7">
-                    <div class="add-task-button" onclick="openTaskModal(null, null, '${groupId || ''}')">
-                        <i data-feather="plus" class="h-4 w-4 inline-block -mt-1 mr-1"></i> Adicionar Tarefa
-                    </div>
-                </td>`;
-            return tr;
-        };
-
-        // Renderiza os grupos e suas tarefas
-        if (groupsWithTasks) {
-            groupsWithTasks.forEach(group => {
-                // Linha do Grupo (Header)
-                const groupTR = document.createElement('tr');
-                groupTR.className = 'task-group-header expanded'; // Começa expandido
-                groupTR.dataset.groupId = group.id;
-                groupTR.onclick = () => toggleGroup(group.id);
-                
-                // Cálculos de Resumo
-                let totalPrevisto = 0;
-                let totalUtilizado = 0;
-                group.tarefas.forEach(t => {
-                    totalPrevisto += t.esforco_previsto || 0;
-                    totalUtilizado += t.esforco_utilizado || 0;
-                });
-
-                groupTR.innerHTML = `
-                    <td colspan="3">
-                        <span class="group-toggle">
-                            <i data-feather="chevron-down" class="h-5 w-5"></i>
-                            <i data-feather="chevron-right" class="h-5 w-5"></i>
-                        </span>
-                        ${escapeHTML(group.nome)}
-                        <span class="text-gray-400 font-normal ml-2">(${group.tarefas.length} tarefas)</span>
-                    </td>
-                    <td class="esforco-cell">${totalPrevisto}h</td>
-                    <td class="esforco-cell">${totalUtilizado}h</td>
-                    <td colspan="2"></td>
-                `;
-                tbody.appendChild(groupTR);
-                
-                // Linha de Resumo (escondida)
-                const summaryTR = document.createElement('tr');
-                summaryTR.className = 'task-group-summary';
-                summaryTR.dataset.groupId = group.id;
-                summaryTR.innerHTML = `
-                    <td colspan="3"><span class="summary-label ml-8">${escapeHTML(group.nome)} (Resumo)</span></td>
-                    <td class="esforco-cell">${totalPrevisto}h</td>
-                    <td class="esforco-cell">${totalUtilizado}h</td>
-                    <td colspan="2"></td>
-                `;
-                tbody.appendChild(summaryTR);
-
-                // Linhas de Tarefas
-                group.tarefas.forEach(task => {
-                    tbody.appendChild(renderTaskRow(task));
-                });
-
-                // Linha "Adicionar Tarefa"
-                tbody.appendChild(renderAddTaskRow(group.id));
+                tbody.appendChild(createAddTaskRow(project.id));
             });
         }
-        
-        // Renderiza tarefas sem grupo
+
+        // 6. Renderiza tarefas sem grupo (se houver)
         if (tasksWithoutGroup && tasksWithoutGroup.length > 0) {
-            // Header "Sem Grupo"
-            const noGroupTR = document.createElement('tr');
-            noGroupTR.className = 'task-group-header expanded';
-            noGroupTR.dataset.groupId = 'none';
-            noGroupTR.onclick = () => toggleGroup('none');
-
-            // Cálculos de Resumo para "Sem Grupo"
-            let totalPrevisto = 0;
-            let totalUtilizado = 0;
-            tasksWithoutGroup.forEach(t => {
-                totalPrevisto += t.esforco_previsto || 0;
-                totalUtilizado += t.esforco_utilizado || 0;
-            });
-
-            noGroupTR.innerHTML = `
-                <td colspan="3">
-                    <span class="group-toggle">
-                        <i data-feather="chevron-down" class="h-5 w-5"></i>
-                        <i data-feather="chevron-right" class="h-5 w-5"></i>
-                    </span>
-                    Tarefas sem Grupo
-                    <span class="text-gray-400 font-normal ml-2">(${tasksWithoutGroup.length} tarefas)</span>
-                </td>
-                <td class="esforco-cell">${totalPrevisto}h</td>
-                <td class="esforco-cell">${totalUtilizado}h</td>
-                <td colspan="2"></td>
-            `;
-            tbody.appendChild(noGroupTR);
-            
-            // Linha de Resumo (escondida)
-            const summaryTR = document.createElement('tr');
-            summaryTR.className = 'task-group-summary';
-            summaryTR.dataset.groupId = 'none';
-            summaryTR.innerHTML = `
-                <td colspan="3"><span class="summary-label ml-8">Tarefas sem Grupo (Resumo)</span></td>
-                <td class="esforco-cell">${totalPrevisto}h</td>
-                <td class="esforco-cell">${totalUtilizado}h</td>
-                <td colspan="2"></td>
-            `;
-            tbody.appendChild(summaryTR);
-
-            // Tarefas
+            const noGroupProject = {
+                id: 'no-group',
+                nome: 'Tarefas sem Projeto',
+                prioridade: 'baixa',
+                tarefas: tasksWithoutGroup || []
+            };
+            tbody.appendChild(createProjectHeaderRow(noGroupProject));
             tasksWithoutGroup.forEach(task => {
-                tbody.appendChild(renderTaskRow(task));
+                tbody.appendChild(createTaskDataRow(task));
             });
-            // Adicionar Tarefa (sem grupo)
-            tbody.appendChild(renderAddTaskRow(null));
+            tbody.appendChild(createAddTaskRow(null)); // null ou 'no-group'
+        }
+        
+        // 7. Se não há absolutamente nada, mostra uma mensagem
+        if (tbody.innerHTML === '') {
+             tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Nenhum projeto ou tarefa encontrada. Clique em "Novo Projeto" para começar.</td></tr>`;
         }
 
+        // 8. Remove o loading (que não está mais no tbody)
+        loadingRow.style.display = 'none';
         feather.replace();
 
     } catch (error) {
-        console.error("Erro ao carregar lista de tarefas:", error);
-        container.innerHTML = `<div class="alert alert-error m-4">Erro ao carregar lista: ${escapeHTML(error.message)}</div>`;
+        console.error("Erro ao carregar lista de projetos:", error);
+        tbody.innerHTML = `<tr><td colspan="6"><div class="alert alert-error m-4">Erro ao carregar lista: ${escapeHTML(error.message)}</div></td></tr>`;
     }
 }
 
-// NOVO: Função para expandir/recolher grupos
-function toggleGroup(groupId) {
-    const headerRow = document.querySelector(`.task-group-header[data-group-id="${groupId}"]`);
-    const summaryRow = document.querySelector(`.task-group-summary[data-group-id="${groupId}"]`);
-    const taskRows = document.querySelectorAll(`.task-row[data-group-id="${groupId}"]`);
-    const addRow = document.querySelector(`.add-task-row[data-group-id="${groupId}"]`);
+// NOVO: Helper para criar a linha de Header do Projeto
+function createProjectHeaderRow(project) {
+    const tr = document.createElement('tr');
+    tr.className = 'project-header-row expanded'; // Começa expandido
+    tr.dataset.projectId = project.id;
+    tr.onclick = (e) => {
+        // Evita que o clique no botão de "+" feche o grupo
+        if (e.target.closest('.btn-icon-task')) return;
+        toggleProjectGroup(project.id);
+    };
+
+    const taskCount = project.tarefas?.length || 0;
+    const priority = project.prioridade || 'baixa';
+
+    tr.innerHTML = `
+        <td colspan="6">
+            <div class="project-header-content">
+                <i data-feather="chevron-down" class="h-5 w-5 project-toggle"></i>
+                <span class="project-priority-dot priority-${priority}" title="Prioridade: ${priority}"></span>
+                <span class="project-title">${escapeHTML(project.nome)}</span>
+                <span class="project-task-count">(${taskCount} ${taskCount === 1 ? 'Tarefa' : 'Tarefas'})</span>
+                <button class="btn-icon-task" title="Adicionar tarefa a este projeto" onclick="event.stopPropagation(); openTaskModal(null, null, '${project.id === 'no-group' ? '' : project.id}')">
+                    <i data-feather="plus" class="h-4 w-4"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    return tr;
+}
+
+// NOVO: Helper para criar a linha de Tarefa
+function createTaskDataRow(task) {
+    const tr = document.createElement('tr');
+    tr.className = 'task-data-row';
+    tr.dataset.taskId = task.id;
+    tr.dataset.projectId = task.grupo_id || 'no-group';
+    
+    // --- Responsável ---
+    let assigneeHtml = '';
+    if (task.assignee) {
+        assigneeHtml = `
+        <div class="person-cell" onclick="openAssigneeModal('${task.id}')">
+            <img src="${escapeHTML(task.assignee.profile_picture_url || 'https://placehold.co/24x24/00D4AA/023047?text=JP')}" alt="${escapeHTML(task.assignee.nome)}">
+            <span>${escapeHTML(task.assignee.nome)}</span>
+        </div>`;
+    } else {
+        assigneeHtml = `
+        <div class="person-cell person-unassigned" onclick="openAssigneeModal('${task.id}')">
+            <i data-feather="user-plus" class="h-4 w-4"></i>
+        </div>`;
+    }
+
+    // --- Status ---
+    const status = task.status ? task.status.nome.toLowerCase().replace(/ /g, '-') : 'a-fazer';
+    const statusText = task.status ? task.status.nome : 'A Fazer';
+    let statusHtml = `
+        <div class="status-box status-${status}" onclick="openStatusModal(event, '${task.id}', '${status}')">
+            ${escapeHTML(statusText)}
+        </div>`;
+
+    // --- Timeline ---
+    let timelineHtml = '<div class="timeline-box" onclick="openTimelineModal(\''+task.id+'\')">';
+    if (task.data_inicio && task.data_entrega) {
+        const start = new Date(task.data_inicio).getTime();
+        const end = new Date(task.data_entrega).getTime();
+        const today = new Date().getTime();
+        const totalDuration = (end - start) > 0 ? (end - start) : 1; // Evita divisão por zero
+        const elapsed = today - start;
+        let progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+
+        const color = (status === 'concluído' || status === 'feito') ? '#059669' : '#f59e0b';
+        
+        timelineHtml += `<div class="timeline-bar" style="background-color: ${color}; width: ${progress}%;"></div>`;
+        timelineHtml += `<span class="timeline-text">${formatDateRange(task.data_inicio, task.data_entrega)}</span>`;
+    } else {
+         timelineHtml += `<span class="timeline-text">-</span>`;
+    }
+    timelineHtml += '</div>';
+
+    // --- Esforço ---
+    const effort = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
+
+    // --- Status de Conclusão ---
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dueDate = task.data_entrega ? new Date(task.data_entrega + 'T00:00:00') : null;
+    const doneDate = task.data_conclusao_real ? new Date(task.data_conclusao_real + 'T00:00:00') : null;
+    
+    let completionHtml = '<div class="completion-status status-na"><i data-feather="minus" class="h-4 w-4"></i><span>N/A</span></div>';
+    
+    if (status === 'concluído' || status === 'feito') {
+        if (doneDate && dueDate && doneDate > dueDate) {
+            completionHtml = '<div class="completion-status status-atrasado"><i data-feather="check" class="h-4 w-4"></i><span>Feito (Atrasado)</span></div>';
+        } else {
+            completionHtml = '<div class="completion-status status-feito-a-tempo"><i data-feather="check" class="h-4 w-4"></i><span>Feito a tempo</span></div>';
+        }
+    } else if (dueDate && dueDate < today) {
+         completionHtml = '<div class="completion-status status-atrasado"><i data-feather="clock" class="h-4 w-4"></i><span>Atrasado</span></div>';
+    }
+
+    // --- Montagem Final ---
+    tr.innerHTML = `
+        <td class="task-title-cell" onclick="openTaskModal(task)">
+            <i data-feather="file-text" class="h-4 w-4"></i> ${escapeHTML(task.titulo)}
+        </td>
+        <td>${assigneeHtml}</td>
+        <td>${statusHtml}</td>
+        <td>${timelineHtml}</td>
+        <td><div class="effort-cell">${effort}</div></td>
+        <td>${completionHtml}</td>
+    `;
+    return tr;
+}
+
+// NOVO: Helper para formatar data
+function formatDateRange(start, end) {
+    const s = new Date(start + 'T00:00:00');
+    const e = new Date(end + 'T00:00:00');
+    const options = { month: 'short', day: 'numeric' };
+    return `${s.toLocaleDateString('pt-BR', options)} - ${e.toLocaleDateString('pt-BR', options)}`;
+}
+
+// NOVO: Helper para criar "Adicionar Tarefa"
+function createAddTaskRow(projectId) {
+    const tr = document.createElement('tr');
+    tr.className = 'add-task-row';
+    tr.dataset.projectId = projectId || 'no-group';
+    
+    const groupId = (projectId === 'no-group' || !projectId) ? '' : projectId;
+
+    tr.innerHTML = `
+        <td colspan="6">
+            <div class="add-task-button-dark" onclick="openTaskModal(null, null, '${groupId}')">
+                <i data-feather="plus" class="h-4 w-4"></i> Adicionar Tarefa
+            </div>
+        </td>`;
+    return tr;
+}
+
+// NOVO: Função para expandir/recolher grupos (agora "Projetos")
+function toggleProjectGroup(projectId) {
+    const headerRow = document.querySelector(`.project-header-row[data-project-id="${projectId}"]`);
+    const taskRows = document.querySelectorAll(`.task-data-row[data-project-id="${projectId}"]`);
+    const addRow = document.querySelector(`.add-task-row[data-project-id="${projectId}"]`);
 
     if (headerRow.classList.contains('expanded')) {
         // Recolher
         headerRow.classList.remove('expanded');
-        if(summaryRow) summaryRow.style.display = 'table-row';
         taskRows.forEach(row => row.style.display = 'none');
         if(addRow) addRow.style.display = 'none';
     } else {
         // Expandir
         headerRow.classList.add('expanded');
-        if(summaryRow) summaryRow.style.display = 'none';
         taskRows.forEach(row => row.style.display = 'table-row');
         if(addRow) addRow.style.display = 'table-row';
     }
 }
 
-// (PRIMEIRA DEFINIÇÃO DE `showMainSystem` REMOVIDA)
+// NOVO: Funções stub para os modais interativos (só para o HTML funcionar)
+function openAssigneeModal(taskId) {
+    console.log("Abrir modal de Responsável para task:", taskId);
+    showNotification("Modal de responsável ainda não implementado.", "info");
+    // Futuro: Abrir um pop-up de seleção de usuário
+}
 
-// Mostra o sistema principal (App)
-async function showMainSystem() {
-    document.getElementById('appShell').style.display = 'flex';
-    document.body.classList.add('system-active');
-
-    // Popula a nova barra superior
-    document.getElementById('topBarUserName').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('topBarUserAvatar').src = currentUser.profile_picture_url || 'icon.png';
-    document.getElementById('dropdownUserName').textContent = currentUser.nome || 'Usuário';
-    document.getElementById('dropdownUserEmail').textContent = currentUser.email || '...';
+// ATUALIZADO: Lógica do Modal de Status
+function openStatusModal(event, taskId, currentStatus) {
+    event.stopPropagation(); // Impede que o clique feche o modal imediatamente
+    console.log("Abrir modal de Status para task:", taskId, "Status atual:", currentStatus);
     
-    // Popula o seletor de times
-    populateTeamSelector();
-    updateActiveTeamUI();
+    const statusModal = document.getElementById('statusModal');
+    const statusModalContent = document.getElementById('statusModalContent');
+    const overlay = document.querySelector('.modal-overlay-transparent');
+    
+    const rect = event.target.getBoundingClientRect();
+    statusModal.style.top = `${rect.bottom + 5}px`;
+    // Centraliza o modal no clique, com limite de borda
+    statusModal.style.left = `max(10px, min(${rect.left + (rect.width / 2) - 100}px, ${window.innerWidth - 210}px))`;
+    
+    statusModal.style.display = 'block';
+    statusModalContent.style.display = 'block';
+    overlay.style.display = 'block';
+
+    // Popula o modal de status
+    statusModalContent.innerHTML = '';
+    currentColumns.forEach(col => {
+        const statusSlug = col.nome.toLowerCase().replace(/ /g, '-');
+        const option = document.createElement('div');
+        option.className = `status-option status-box status-${statusSlug}`;
+        option.textContent = col.nome;
+        option.onclick = () => updateTaskStatus(taskId, col.id);
+        statusModalContent.appendChild(option);
+    });
+
+    // Adiciona listener para fechar
+    const closeListener = (e) => {
+        statusModal.style.display = 'none';
+        statusModalContent.style.display = 'none';
+        overlay.style.display = 'none';
+        overlay.removeEventListener('click', closeListener);
+    };
+    overlay.addEventListener('click', closeListener);
+}
+
+// NOVO: Função para atualizar o status
+async function updateTaskStatus(taskId, newColunaId) {
+     console.log(`Atualizando task ${taskId} para coluna ${newColunaId}`);
+     
+     const overlay = document.querySelector('.modal-overlay-transparent');
+     if(overlay) overlay.click(); // Fecha o modal
 
     try {
-        console.log("🔄 Carregando projeto ativo...");
-        await loadActiveProject();
-        
-        // Validação final antes de mostrar o dashboard
-        if (!currentProject || !currentProject.id) {
-            throw new Error("Projeto inválido após carregamento");
-        }
-        if (!currentColumns || currentColumns.length === 0) {
-            throw new Error("Nenhuma coluna carregada");
-        }
-        
-        console.log("✅ Projeto carregado com sucesso!");
-        console.log("   - Projeto ID:", currentProject.id);
-        console.log("   - Colunas:", currentColumns.length);
-        console.log("   - Grupos:", currentGroups.length);
-        
-        // Só mostra o dashboard se TUDO estiver OK
-        showView('dashboardView', document.querySelector('a[href="#dashboard"]')); 
-        feather.replace();
-        
-    } catch (err) {
-        console.error("❌ Erro ao carregar projeto ativo:", err);
-        
-        // Mostra erro amigável na tela
-        const mainContent = document.getElementById('mainContent');
-        mainContent.innerHTML = `
-            <div class="container mx-auto px-6 py-8">
-                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
-                    <div class="flex items-center mb-4">
-                        <i data-feather="alert-circle" class="h-6 w-6 text-red-500 mr-3"></i>
-                        <h2 class="text-xl font-bold text-red-900">Erro na Inicialização</h2>
-                    </div>
-                    <p class="text-red-700 mb-4">${escapeHTML(err.message)}</p>
-                    <div class="bg-white p-4 rounded border border-red-200 mb-4">
-                        <h3 class="font-semibold text-red-900 mb-2">Possíveis causas:</h3>
-                        <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
-                            <li>Políticas RLS (Row Level Security) não configuradas corretamente no Supabase</li>
-                            <li>Usuário sem permissão para criar ou visualizar projetos</li>
-                            <li>Problema de conexão com o banco de dados</li>
-                        </ul>
-                    </div>
-                    <div class="flex gap-3">
-                        <button class="btn btn-danger" onclick="logout()">
-                            <i data-feather="log-out" class="h-4 w-4 mr-2"></i>
-                            Sair e Tentar Novamente
-                        </button>
-                        <button class="btn btn-secondary" onclick="location.reload()">
-                            <i data-feather="refresh-cw" class="h-4 w-4 mr-2"></i>
-                            Recarregar Página
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        feather.replace();
+        await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', {
+            coluna_id: newColunaId,
+            updated_at: new Date().toISOString()
+        });
+        showNotification(`Status atualizado.`, 'success');
+        loadProjectListView(false); // Recarrega a view
+        loadKanbanView(); // Sincroniza o Kanban
+    } catch (error) {
+        console.error("Falha ao atualizar status:", error);
+        showNotification('Falha ao atualizar status.', 'error');
     }
 }
 
-// NOVO: Atualiza a UI do seletor de time
-// (DEFINIÇÃO MOVIDA PARA CIMA)
-
-// NOVO: Popula o dropdown do seletor de times
-// (DEFINIÇÃO MOVIDA PARA CIMA)
-
-// NOVO: Troca o time ativo
-// (DEFINIÇÃO MOVIDA PARA CIMA)
-
-// ========================================
-// 4. NAVEGAÇÃO E UI (Restante do seu código)
-
-
+function openTimelineModal(taskId) {
+    console.log("Abrir modal de Timeline para task:", taskId);
+    showNotification("Modal de timeline ainda não implementado.", "info");
+    // Futuro: Abrir um pop-up de seleção de data (calendário)
+}
 
