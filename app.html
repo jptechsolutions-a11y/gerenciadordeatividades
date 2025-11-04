@@ -8,7 +8,8 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#011627">
     <!-- Estilos -->
-    <link rel="stylesheet" href="style.css">
+    <!-- ATUALIZAÇÃO: Adicionado ?v=4 para forçar a limpeza de cache -->
+    <link rel="stylesheet" href="style.css?v=4">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bibliotecas JS -->
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
@@ -195,7 +196,8 @@
                 <!-- ATENÇÃO: O container foi removido daqui para que a tabela ocupe 100% da largura -->
 
                 <!-- #dashboardView -->
-                <div id="dashboardView" class="view-content active">
+                <!-- ATUALIZAÇÃO: Removida a classe 'active' daqui. O JS decide quem é o ativo. -->
+                <div id="dashboardView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -637,7 +639,8 @@
         // Configuração Inicial (Reutilizando sua API Proxy)
         const SUPABASE_PROXY_URL = '/api/proxy';
     </script>
-    <script src="script.js"></script>
+    <!-- ATUALIZAÇÃO: Adicionado ?v=4 para forçar a limpeza de cache -->
+    <script src="script.js?v=4"></script>
     <script>
         // Inicializar ícones e PWA
         feather.replace();
