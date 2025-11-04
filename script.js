@@ -1878,7 +1878,7 @@ async function loadProjectListView(forceReload = false) {
 
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
 
-        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas!inner(id,titulo,data_inicio,data_entrega,esforco_previsto,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&tarefas.projeto_id=eq.${currentProject.id}&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
+        const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
         
         console.log("Query Lista de Projetos:", query);
         const projectsList = await supabaseRequest(query, 'GET');
