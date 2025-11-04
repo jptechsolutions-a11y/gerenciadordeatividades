@@ -10,6 +10,22 @@ let currentNoteId = null;
 let currentGroups = []; 
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ======================================================
+    // ATUALIZAÇÃO: LIMPEZA DE SEGURANÇA (SAFETY CLEANUP)
+    // Força a remoção de classes 'active' de views antigas
+    // que possam estar presas no cache do HTML.
+    // ======================================================
+    try {
+        console.log("Executando limpeza de segurança de UI...");
+        document.querySelectorAll('.view-content').forEach(view => {
+            view.classList.remove('active');
+        });
+        console.log("Limpeza de segurança concluída.");
+    } catch (e) {
+        console.error("Erro na limpeza de segurança:", e);
+    }
+    // ======================================================
+
     document.getElementById('taskForm')?.addEventListener('submit', handleTaskFormSubmit);
     document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
     document.getElementById('perfilForm')?.addEventListener('submit', handlePerfilFormSubmit);
@@ -417,7 +433,7 @@ async function showMainSystem() {
         console.log("   - Projetos (grupos):", currentGroups.length);
         
         // --- CORREÇÃO: Carrega a view 'Projetos' (listView) como inicial ---
-        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView'; // <--- ALTERADO AQUI
+        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView'; // <--- Mantido 'listView'
         const activeLink = document.querySelector(`.sidebar .nav-item[href="#${lastViewId.replace('View', '')}"]`);
         
         showView(lastViewId, activeLink); 
