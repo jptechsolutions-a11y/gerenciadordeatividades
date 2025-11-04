@@ -213,18 +213,13 @@
                                 <div class="relative h-96"><canvas id="statusChart"></canvas></div>
                             </div>
                         </div>
-                    </div>
+                    </div> <!-- [JP-FIX]: Esta div (L289) fecha o .container (L271) -->
                     <!-- 
                       ERRO CORRIGIDO: 
                       A lista de projetos estava aqui por engano. 
                       Ela foi movida para dentro da #listView abaixo.
                     -->
-                    <!-- 
-                      BUG FIX: 
-                      O </div> extra que estava aqui (fechando o <main> por engano) foi REMOVIDO.
-                    -->
-                </div> <!-- [JP-FIX]: Esta div (original L289) fecha o .container (L271) -->
-                <!-- [JP-FIX]: Adicionando o </div> faltante para fechar a #dashboardView (L270) -->
+                <!-- [JP-FIX]: Esta div fecha a #dashboardView (L270) -->
                 </div>
 
                 <!-- #projetosView (Kanban) -->
@@ -469,7 +464,7 @@
                     </div>
                 </div>
 
-            </main> <!-- BUG FIX: Esta tag </main> agora fecha corretamente o <main> da linha 194 -->
+            </main> <!-- Esta tag </main> (L477) fecha corretamente o <main> (L194) -->
         </div> <!-- Fim #mainSystem -->
     </div> <!-- Fim #appShell -->
 
@@ -654,3 +649,4 @@
     </script>
 </body>
 </html>
+
