@@ -39,31 +39,61 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. Fetch: Estratégia "Network First" (O MAIS IMPORTANTE)
-// Tenta buscar da rede primeiro. Se falhar, usa o cache.
+// 3. Fetch: Estratégia Mista (Cache First para App, Network First para API/CDNs)
 self.addEventListener('fetch', event => {
-    // Ignora requisições que não são GET (ex: POST para /api/proxy)
     if (event.request.method !== 'GET') {
         return;
     }
 
+    const requestUrl = new URL(event.request.url);
+
+    // --- ESTRATÉGIA 1: Cache First (para o App Shell) ---
+    // Verifica se a URL é do mesmo host e está na lista de cache
+    const isAppShell = requestUrl.origin === self.location.origin && urlsToCache.includes(requestUrl.pathname);
+
+    if (isAppShell) {
+        event.respondWith(
+            caches.match(event.request)
+                .then(cachedResponse => {
+                    // 1. Tenta servir do cache
+                    if (cachedResponse) {
+                        // Opcional: No background, atualiza o cache (Stale-While-Revalidate)
+                        fetch(event.request).then(networkResponse => {
+                            caches.open(CACHE_NAME).then(cache => {
+                                cache.put(event.request, networkResponse);
+                            });
+                        });
+                        // Retorna o cache imediatamente
+                        return cachedResponse;
+                    }
+                    // 2. Se falhar (não está em cache), busca na rede, cacheia e retorna
+                    return fetch(event.request).then(networkResponse => {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, responseToCache);
+                        });
+                        return networkResponse;
+                    });
+                })
+        );
+        return; // Encerra aqui para arquivos do App Shell
+    }
+
+    // --- ESTRATÉGIA 2: Network First (para API, CDNs, etc.) ---
     event.respondWith(
         fetch(event.request)
             .then(networkResponse => {
-                // Sucesso! Clona a resposta e salva no cache para a próxima vez.
+                // Opcional: cachear dinamicamente para offline
                 const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME)
-                    .then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
                 return networkResponse;
             })
             .catch(() => {
-                // Rede falhou (offline?). Tenta pegar do cache.
-                return caches.match(event.request)
-                    .then(cachedResponse => {
-                        return cachedResponse || Response.error(); // Retorna cache ou falha
-                    });
+                // Rede falhou, tenta o cache como fallback (bom para offline)
+                return caches.match(event.request);
             })
     );
 });
+
