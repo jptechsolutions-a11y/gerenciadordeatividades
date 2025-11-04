@@ -34,12 +34,16 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN') {
         }
     });
+    
+    // REMOVIDO: Bloco de auto-login
+    /*
     // Verifica se o usuário já está logado (ex: voltou para a pág de login)
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) {
             window.location.href = 'app.html';
         }
     });
+    */
 });
 
 function checkHash() {
@@ -157,3 +161,4 @@ function escapeHTML(str) {
          .replace(/"/g, '&quot;')
          .replace(/'/g, '&#39;');
 }
+
