@@ -816,12 +816,16 @@ async function renderGanttChart() {
     }
 }
 
+// ========================================
+// 7. LÓGICA DO KANBAN
+// ========================================
 let draggedTask = null;
 
 async function loadKanbanView() {
-    const kanbanView = document.getElementById('projetosView'); 
+    const kanbanView = document.getElementById('projetosView'); // ID da view
     if (!kanbanView) return;
     
+    // Adiciona o container de padding se não estiver lá (para centralizar)
     if (!kanbanView.querySelector('.container')) {
          kanbanView.innerHTML = `<div class="container mx-auto px-6 py-8">${kanbanView.innerHTML}</div>`;
     }
@@ -842,6 +846,7 @@ async function loadKanbanView() {
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
         
+        // --- Query Única com JOINs ---
         const taskQuery = `tarefas?${projectFilter}&select=*,assignee:assignee_id(id,nome,profile_picture_url)&order=ordem_na_coluna.asc`;
         console.log("Query Kanban:", taskQuery); 
         const tasks = await supabaseRequest(taskQuery, 'GET');
@@ -865,12 +870,14 @@ async function loadKanbanView() {
             columnContentEl.ondragover = handleDragOver;
             columnContentEl.ondrop = (e) => handleDrop(e, coluna.id);
             
+            // ATUALIZADO: Estilo do botão de adicionar
             const addTaskBtn = `<button class="btn btn-secondary btn-small w-full" style="border-style: dashed; text-transform: none; font-weight: 500;" onclick="openTaskModal(null, '${coluna.id}')">
                                     <i data-feather="plus" class="h-4 w-4 mr-1"></i> Adicionar Tarefa
                                 </button>`;
 
             columnEl.innerHTML = `<h3 class="kanban-column-title">${escapeHTML(coluna.nome)}</h3>`;
             columnEl.appendChild(columnContentEl);
+            // ATUALIZADO: Adiciona padding ao redor do botão
             columnEl.innerHTML += `<div class="p-2 mt-auto">${addTaskBtn}</div>`;
 
             if (tasks && tasks.length > 0) {
@@ -905,6 +912,7 @@ async function loadKanbanView() {
 function createTaskCard(task) {
     const card = document.createElement('div');
     card.id = `task-${task.id}`;
+    // ATUALIZADO: Adiciona classe de prioridade ao card
     card.className = `kanban-card priority-${task.prioridade}`;
     card.draggable = true;
     card.dataset.taskId = task.id;
@@ -943,6 +951,7 @@ function createTaskCard(task) {
         <div class="kanban-card-title">${escapeHTML(task.titulo)}</div>
         <div class="kanban-card-footer">
             <div class="flex items-center gap-2">
+                 <!-- ATUALIZADO: Mostra a prioridade como texto -->
                  <span class"kanban-card-priority priority-${task.prioridade}" title="Prioridade ${task.prioridade}">${escapeHTML(task.prioridade)}</span>
                  ${dateHtml}
             </div>
@@ -968,11 +977,13 @@ function handleDragOver(e) {
     e.dataTransfer.dropEffect = 'move';
     const columnContent = e.target.closest('.kanban-column-content');
     if (columnContent) {
+        // Remove de todos e adiciona apenas no atual
         document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
         columnContent.classList.add('drag-over');
     }
 }
 
+// Adiciona listeners globais para limpar o 'drag-over'
 document.addEventListener('dragend', () => {
     document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
     if (draggedTask) {
@@ -981,6 +992,7 @@ document.addEventListener('dragend', () => {
     }
 });
 document.addEventListener('dragover', (e) => {
+    // Limpa se estiver fora de uma zona de drop válida
     if (!e.target.closest('.kanban-column-content')) {
          document.querySelectorAll('.kanban-column-content.drag-over').forEach(col => col.classList.remove('drag-over'));
     }
@@ -1010,9 +1022,10 @@ async function handleDrop(e, newColunaId) {
                 showNotification(`Tarefa movida.`, 'success');
                 loadTimelineView(); 
                 loadDashboardView();
-                loadProjectListView(false); 
+                loadProjectListView(false); // ATUALIZADO: Sincroniza a lista
             } catch (error) {
                 console.error("Falha ao atualizar task:", error);
+                // Devolve o card se falhar
                 document.getElementById(`col-${oldColunaId}`).querySelector('.kanban-column-content').appendChild(draggedTask); 
                 draggedTask.dataset.colunaId = oldColunaId;
                 showNotification('Falha ao mover tarefa.', 'error');
@@ -1023,7 +1036,10 @@ async function handleDrop(e, newColunaId) {
     }
 }
 
-async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId = null) { 
+// ========================================
+// 8. LÓGICA DO MODAL DE TAREFAS (ATUALIZADO)
+// ========================================
+async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId = null) { // defaultGrupoId é o "Projeto"
      if (!currentProject || currentColumns.length === 0) {
           showNotification("Crie ou selecione um quadro e suas colunas primeiro.", "error");
           return;
@@ -1034,16 +1050,18 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
     form.reset();
     document.getElementById('taskAlert').innerHTML = '';
 
+    // Garante que o input hidden da coluna existe
     let colunaIdInput = document.getElementById('taskColunaId');
     if (!colunaIdInput) {
         colunaIdInput = document.createElement('input');
         colunaIdInput.type = 'hidden';
         colunaIdInput.id = 'taskColunaId';
-        colunaIdInput.name = 'coluna_id'; 
+        colunaIdInput.name = 'coluna_id'; // Adiciona nome para debugging
         form.appendChild(colunaIdInput);
     }
 
     if (task) {
+        // Modo Edição
         document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.titulo;
@@ -1053,19 +1071,22 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
         document.getElementById('taskPriority').value = task.prioridade || 'media';
         colunaIdInput.value = task.coluna_id;
         
+        // Preenche os novos campos
         document.getElementById('taskAssignee').value = task.assignee_id || '';
-        document.getElementById('taskGroup').value = task.grupo_id || ''; 
+        document.getElementById('taskGroup').value = task.grupo_id || ''; // "Projeto" (Grupo)
         document.getElementById('taskEsforcoPrevisto').value = task.esforco_previsto || '';
         document.getElementById('taskEsforcoUtilizado').value = task.esforco_utilizado || '';
         document.getElementById('taskDataConclusaoReal').value = task.data_conclusao_real || '';
 
     } else {
+        // Modo Criação
         document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
         document.getElementById('taskId').value = '';
         
         const primeiraColunaId = currentColumns[0]?.id;
         colunaIdInput.value = defaultColunaId || primeiraColunaId || '';
         
+        // Preenche o "Projeto" (Grupo) padrão (se vindo do botão "+ Adicionar")
         document.getElementById('taskGroup').value = defaultGrupoId || '';
         
         if (!colunaIdInput.value) {
@@ -1074,6 +1095,7 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
         }
     }
 
+    // Preenche os dropdowns de Responsáveis e "Projetos" (Grupos)
     await loadTeamMembersForSelect('taskAssignee', task ? task.assignee_id : null);
     await loadGroupsForSelect('taskGroup', task ? task.grupo_id : (defaultGrupoId || ''));
 
@@ -1081,14 +1103,16 @@ async function openTaskModal(task = null, defaultColunaId = null, defaultGrupoId
     feather.replace();
 }
 
+// Carrega membros do time para o select
 async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
     const select = document.getElementById(selectId);
     if (!select) return;
 
+    // Limpa opções antigas, exceto a primeira ("Ninguém atribuído")
     while (select.options.length > 1) {
         select.remove(1);
     }
-    select.value = ''; 
+    select.value = ''; // Reseta a seleção
 
     if (!currentOrg?.id) {
         console.warn("Não é possível carregar membros, não há time (org) selecionado.");
@@ -1096,11 +1120,12 @@ async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
     }
 
     try {
+        // Busca usuários vinculados a esta organização
         const membersData = await supabaseRequest(`usuario_orgs?org_id=eq.${currentOrg.id}&select=usuarios(id,nome)`, 'GET');
         
         if (membersData && membersData.length > 0) {
             membersData.forEach(member => {
-                if (member.usuarios) { 
+                if (member.usuarios) { // Garante que o join funcionou
                     const user = member.usuarios;
                     const option = document.createElement('option');
                     option.value = user.id;
@@ -1109,6 +1134,7 @@ async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
                 }
             });
         }
+        // Resseleciona o usuário correto (se estiver editando)
         if (selectedUserId) {
             select.value = selectedUserId;
         }
@@ -1119,24 +1145,27 @@ async function loadTeamMembersForSelect(selectId, selectedUserId = null) {
     }
 }
 
+// Carrega "Projetos" (Grupos) para o select
 async function loadGroupsForSelect(selectId, selectedGroupId = null) {
     const select = document.getElementById(selectId);
     if (!select) return;
 
+    // ATUALIZADO: Muda a label do select
     const label = document.querySelector(`label[for="${selectId}"]`);
     if (label) label.textContent = 'Projeto:';
 
-    while (select.options.length > 1) { 
+    while (select.options.length > 1) { // Mantém "Nenhum grupo"
         select.remove(1);
     }
-    select.options[0].textContent = 'Nenhum projeto'; 
+    select.options[0].textContent = 'Nenhum projeto'; // Atualiza o texto padrão
     select.value = '';
 
+    // Usa o cache 'currentGroups' (que são os "Projetos")
     if (currentGroups && currentGroups.length > 0) {
         currentGroups.forEach(group => {
             const option = document.createElement('option');
             option.value = group.id;
-            option.textContent = group.nome; 
+            option.textContent = group.nome; // Ex: "Planejamento"
             select.appendChild(option);
         });
     }
@@ -1165,6 +1194,7 @@ async function handleTaskFormSubmit(e) {
         colunaIdFinal = currentColumns[0]?.id || null;
     }
 
+    // ATUALIZADO: Coleta todos os novos campos
     const taskData = {
         titulo: document.getElementById('taskTitle').value,
         descricao: document.getElementById('taskDescription').value || null,
@@ -1172,13 +1202,13 @@ async function handleTaskFormSubmit(e) {
         data_entrega: document.getElementById('taskDueDate').value || null,
         prioridade: document.getElementById('taskPriority').value,
         assignee_id: document.getElementById('taskAssignee').value || null,
-        grupo_id: document.getElementById('taskGroup').value || null, 
+        grupo_id: document.getElementById('taskGroup').value || null, // "Projeto" (Grupo)
         esforco_previsto: parseInt(document.getElementById('taskEsforcoPrevisto').value) || null,
         esforco_utilizado: parseInt(document.getElementById('taskEsforcoUtilizado').value) || null,
         data_conclusao_real: document.getElementById('taskDataConclusaoReal').value || null,
         org_id: currentOrg?.id || null,
-        projeto_id: currentProject.id, 
-        coluna_id: colunaIdFinal, 
+        projeto_id: currentProject.id, // O "Quadro"
+        coluna_id: colunaIdFinal, // O "Status"
         updated_at: new Date().toISOString()
     };
 
@@ -1188,15 +1218,17 @@ async function handleTaskFormSubmit(e) {
         if (taskId) {
             await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', taskData);
         } else {
+            // TODO: Adicionar lógica para 'ordem_na_coluna'
             await supabaseRequest('tarefas', 'POST', taskData);
         }
         showNotification(`Tarefa ${taskId ? 'atualizada' : 'criada'}!`, 'success');
         closeModal('taskModal');
         
+        // Recarrega todas as views que usam tarefas
         loadKanbanView(); 
         loadDashboardView(); 
         loadTimelineView(); 
-        loadProjectListView(false); 
+        loadProjectListView(false); // ATUALIZADO
 
     } catch (error) {
         console.error("Erro ao salvar tarefa:", error);
@@ -1204,6 +1236,11 @@ async function handleTaskFormSubmit(e) {
     }
 }
 
+// ========================================
+// 9. NOVO: Modal de Projeto (antigo Grupo)
+// ========================================
+
+// NOVO: Abre o modal de criação de Projeto (antigo Grupo)
 function openCreateProjectModal() {
     document.getElementById('projectForm').reset();
     document.getElementById('projectAlert').innerHTML = '';
@@ -1211,6 +1248,7 @@ function openCreateProjectModal() {
     feather.replace();
 }
 
+// NOVO: Salva o novo Projeto (antigo Grupo)
 async function handleProjectFormSubmit(e) {
     e.preventDefault();
     const alert = document.getElementById('projectAlert');
@@ -1221,10 +1259,11 @@ async function handleProjectFormSubmit(e) {
     const projectName = document.getElementById('projectName').value;
     const projectPriority = document.getElementById('projectPriority').value;
 
+    // Pega a ordem atual
     const newOrder = currentGroups.length;
 
     const projectData = {
-        projeto_id: currentProject.id, 
+        projeto_id: currentProject.id, // ID do "Quadro"
         org_id: currentOrg?.id || null,
         nome: projectName,
         prioridade: projectPriority,
@@ -1235,12 +1274,12 @@ async function handleProjectFormSubmit(e) {
         const newProject = await supabaseRequest('grupos_tarefas', 'POST', projectData);
         
         if (newProject && newProject[0]) {
-            currentGroups.push(newProject[0]); 
+            currentGroups.push(newProject[0]); // Adiciona ao cache local
         }
 
         showNotification(`Projeto "${projectName}" criado!`, 'success');
         closeModal('projectModal');
-        loadProjectListView(false); 
+        loadProjectListView(false); // Recarrega a lista
     } catch (error) {
         console.error("Erro ao criar projeto (grupo):", error);
         alert.innerHTML = `<div class="alert alert-error">${escapeHTML(error.message)}</div>`;
@@ -1249,6 +1288,10 @@ async function handleProjectFormSubmit(e) {
     }
 }
 
+
+// ========================================
+// 10. LÓGICA DO TIME (Convites)
+// ========================================
 async function loadTimeView() {
     const teamView = document.getElementById('timeView');
     if (!teamView.querySelector('.container')) {
@@ -1279,7 +1322,7 @@ async function loadTimeView() {
             const orgData = await supabaseRequest(`organizacoes?id=eq.${orgId}&select=invite_code`, 'GET');
             if (orgData && orgData[0] && orgData[0].invite_code) {
                 inviteCodeInput.value = orgData[0].invite_code;
-                currentOrg.invite_code = orgData[0].invite_code; 
+                currentOrg.invite_code = orgData[0].invite_code; // Salva no cache
             } else {
                 inviteCodeInput.value = 'Erro ao carregar';
             }
@@ -1295,6 +1338,7 @@ async function loadTimeView() {
         teamBody.innerHTML = members.map(m => {
             const user = m.usuarios;
             if (!user) return '';
+            // ATUALIZADO: Usando classes de status do Kanban/Lista
             const statusClass = user.ativo ? 'status-concluído' : 'status-parado';
             const statusText = user.ativo ? 'Ativo' : 'Inativo'; 
             return `
@@ -1373,6 +1417,7 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
+     // ATUALIZADO: Modal customizado em vez de prompt
      const confirmation = window.confirm(`Tem certeza que deseja remover este membro do time? Esta ação não pode ser desfeita.`);
      if (!confirmation) {
         showNotification("Remoção cancelada.", "info");
@@ -1411,6 +1456,10 @@ function copyInviteCode() {
     }
 }
 
+
+// ========================================
+// 11. LÓGICA DO BLOCO DE NOTAS
+// ========================================
 async function loadNotasView() {
     const notasView = document.getElementById('notasView');
     if (!notasView.querySelector('.container')) {
@@ -1529,6 +1578,9 @@ async function saveNote() {
     }
 }
 
+// ========================================
+// 12. LÓGICA DO CALENDÁRIO
+// ========================================
 async function loadCalendarView() {
     const calView = document.getElementById('calendarioView');
     if (!calView.querySelector('.container')) {
@@ -1571,6 +1623,9 @@ async function loadCalendarView() {
     }
 }
 
+// ========================================
+// 13. UTILITÁRIOS (API Proxy)
+// ========================================
 async function supabaseRequest(endpoint, method = 'GET', body = null, headers = {}) {
     const authToken = localStorage.getItem('auth_token');
     if (!authToken) {
@@ -1579,6 +1634,7 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
         throw new Error("Sessão expirada. Faça login novamente.");
     }
     
+    // Assegura que o endpoint está codificado corretamente
     const encodedEndpoint = encodeURIComponent(endpoint);
     const url = `${SUPABASE_PROXY_URL}?endpoint=${encodedEndpoint}`;
 
@@ -1587,10 +1643,11 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
-            ...headers 
+            ...headers // Permite sobrescrever, ex: 'Prefer': 'count=exact'
         }
     };
 
+    // Adiciona 'Prefer: return=representation' por padrão para POST/PATCH
     if (['POST', 'PATCH'].includes(method) && !config.headers['Prefer']) {
         config.headers['Prefer'] = 'return=representation';
     }
@@ -1602,12 +1659,14 @@ async function supabaseRequest(endpoint, method = 'GET', body = null, headers = 
     try {
         const response = await fetch(url, config);
         
+        // Tratamento de contagem (count)
         if (headers['Prefer'] === 'count=exact' && response.ok) {
              const countRange = response.headers.get('content-range');
              const count = countRange ? countRange.split('/')[1] : '0';
              return { count: parseInt(count || '0', 10) };
         }
         
+        // Tratamento de resposta vazia (ex: DELETE)
         if (response.status === 204 || response.headers.get('content-length') === '0') {
              return null;
         }
@@ -1641,6 +1700,9 @@ function escapeHTML(str) {
          .replace(/'/g, '&#39;');
 }
 
+// ========================================
+// 14. FUNÇÕES: PERFIL
+// ========================================
 function loadPerfilView() {
     const perfilView = document.getElementById('perfilView');
     if (!perfilView.querySelector('.container')) {
@@ -1766,6 +1828,9 @@ async function handlePerfilFormSubmit(event) {
     }
 }
 
+// ========================================
+// 15. FUNÇÕES: TIMELINE
+// ========================================
 async function loadTimelineView() {
     const timelineView = document.getElementById('timelineView');
     if (!timelineView.querySelector('.container')) {
@@ -1782,6 +1847,7 @@ async function loadTimelineView() {
 
     try {
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        // Query para a timeline
         const events = await supabaseRequest(
             `tarefas?${projectFilter}&select=id,titulo,created_at,updated_at,created_by(nome,profile_picture_url),assignee:assignee_id(nome),coluna:colunas_kanban(nome)&order=updated_at.desc&limit=50`,
             'GET'
@@ -1845,7 +1911,11 @@ function timeAgo(timestamp) {
     return past.toLocaleDateString('pt-BR');
 }
 
-async function loadProjectListView(forceReload = false) { 
+
+// ========================================
+// 16. NOVA LÓGICA: Lista de Projetos (View)
+// ========================================
+async function loadProjectListView(forceReload = false) { // Antiga loadListView
     console.log("CARREGANDO VIEW DE PROJETOS (LISTA)");
     const container = document.getElementById('projectListContainer');
     const tbody = document.getElementById('projectListBody');
@@ -1855,6 +1925,8 @@ async function loadProjectListView(forceReload = false) {
         return;
     }
 
+    // Mostra o loading
+    // CORREÇÃO: Define o HTML do loading diretamente para evitar erros de DOM
     const loadingHTML = `
         <tr id="projectListLoading">
             <td colspan="6">
@@ -1867,9 +1939,10 @@ async function loadProjectListView(forceReload = false) {
     tbody.innerHTML = loadingHTML;
 
     try {
+        // 1. Garante que os "Projetos" (grupos_tarefas) estão carregados
         if (forceReload || currentGroups.length === 0) {
             console.log("Forçando recarga de grupos/projetos...");
-            await loadActiveProject(); 
+            await loadActiveProject(); // Recarrega `currentGroups` (com prioridade)
         }
 
         if (!currentProject) {
@@ -1878,26 +1951,35 @@ async function loadProjectListView(forceReload = false) {
 
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
 
+        // 2. Query ÚNICA: Pega os "Projetos" (grupos) e suas "Tarefas" aninhadas
+        // CORREÇÃO CRÍTICA: A sintaxe de ordenação estava errada.
+        // Mudei de &order=ordem.asc,tarefas.ordem_na_coluna.asc
+        // Para:   &order=ordem.asc&tarefas.order=ordem_na_coluna.asc
         const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
         
         console.log("Query Lista de Projetos:", query);
         const projectsList = await supabaseRequest(query, 'GET');
 
+        // 3. Pega tarefas SEM projeto (sem grupo)
+        // CORREÇÃO CRÍTICA: A sintaxe do select aninhado estava errada
         const tasksWithoutGroupQuery = `tarefas?${projectFilter}&grupo_id=is.null&select=*,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`;
         
         console.log("Query Tarefas Sem Grupo:", tasksWithoutGroupQuery);
         const tasksWithoutGroup = await supabaseRequest(tasksWithoutGroupQuery, 'GET');
 
+        // 4. Limpa o body da tabela
         tbody.innerHTML = '';
 
+        // 5. Renderiza os "Projetos" (grupos)
         if (projectsList && projectsList.length > 0) {
             projectsList.forEach(project => {
-                if (project.tarefas && project.tarefas.length > 0) {
+                // CORREÇÃO: Garante que 'tarefas' é um array antes de ordenar
+                if (project.tarefas && Array.isArray(project.tarefas) && project.tarefas.length > 0) {
                     project.tarefas.sort((a, b) => (a.ordem_na_coluna || 0) - (b.ordem_na_coluna || 0));
                 }
                 
                 tbody.appendChild(createProjectHeaderRow(project));
-                if (project.tarefas && project.tarefas.length > 0) {
+                if (project.tarefas && Array.isArray(project.tarefas) && project.tarefas.length > 0) {
                     project.tarefas.forEach(task => {
                         tbody.appendChild(createTaskDataRow(task));
                     });
@@ -1906,6 +1988,7 @@ async function loadProjectListView(forceReload = false) {
             });
         }
 
+        // 6. Renderiza tarefas sem grupo (se houver)
         if (tasksWithoutGroup && tasksWithoutGroup.length > 0) {
             const noGroupProject = {
                 id: 'no-group',
@@ -1917,9 +2000,10 @@ async function loadProjectListView(forceReload = false) {
             tasksWithoutGroup.forEach(task => {
                 tbody.appendChild(createTaskDataRow(task));
             });
-            tbody.appendChild(createAddTaskRow(null)); 
+            tbody.appendChild(createAddTaskRow(null)); // null ou 'no-group'
         }
         
+        // 7. Se não há absolutamente nada, mostra uma mensagem
         if (tbody.innerHTML === '') {
              tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Nenhum projeto ou tarefa encontrada. Clique em "Novo Projeto" para começar.</td></tr>`;
         }
@@ -1932,11 +2016,13 @@ async function loadProjectListView(forceReload = false) {
     }
 }
 
+// NOVO: Helper para criar a linha de Header do Projeto
 function createProjectHeaderRow(project) {
     const tr = document.createElement('tr');
-    tr.className = 'project-header-row expanded'; 
+    tr.className = 'project-header-row expanded'; // Começa expandido
     tr.dataset.projectId = project.id;
     tr.onclick = (e) => {
+        // Evita que o clique no botão de "+" feche o grupo
         if (e.target.closest('.btn-icon-task')) return;
         toggleProjectGroup(project.id);
     };
@@ -1960,12 +2046,14 @@ function createProjectHeaderRow(project) {
     return tr;
 }
 
+// NOVO: Helper para criar a linha de Tarefa
 function createTaskDataRow(task) {
     const tr = document.createElement('tr');
     tr.className = 'task-data-row';
     tr.dataset.taskId = task.id;
     tr.dataset.projectId = task.grupo_id || 'no-group';
     
+    // --- Responsável ---
     let assigneeHtml = '';
     if (task.assignee) {
         assigneeHtml = `
@@ -1980,6 +2068,8 @@ function createTaskDataRow(task) {
         </div>`;
     }
 
+    // --- Status ---
+    // CORREÇÃO: Garante que 'task.status' existe antes de acessar 'nome'
     const status = task.status ? task.status.nome.toLowerCase().replace(/ /g, '-') : 'a-fazer';
     const statusText = task.status ? task.status.nome : 'A Fazer';
     let statusHtml = `
@@ -1987,12 +2077,13 @@ function createTaskDataRow(task) {
             ${escapeHTML(statusText)}
         </div>`;
 
+    // --- Timeline ---
     let timelineHtml = '<div class="timeline-box" onclick="openTimelineModal(\''+task.id+'\')">';
     if (task.data_inicio && task.data_entrega) {
         const start = new Date(task.data_inicio).getTime();
         const end = new Date(task.data_entrega).getTime();
         const today = new Date().getTime();
-        const totalDuration = (end - start) > 0 ? (end - start) : 1; 
+        const totalDuration = (end - start) > 0 ? (end - start) : 1; // Evita divisão por zero
         const elapsed = today - start;
         let progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
 
@@ -2005,8 +2096,10 @@ function createTaskDataRow(task) {
     }
     timelineHtml += '</div>';
 
+    // --- Esforço ---
     const effort = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
 
+    // --- Status de Conclusão ---
     const today = new Date(); today.setHours(0,0,0,0);
     const dueDate = task.data_entrega ? new Date(task.data_entrega + 'T00:00:00') : null;
     const doneDate = task.data_conclusao_real ? new Date(task.data_conclusao_real + 'T00:00:00') : null;
@@ -2023,6 +2116,7 @@ function createTaskDataRow(task) {
          completionHtml = '<div class="completion-status status-atrasado"><i data-feather="clock" class="h-4 w-4"></i><span>Atrasado</span></div>';
     }
 
+    // --- Montagem Final ---
     tr.innerHTML = `
         <td class="task-title-cell" onclick="openTaskModal(task)">
             <i data-feather="file-text" class="h-4 w-4"></i> ${escapeHTML(task.titulo)}
@@ -2036,6 +2130,7 @@ function createTaskDataRow(task) {
     return tr;
 }
 
+// NOVO: Helper para formatar data
 function formatDateRange(start, end) {
     const s = new Date(start + 'T00:00:00');
     const e = new Date(end + 'T00:00:00');
@@ -2043,6 +2138,7 @@ function formatDateRange(start, end) {
     return `${s.toLocaleDateString('pt-BR', options)} - ${e.toLocaleDateString('pt-BR', options)}`;
 }
 
+// NOVO: Helper para criar "Adicionar Tarefa"
 function createAddTaskRow(projectId) {
     const tr = document.createElement('tr');
     tr.className = 'add-task-row';
@@ -2059,29 +2155,35 @@ function createAddTaskRow(projectId) {
     return tr;
 }
 
+// NOVO: Função para expandir/recolher grupos (agora "Projetos")
 function toggleProjectGroup(projectId) {
     const headerRow = document.querySelector(`.project-header-row[data-project-id="${projectId}"]`);
     const taskRows = document.querySelectorAll(`.task-data-row[data-project-id="${projectId}"]`);
     const addRow = document.querySelector(`.add-task-row[data-project-id="${projectId}"]`);
 
     if (headerRow.classList.contains('expanded')) {
+        // Recolher
         headerRow.classList.remove('expanded');
         taskRows.forEach(row => row.style.display = 'none');
         if(addRow) addRow.style.display = 'none';
     } else {
+        // Expandir
         headerRow.classList.add('expanded');
         taskRows.forEach(row => row.style.display = 'table-row');
         if(addRow) addRow.style.display = 'table-row';
     }
 }
 
+// NOVO: Funções stub para os modais interativos (só para o HTML funcionar)
 function openAssigneeModal(taskId) {
     console.log("Abrir modal de Responsável para task:", taskId);
     showNotification("Modal de responsável ainda não implementado.", "info");
+    // Futuro: Abrir um pop-up de seleção de usuário
 }
 
+// ATUALIZADO: Lógica do Modal de Status
 function openStatusModal(event, taskId, currentStatus) {
-    event.stopPropagation(); 
+    event.stopPropagation(); // Impede que o clique feche o modal imediatamente
     console.log("Abrir modal de Status para task:", taskId, "Status atual:", currentStatus);
     
     const statusModal = document.getElementById('statusModal');
@@ -2090,12 +2192,14 @@ function openStatusModal(event, taskId, currentStatus) {
     
     const rect = event.target.getBoundingClientRect();
     statusModal.style.top = `${rect.bottom + 5}px`;
+    // Centraliza o modal no clique, com limite de borda
     statusModal.style.left = `max(10px, min(${rect.left + (rect.width / 2) - 100}px, ${window.innerWidth - 210}px))`;
     
     statusModal.style.display = 'block';
     statusModalContent.style.display = 'block';
     overlay.style.display = 'block';
 
+    // Popula o modal de status
     statusModalContent.innerHTML = '';
     currentColumns.forEach(col => {
         const statusSlug = col.nome.toLowerCase().replace(/ /g, '-');
@@ -2106,6 +2210,7 @@ function openStatusModal(event, taskId, currentStatus) {
         statusModalContent.appendChild(option);
     });
 
+    // Adiciona listener para fechar
     const closeListener = (e) => {
         statusModal.style.display = 'none';
         statusModalContent.style.display = 'none';
@@ -2115,11 +2220,12 @@ function openStatusModal(event, taskId, currentStatus) {
     overlay.addEventListener('click', closeListener);
 }
 
+// NOVO: Função para atualizar o status
 async function updateTaskStatus(taskId, newColunaId) {
      console.log(`Atualizando task ${taskId} para coluna ${newColunaId}`);
      
      const overlay = document.querySelector('.modal-overlay-transparent');
-     if(overlay) overlay.click(); 
+     if(overlay) overlay.click(); // Fecha o modal
 
     try {
         await supabaseRequest(`tarefas?id=eq.${taskId}`, 'PATCH', {
@@ -2127,8 +2233,8 @@ async function updateTaskStatus(taskId, newColunaId) {
             updated_at: new Date().toISOString()
         });
         showNotification(`Status atualizado.`, 'success');
-        loadProjectListView(false); 
-        loadKanbanView(); 
+        loadProjectListView(false); // Recarrega a view
+        loadKanbanView(); // Sincroniza o Kanban
     } catch (error) {
         console.error("Falha ao atualizar status:", error);
         showNotification('Falha ao atualizar status.', 'error');
@@ -2138,190 +2244,5 @@ async function updateTaskStatus(taskId, newColunaId) {
 function openTimelineModal(taskId) {
     console.log("Abrir modal de Timeline para task:", taskId);
     showNotification("Modal de timeline ainda não implementado.", "info");
+    // Futuro: Abrir um pop-up de seleção de data (calendário)
 }
-
-
-{
-type: uploaded file
-fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-56342d6557fa323b4289f7b72888d59ed6c784a5/api/forgot-password.js
-fullText:
-// /api/forgot-password.js
-import { createClient } from '@supabase/supabase-js';
-
-// --- CARREGA CHAVES DAS VARIÁVEIS DE AMBIENTE (SEGURO) ---
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; // <-- Chave Secreta via process.env
-// IMPORTANTE: Defina a URL BASE da sua aplicação na Vercel (sem / ao final)
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || 'URL_DA_SUA_APP_AQUI'; // <-- Use a URL correta do seu site
-// --- FIM DO CARREGAMENTO SEGURO ---
-
-// Validação inicial das variáveis
-if (!supabaseUrl || !supabaseServiceKey || siteUrl === 'URL_DA_SUA_APP_AQUI') {
-    console.error('ERRO CRÍTICO [forgot-password]: Variáveis SUPABASE_URL, SUPABASE_SERVICE_KEY ou APP_URL/NEXT_PUBLIC_SITE_URL ausentes/incorretas.');
-}
-
-// Cria o cliente ADMIN do Supabase (APENAS se as chaves existirem)
-const supabaseAdmin = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-}) : null;
-
-export default async (req, res) => {
-    // 1. Verifica se o cliente Admin foi inicializado
-    if (!supabaseAdmin) {
-        return res.status(500).json({ error: 'Configuração interna do servidor incompleta.' });
-    }
-    // 2. Verifica se a URL do site está configurada (necessária para generateLink)
-    if (siteUrl === 'URL_DA_SUA_APP_AQUI') {
-        console.error("ERRO CRÍTICO [forgot-password]: A variável de ambiente APP_URL ou NEXT_PUBLIC_SITE_URL precisa ser definida com a URL base da sua aplicação.");
-         return res.status(500).json({ error: 'Configuração interna do servidor incompleta (URL do site).' });
-    }
-
-
-    // 3. Permite apenas método POST
-    if (req.method !== 'POST') {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).json({ error: 'Método não permitido.' });
-    }
-
-    try {
-        const { email } = req.body;
-
-        // 4. Validação básica do input
-        if (!email || typeof email !== 'string' || !email.includes('@')) {
-            return res.status(400).json({ error: 'E-mail inválido fornecido.' });
-        }
-
-        console.log(`[forgot-password] Recebida solicitação para o e-mail: ${email}`);
-
-        // 5. *** CORREÇÃO: Usa generateLink para criar o link de recuperação ***
-        const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'recovery', // Tipo de link: recuperação de senha
-            email: email,
-            options: {
-                redirectTo: `${siteUrl}` // Para onde redirecionar APÓS o reset ser concluído no link do e-mail. Ajuste se precisar de uma página específica.
-            }
-        });
-
-        // 6. Tratamento de Erro do Supabase
-        if (error) {
-            console.error(`[forgot-password] Erro do Supabase ao tentar gerar link para ${email}:`, error.message);
-            // IMPORTANTE: Resposta genérica por segurança.
-        } else {
-             // O 'data' contém informações sobre o link gerado e o usuário, mas NÃO o enviamos ao cliente.
-             // O Supabase Auth cuidará de enviar o e-mail automaticamente se o template estiver ativo.
-             console.log(`[forgot-password] Supabase processou generateLink para ${email}. Link enviado se template ativo.`);
-        }
-
-        // 7. Resposta Genérica de Sucesso (Por Segurança)
-        return res.status(200).json({ message: 'Se o e-mail estiver cadastrado, um link de recuperação foi enviado.' });
-
-    } catch (error) {
-        // Erro inesperado no servidor
-        console.error('[forgot-password] Erro interno do servidor:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor ao processar a solicitação.' });
-    }
-};
-
-}
-
-{
-type: uploaded file
-fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-56342d6557fa323b4289f7b72888d59ed6c784a5/api/login.js
-fullText:
-// /api/login.js
-import { createClient } from '@supabase/supabase-js';
-
-// Pega as credenciais das Variáveis de Ambiente
-const supabaseUrl = process.env.SUPABASE_URL;
-// IMPORTANTE: Aqui usamos a CHAVE ANÓNIMA, pois é a chave correta para LOGIN.
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY; 
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey); 
-
-export default async (req, res) => {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido.' });
-    }
-
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
-        }
-        
-        // --- FUNÇÃO DE LOGIN SEGURA DO SUPABASE ---
-        // Esta função envia o e-mail/senha para o Supabase Auth,
-        // que verifica o hash da senha de forma segura.
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-
-        if (error) {
-            console.error('Erro de Autenticação Supabase:', error.message);
-            // Retorna um erro genérico para não expor detalhes de segurança
-            return res.status(401).json({ error: 'Falha na autenticação. Usuário ou senha incorretos.' });
-        }
-        
-        // Retorna o objeto de sessão e usuário que o front-end espera
-        return res.status(200).json({ user: data.user, session: data.session });
-
-    } catch (error) {
-        console.error('Erro no endpoint /api/login:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor durante o login.' });
-    }
-};
-
-}
-
-{
-type: uploaded file
-fileName: jptechsolutions-a11y/gerenciadordeatividades/gerenciadordeatividades-4c670c348b337b8a6bd504e4d0139be919ef48d5/api/signup.js
-fullText:
-// /api/signup.js
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-// IMPORTANTE: Use a Service Key para criar usuários no backend!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-export default async (req, res) => {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido.' });
-    }
-
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
-        }
-
-        // Cria o usuário no Supabase Auth
-        const { data, error } = await supabaseAdmin.auth.admin.createUser({
-            email: email,
-            password: password,
-            email_confirm: true, // Define como true para enviar e-mail de confirmação
-        });
-
-        if (error) {
-            console.error('Erro ao criar usuário:', error.message);
-            return res.status(400).json({ error: error.message });
-        }
-
-        return res.status(200).json({ user: data.user });
-
-    } catch (error) {
-        console.error('Erro no endpoint /api/signup:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
-    }
-};
-
-}
-
