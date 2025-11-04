@@ -86,25 +86,64 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Auth Event:", event);
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             if (session) {
-                initializeApp(session);
+                // Não é mais necessário chamar initializeApp aqui,
+                // getSession() abaixo cuidará disso.
             }
         } else if (event === 'SIGNED_OUT') {
             window.location.href = 'login.html';
         }
     });
 
+    // ======================================================
+    // AJUSTE CRÍTICO: Capturar falhas na inicialização
+    // ======================================================
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) {
             console.log("Sessão encontrada. Inicializando app.");
-            initializeApp(session);
+            
+            // ADICIONAMOS UM .catch() AQUI:
+            // Se initializeApp() falhar (ex: RLS bloqueia perfil),
+            // este .catch() será acionado.
+            initializeApp(session).catch(error => {
+                 console.error("Falha crítica na inicialização do app:", error);
+                 
+                 // Mostra o erro na tela de forma segura
+                 const mainContent = document.getElementById('mainContent') || document.body;
+                 
+                 // Limpa a tela para mostrar apenas o erro
+                 document.body.innerHTML = ''; 
+                 document.body.appendChild(mainContent);
+                 mainContent.style.height = '100vh';
+                 mainContent.style.overflow = 'auto';
+                 document.body.classList.add('system-active'); // Fundo claro
+
+                 mainContent.innerHTML = `
+                    <div class="container mx-auto px-6 py-8">
+                        <div class="alert alert-error" style="background-color: #fef2f2; border-color: #fecaca; color: #b91c1c; border-width: 1px;">
+                            <h3 class="font-bold text-lg" style="color: #b91c1c;">Erro Crítico de Inicialização</h3>
+                            <p class="mt-2">Não foi possível carregar seu perfil do banco de dados.</p>
+                            <p class="text-sm mt-2"><strong>Causa provável:</strong> Políticas de RLS (Row Level Security) na tabela 'usuarios' estão bloqueando o acesso.</p>
+                            <p class="text-sm mt-1"><strong>Erro detalhado:</strong> ${escapeHTML(error.message)}</p>
+                            <p class="text-sm mt-4"><strong>Ação:</strong> Aplique o script SQL de RLS no seu banco Supabase e tente novamente.</p>
+                            <button class="btn btn-danger" style="background: #dc2626; color: white; margin-top: 1rem;" onclick="logout()">
+                                Sair
+                            </button>
+                        </div>
+                    </div>`;
+                 // Não chame logout() automaticamente, pois causa loop.
+            });
+            
         } else {
             console.log("Nenhuma sessão encontrada. Redirecionando para login.");
             window.location.href = 'login.html';
         }
     }).catch(error => {
-        console.error("Erro ao pegar sessão:", error);
+        console.error("Erro fatal ao pegar sessão (rede/config?):", error);
         window.location.href = 'login.html';
     });
+    // ======================================================
+    // FIM DO AJUSTE CRÍTICO
+    // ======================================================
 
     window.logout = async () => {
         console.log("Deslogando usuário...");
@@ -120,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const { error } = await supabaseClient.auth.signOut();
         if (error) console.error("Erro ao deslogar:", error);
+        // onAuthStateChange cuidará do redirecionamento
     };
 });
 
@@ -142,8 +182,10 @@ async function initializeApp(session) {
                  profile_picture_url: authUser.user_metadata?.avatar_url || null
              };
              const createResponse = await supabaseRequest('usuarios', 'POST', newProfile);
+             
+             // VALIDAÇÃO: Se RLS de INSERT falhar, createResponse será [null] ou []
              if (!createResponse || !createResponse[0]) {
-                 throw new Error("Falha ao criar o perfil de usuário no banco de dados.");
+                 throw new Error("Falha ao criar o perfil de usuário no banco de dados. (Verifique a política de INSERT na tabela 'usuarios')");
              }
              currentUser = createResponse[0];
              currentUser.organizacoes = [];
@@ -151,6 +193,11 @@ async function initializeApp(session) {
         } else {
              currentUser = profileResponse[0];
              console.log("Perfil encontrado!");
+        }
+        
+        // VALIDAÇÃO: Se a RLS de SELECT falhar, profileResponse pode ser [null]
+        if (!currentUser) {
+            throw new Error("Falha ao carregar perfil. A política de RLS (SELECT) na tabela 'usuarios' retornou 'null'.");
         }
 
         const userOrgs = (currentUser.usuario_orgs || []).map(uo => uo.organizacoes).filter(Boolean);
@@ -169,10 +216,20 @@ async function initializeApp(session) {
         
         redirectToDashboard();
 
+    // ======================================================
+    // AJUSTE CRÍTICO: Lançar erro em vez de chamar logout()
+    // ======================================================
     } catch (error) {
         console.error("Erro detalhado na inicialização:", error);
-        logout();
+        // NÃO chame logout() aqui.
+        // logout(); // <-- REMOVIDO
+
+        // Lança o erro para que o .catch() de getSession() possa tratá-lo.
+        throw error;
     }
+    // ======================================================
+    // FIM DO AJUSTE
+    // ======================================================
 }
 
 function redirectToDashboard() {
