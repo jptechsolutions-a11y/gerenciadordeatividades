@@ -416,8 +416,8 @@ async function showMainSystem() {
         console.log("   - Colunas (status):", currentColumns.length);
         console.log("   - Projetos (grupos):", currentGroups.length);
         
-        // --- AJUSTE: Carrega a última view salva ---
-        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView';
+        // --- CORREÇÃO: Carrega o Dashboard como view inicial ---
+        const lastViewId = localStorage.getItem('last_active_view_id') || 'dashboardView';
         const activeLink = document.querySelector(`.sidebar .nav-item[href="#${lastViewId.replace('View', '')}"]`);
         
         showView(lastViewId, activeLink); 
