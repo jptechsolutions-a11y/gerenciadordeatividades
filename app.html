@@ -7,8 +7,10 @@
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#011627">
+    <!-- Estilos -->
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bibliotecas JS -->
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -16,9 +18,57 @@
 </head>
 <body class="bg-gray-100">
 
-    <!-- ... (Modal de Onboarding - Sem alterações) ... -->
-    <div id="teamOnboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
-        <!-- ... (Conteúdo do modal) ... -->
+    <!-- ====================================================== -->
+    <!-- MODAL DE ONBOARDING (CRIAR/ENTRAR EM TIME) -->
+    <!-- ====================================================== -->
+    <div id="teamOnboardingModal" class="modal-overlay" style="display: none; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000;">
+        <div class="modal-content bg-white" style="max-width: 500px;">
+            <div class="text-center mb-6">
+                <img src="icon.png" class="w-16 h-16 mx-auto mb-4" alt="Logo">
+                <h2 class="text-2xl font-bold text-gray-800">Bem-vindo ao JProjects!</h2>
+                <p class="text-gray-600">Para começar, crie um novo time ou junte-se a um existente.</p>
+            </div>
+
+            <!-- Abas -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+                    <button id="tabCreateTeam" onclick="showOnboardingTab('create')" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-blue-600 text-blue-600">
+                        Criar um Time
+                    </button>
+                    <button id="tabJoinTeam" onclick="showOnboardingTab('join')" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        Entrar em um Time
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Painel Criar Time -->
+            <div id="panelCreateTeam">
+                <form id="createTeamForm">
+                    <div class="form-group mb-4">
+                        <label for="teamName" class="font-semibold">Nome do Time:</label>
+                        <input type="text" id="teamName" required class="w-full" placeholder="Ex: Time de Marketing">
+                    </div>
+                    <div id="createTeamAlert"></div>
+                    <button type="submit" class="btn btn-primary w-full mt-4">
+                        <i data-feather="arrow-right" class="h-4 w-4 mr-2"></i> Criar e Continuar
+                    </button>
+                </form>
+            </div>
+
+            <!-- Painel Entrar no Time -->
+            <div id="panelJoinTeam" style="display: none;">
+                <form id="joinTeamForm">
+                    <div class="form-group mb-4">
+                        <label for="teamInviteCode" class="font-semibold">Código de Convite:</label>
+                        <input type="text" id="teamInviteCode" required class="w-full" placeholder="XXXXXX" style="text-transform: uppercase;">
+                    </div>
+                    <div id="joinTeamAlert"></div>
+                    <button type="submit" class="btn btn-primary w-full mt-4">
+                        <i data-feather="log-in" class="h-4 w-4 mr-2"></i> Entrar no Time
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
     <!-- FIM DO MODAL DE ONBOARDING -->
 
@@ -28,13 +78,14 @@
 
         <!-- 1. BARRA SUPERIOR (HEADER) -->
         <header id="topBar" class="flex-shrink-0">
-            <!-- ... (Conteúdo da Barra Superior - Sem alterações) ... -->
+            <!-- Botão de Menu e Logo -->
             <div class="flex items-center gap-4">
                 <button id="sidebarToggle" class="btn-icon">
                     <i data-feather="menu" class="h-5 w-5"></i>
                 </button>
                 <img src="icon.png" class="h-8 w-8" alt="Logo JP">
                 <div class="separator"></div>
+                <!-- Seletor de Time -->
                 <div id="teamSelector" class="relative">
                     <button id="teamSelectorButton" class="flex items-center gap-2 rounded-md hover:bg-gray-700 p-2 transition-colors"> 
                         <div class="flex flex-col text-left">
@@ -43,28 +94,52 @@
                         </div>
                        <i data-feather="chevron-down" class="h-4 w-4 text-gray-400"></i>
                     </button>
+                    <!-- Dropdown do Seletor de Time -->
                     <div id="teamSelectorMenu" class="dropdown-menu" style="width: 280px; top: 110%; background: #1e293b;">
-                        <!-- ... (Conteúdo do seletor de time) ... -->
+                        <div id="teamSelectorList" class="p-2 max-h-60 overflow-y-auto">
+                            <!-- JS vai popular isso -->
+                        </div>
+                        <div class="p-2 border-t border-gray-700">
+                            <a href="#" onclick="openCreateTeamModal()" class="dropdown-item">
+                                <i data-feather="plus-circle" class="h-4 w-4"></i> Criar novo time
+                            </a>
+                            <a href="#" onclick="openJoinTeamModal()" class="dropdown-item">
+                                <i data-feather="log-in" class="h-4 w-4"></i> Entrar em um time
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            <!-- Busca -->
             <div class="flex-1 flex justify-center px-8">
                 <input type="text" id="topBarSearch" placeholder="Buscar tarefas..." class="w-full max-w-md">
             </div>
+            <!-- Ações do Usuário -->
             <div class="flex items-center gap-4">
                 <button class="btn btn-success" onclick="openTaskModal(null)">
                     <i data-feather="plus" class="h-4 w-4 mr-2"></i>
                     <span class="hidden md:inline">Nova Tarefa</span>
                 </button>
                 <div class="separator"></div>
+                <!-- Dropdown de Perfil -->
                 <div id="profileDropdown" class="relative">
                     <button id="profileDropdownButton" class="flex items-center gap-2 rounded-full hover:bg-gray-700 p-1">
                         <img id="topBarUserAvatar" src="icon.png" class="w-8 h-8 rounded-full object-cover bg-gray-600">
                         <span id="topBarUserName" class="text-sm font-medium text-white hidden md:block">Usuário</span>
                         <i data-feather="chevron-down" class="h-4 w-4 text-gray-400 hidden md:block"></i>
                     </button>
+                    <!-- Conteúdo do Dropdown de Perfil -->
                     <div id="profileDropdownMenu" class="dropdown-menu">
-                        <!-- ... (Conteúdo do dropdown de perfil) ... -->
+                        <div class="p-4 border-b border-gray-700">
+                            <p id="dropdownUserName" class="font-semibold text-white">Carregando...</p>
+                            <p id="dropdownUserEmail" class="text-sm text-gray-400">...</p>
+                        </div>
+                        <a href="#perfil" onclick="showView('perfilView', document.querySelector('a[href=\'#perfil\']'))" class="dropdown-item">
+                            <i data-feather="user" class="h-4 w-4"></i> Meu Perfil
+                        </a>
+                        <a href="#" onclick="logout()" class="dropdown-item">
+                            <i data-feather="log-out" class="h-4 w-4"></i> Sair
+                        </a>
                     </div>
                 </div>
             </div>
@@ -107,6 +182,8 @@
                     <a href="#perfil" class="nav-item" title="Meu Perfil" onclick="showView('perfilView', this)">
                         <i data-feather="user" class="h-5 w-5 mr-3"></i> <span class="nav-text">Meu Perfil</span>
                     </a>
+                    
+                    <!-- Link de Logout movido para o dropdown de perfil -->
                 </nav>
             </aside>
 
@@ -118,7 +195,6 @@
                 <div id="dashboardView" class="view-content active">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
-                        <!-- ... (Conteúdo do Dashboard - Sem alterações) ... -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                             <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">0</span><span class="stat-label">Tarefas Ativas</span></div>
                             <div class="stat-card-dash"><span class="stat-number" id="dashCompletedTasks">0</span><span class="stat-label">Tarefas Concluídas (Mês)</span></div>
@@ -189,7 +265,7 @@
                                     <th style="width: 200px;">
                                         <i data-feather="calendar" class="h-4 w-4 mr-2"></i> Timeline
                                     </th>
-                                    <th style="width: 120px;">
+                                    <th style="width: 120px;" class="esforco-header">
                                         <i data-feather="clock" class="h-4 w-4 mr-2"></i> Esforço (h)
                                     </th>
                                     <th style="width: 150px;">
@@ -199,94 +275,6 @@
                             </thead>
                             <!-- O JS vai popular isso aqui -->
                             <tbody id="projectListBody">
-                                <!-- Exemplo de Header de Projeto (antigo Grupo) -->
-                                <tr class="project-header-row" data-project-id="proj-1">
-                                    <td colspan="6">
-                                        <div class="project-header-content">
-                                            <i data-feather="chevron-down" class="h-5 w-5 project-toggle"></i>
-                                            <span class="project-priority-dot priority-alta"></span>
-                                            <span class="project-title">Planejamento</span>
-                                            <span class="project-task-count">(3 Tarefas)</span>
-                                            <button class="btn-icon-task" onclick="openTaskModal(null, null, 'proj-1')">
-                                                <i data-feather="plus" class="h-4 w-4"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Exemplo de Tarefa -->
-                                <tr class="task-data-row" data-task-id="task-1" data-project-id="proj-1">
-                                    <td class="task-title-cell">
-                                        <i data-feather="file-text" class="h-4 w-4"></i> Tarefa 1
-                                    </td>
-                                    <td>
-                                        <div class="person-cell" onclick="openAssigneeModal('task-1')">
-                                            <img src="https://placehold.co/24x24/00D4AA/023047?text=JP" alt="Responsável">
-                                            <span>Juliano Patrick</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <!-- Status Interativo -->
-                                        <div class="status-box status-feito" onclick="openStatusModal('task-1', 'feito')">
-                                            Feito
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <!-- Timeline Interativa -->
-                                        <div class="timeline-box" onclick="openTimelineModal('task-1')">
-                                            <div class="timeline-bar" style="background-color: #00D4AA; width: 80%; margin-left: 10%;"></div>
-                                            <span class="timeline-text">10 nov - 20 nov</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="effort-cell">10h</div>
-                                    </td>
-                                    <td>
-                                        <div class="completion-status status-feito-a-tempo">
-                                            <i data-feather="check" class="h-4 w-4"></i>
-                                            <span>Feito a tempo</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                 <!-- Exemplo de Tarefa 2 -->
-                                <tr class="task-data-row" data-task-id="task-2" data-project-id="proj-1">
-                                    <td class="task-title-cell">
-                                        <i data-feather="file-text" class="h-4 w-4"></i> Tarefa 2
-                                    </td>
-                                    <td>
-                                        <div class="person-cell person-unassigned" onclick="openAssigneeModal('task-2')">
-                                            <i data-feather="user-plus" class="h-4 w-4"></i>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="status-box status-em-andamento" onclick="openStatusModal('task-2', 'em-andamento')">
-                                            Em Andamento
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="timeline-box" onclick="openTimelineModal('task-2')">
-                                            <div class="timeline-bar" style="background-color: #F77F00; width: 30%; margin-left: 5%;"></div>
-                                            <span class="timeline-text">5 nov - 15 nov</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="effort-cell">8h</div>
-                                    </td>
-                                    <td>
-                                        <div class="completion-status status-atrasado">
-                                            <i data-feather="clock" class="h-4 w-4"></i>
-                                            <span>Atrasado</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Exemplo de "Adicionar Tarefa" -->
-                                <tr class="add-task-row" data-project-id="proj-1">
-                                    <td colspan="6">
-                                        <div class="add-task-button-dark" onclick="openTaskModal(null, null, 'proj-1')">
-                                            <i data-feather="plus" class="h-4 w-4"></i> Adicionar Tarefa
-                                        </div>
-                                    </td>
-                                </tr>
-                                
                                 <!-- Exemplo Loading -->
                                 <tr id="projectListLoading">
                                     <td colspan="6">
@@ -302,7 +290,10 @@
                 <div id="timelineView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Timeline de Atividades Recentes</h1>
-                        <!-- ... (Conteúdo da Timeline - Sem alterações) ... -->
+                        <!-- Container para a Timeline -->
+                        <div id="timelineContainer" class="space-y-4">
+                             <div class="loading"><div class="spinner"></div> Carregando timeline...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -310,7 +301,10 @@
                 <div id="calendarioView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Calendário de Entregas</h1>
-                        <!-- ... (Conteúdo do Calendário - Sem alterações) ... -->
+                        <!-- Container para o Calendário -->
+                        <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="loading"><div class="spinner"></div> Carregando calendário...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -318,15 +312,65 @@
                 <div id="notasView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Bloco de Notas</h1>
-                        <!-- ... (Conteúdo das Notas - Sem alterações) ... -->
+                        <!-- Container do Bloco de Notas -->
+                        <div class="note-container">
+                            <div id="noteList" class="note-list">
+                                <button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>
+                                <div class="loading"><div class="spinner"></div> Carregando notas...</div>
+                            </div>
+                            <div class="note-editor">
+                                <input type="text" id="noteTitle" placeholder="Título da sua nota...">
+                                <textarea id="noteBody" placeholder="Comece a escrever..."></textarea>
+                                <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+                                    <button class="btn btn-success" onclick="saveNote()">
+                                        <i data-feather="save" class="h-4 w-4 mr-2"></i> Salvar Nota
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- #timeView -->
                 <div id="timeView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
-                        <h1 class="text-3xl font-bold text-gray-800 mb-6">Gerenciar Time</h1>
-                        <!-- ... (Conteúdo do Time - Sem alterações) ... -->
+                        <div class="flex justify-between items-center mb-6">
+                            <h1 class="text-3xl font-bold text-gray-800">Gerenciar Time</h1>
+                            <button class="btn btn-success" onclick="openInviteModal()">
+                                <i data-feather="user-plus" class="h-4 w-4 mr-2"></i> Convidar Membro
+                            </button>
+                        </div>
+
+                        <!-- Código de Convite -->
+                        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                            <h3 class="text-xl font-semibold mb-4">Código de Convite do Time</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="text" id="teamInviteCodeDisplay" class="w-full max-w-xs" value="Carregando..." readonly>
+                                <button class="btn btn-secondary" onclick="copyInviteCode()">
+                                    <i data-feather="copy" class="h-4 w-4 mr-2"></i> Copiar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Membros -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="table-container">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Email</th>
+                                            <th>Função</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="teamTableBody">
+                                        <tr><td colspan="5" class="loading"><div class="spinner"></div> Carregando membros...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -334,7 +378,54 @@
                 <div id="perfilView" class="view-content">
                      <div class="container mx-auto px-6 py-8">
                          <h1 class="text-3xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
-                        <!-- ... (Conteúdo do Perfil - Sem alterações) ... -->
+                         
+                         <div class="bg-white p-6 rounded-lg shadow-md">
+                            <form id="perfilForm">
+                                <div id="perfilAlert"></div>
+                                <div class="flex flex-col sm:flex-row gap-6 mb-6">
+                                    <!-- Foto -->
+                                    <div class="flex flex-col items-center">
+                                        <img id="perfilPicturePreview" src="https://placehold.co/96x96/00D4AA/023047?text=JP" alt="Foto de Perfil" class="w-24 h-24 rounded-full object-cover mb-2">
+                                        <input type="file" id="perfilPicture" accept="image/*" class="text-sm" onchange="previewProfilePicture(event)">
+                                    </div>
+                                    <!-- Infos Principais -->
+                                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-group">
+                                            <label for="perfilNome">Nome Completo:</label>
+                                            <input type="text" id="perfilNome" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="perfilEmail">Email:</label>
+                                            <input type="email" id="perfilEmail" disabled class="bg-gray-100">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="perfilNickname">Apelido:</label>
+                                            <input type="text" id="perfilNickname" placeholder="Ex: JP">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="perfilSector">Setor / Cargo:</label>
+                                            <input type="text" id="perfilSector" placeholder="Ex: Desenvolvedor Front-end">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-4">
+                                    <label for="perfilDescription">Bio / Descrição:</label>
+                                    <textarea id="perfilDescription" rows="3" placeholder="Fale um pouco sobre você..."></textarea>
+                                </div>
+                                
+                                <div class="form-group mb-6">
+                                    <label for="perfilSkills">Habilidades (separadas por vírgula):</label>
+                                    <input type="text" id="perfilSkills" placeholder="Ex: JavaScript, CSS, Gestão de Projetos">
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="submit" class="btn btn-success">
+                                        <i data-feather="save" class="h-4 w-4 mr-2"></i> Salvar Alterações
+                                    </button>
+                                </div>
+                            </form>
+                         </div>
                     </div>
                 </div>
 
@@ -346,14 +437,118 @@
     <!-- MODAIS (Pop-ups) -->
     <!-- ====================================================== -->
   
-    <!-- #taskModal (Sem alterações estruturais, mas o JS vai usá-lo de forma diferente) -->
+    <!-- #taskModal (Modal de Tarefa) -->
     <div id="taskModal" class="modal-overlay">
-        <!-- ... (Conteúdo do Modal de Tarefa - Sem alterações) ... -->
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="taskModalTitle" class="text-xl font-semibold text-gray-800">Nova Tarefa</h3>
+                <button class="text-gray-500 hover:text-red-600" onclick="closeModal('taskModal')">
+                    <i data-feather="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <!-- <input type="hidden" id="taskColunaId"> REMOVIDO, o script.js cria ele -->
+                <div id="taskAlert"></div>
+
+                <div class="form-group mb-4">
+                    <label for="taskTitle">Título da Tarefa:</label>
+                    <input type="text" id="taskTitle" required placeholder="Ex: Desenvolver a tela de login">
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label for="taskDescription">Descrição:</label>
+                    <textarea id="taskDescription" rows="3" placeholder="Adicione mais detalhes..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label for="taskAssignee">Responsável:</label>
+                        <select id="taskAssignee">
+                            <option value="">Ninguém</option>
+                            <!-- JS vai popular -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskGroup">Projeto:</label>
+                        <select id="taskGroup">
+                            <option value="">Nenhum projeto</option>
+                            <!-- JS vai popular -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskStartDate">Data de Início:</label>
+                        <input type="date" id="taskStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDueDate">Data de Entrega:</label>
+                        <input type="date" id="taskDueDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPriority">Prioridade:</label>
+                        <select id="taskPriority">
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskEsforcoPrevisto">Esforço Previsto (h):</label>
+                        <input type="number" id="taskEsforcoPrevisto" placeholder="Ex: 8">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskEsforcoUtilizado">Esforço Utilizado (h):</label>
+                        <input type="number" id="taskEsforcoUtilizado" placeholder="Ex: 4">
+                    </div>
+                     <div class="form-group">
+                        <label for="taskDataConclusaoReal">Data de Conclusão Real:</label>
+                        <input type="date" id="taskDataConclusaoReal">
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6 justify-end">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('taskModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i data-feather="save" class="h-4 w-4 mr-2"></i> Salvar Tarefa
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- #inviteModal (Sem alterações) -->
+    <!-- #inviteModal (Modal de Convite) -->
     <div id="inviteModal" class="modal-overlay">
-        <!-- ... (Conteúdo do Modal de Convite - Sem alterações) ... -->
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Convidar Membro</h3>
+                <button class="text-gray-500 hover:text-red-600" onclick="closeModal('inviteModal')">
+                    <i data-feather="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            
+            <form id="inviteForm">
+                <div id="inviteAlert"></div>
+                <div class="form-group mb-4">
+                    <label for="inviteEmail">Email do Convidado:</label>
+                    <input type="email" id="inviteEmail" required placeholder="email@exemplo.com">
+                </div>
+                <div class="form-group mb-4">
+                    <label for="inviteRole">Função:</label>
+                    <select id="inviteRole">
+                        <option value="membro" selected>Membro</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex gap-4 mt-6 justify-end">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('inviteModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i data-feather="send" class="h-4 w-4 mr-2"></i> Enviar Convite
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- NOVO: Modal para Criar Projeto (antigo Grupo) -->
@@ -390,15 +585,12 @@
         </div>
     </div>
 
+    <!-- Overlay transparente para fechar pop-ups -->
+    <div class="modal-overlay-transparent"></div>
+
     <!-- NOVO: Modal genérico para Status (será populado pelo JS) -->
-    <div id="statusModal" class="modal-overlay-transparent">
-        <div id="statusModalContent" class="dropdown-menu-popup">
-            <!-- Conteúdo será preenchido pelo JS -->
-            <div class="status-option status-feito">Feito</div>
-            <div class="status-option status-em-andamento">Em Andamento</div>
-            <div class="status-option status-parado">Parado</div>
-            <div class="status-option status-planejamento">Planejamento</div>
-        </div>
+    <div id="statusModal" class="dropdown-menu-popup">
+        <!-- Conteúdo será preenchido pelo JS -->
     </div>
 
 
@@ -422,4 +614,3 @@
     </script>
 </body>
 </html>
-
