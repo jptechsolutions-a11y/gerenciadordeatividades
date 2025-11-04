@@ -416,8 +416,8 @@ async function showMainSystem() {
         console.log("   - Colunas (status):", currentColumns.length);
         console.log("   - Projetos (grupos):", currentGroups.length);
         
-        // --- CORREÇÃO: Carrega o Dashboard como view inicial ---
-        const lastViewId = localStorage.getItem('last_active_view_id') || 'dashboardView';
+        // --- CORREÇÃO: Carrega a view 'Projetos' (listView) como inicial ---
+        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView'; // <--- ALTERADO AQUI
         const activeLink = document.querySelector(`.sidebar .nav-item[href="#${lastViewId.replace('View', '')}"]`);
         
         showView(lastViewId, activeLink); 
@@ -537,6 +537,12 @@ function showView(viewId, element = null) {
     }
 
     document.querySelectorAll('.sidebar nav .nav-item').forEach(item => item.classList.remove('active'));
+    
+    // Se nenhum elemento foi passado (ex: no carregamento inicial), encontra o elemento certo
+    if (!element) {
+         element = document.querySelector(`.sidebar .nav-item[href="#${viewId.replace('View', '')}"]`);
+    }
+    
     element?.classList.add('active');
 
     try {
@@ -2094,11 +2100,13 @@ function createTaskDataRow(task) {
     const assigneeCell = `<td>${assigneeHtml}</td>`;
 
     // 4. Status (Clicável)
-    const status = task.status ? task.status.nome.toLowerCase().replace(/ /g, '-') : 'a-fazer';
-    const statusText = task.status ? task.status.nome : 'A Fazer';
+    // CORREÇÃO: Usar o nome da coluna (status) ou 'a-fazer' como fallback
+    const statusName = task.status ? task.status.nome : 'A Fazer';
+    const statusSlug = statusName.toLowerCase().replace(/ /g, '-');
+    
     let statusHtml = `
-        <div class="status-box status-${status}" onclick="openStatusModal(event, '${task.id}', '${status}')">
-            ${escapeHTML(statusText)}
+        <div class="status-box status-${statusSlug}" onclick="openStatusModal(event, '${task.id}', '${statusSlug}')">
+            ${escapeHTML(statusName)}
         </div>`;
     const statusCell = `<td>${statusHtml}</td>`;
 
@@ -2113,7 +2121,7 @@ function createTaskDataRow(task) {
         let progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
 
         // Define a cor da barra
-        const color = (status === 'concluído' || status === 'feito') ? 'var(--primary)' : '#f59e0b'; // Verde JP ou Laranja
+        const color = (statusSlug === 'concluído' || statusSlug === 'feito') ? 'var(--primary)' : '#f59e0b'; // Verde JP ou Laranja
         
         timelineHtml += `<div class="timeline-bar" style="background-color: ${color}; width: ${progress}%;"></div>`;
         timelineHtml += `<span class="timeline-text">${formatDateRange(task.data_inicio, task.data_entrega)}</span>`;
@@ -2157,7 +2165,7 @@ function createTaskDataRow(task) {
     
     let completionHtml = '<div class="completion-status status-na"><i data-feather="minus" class="h-4 w-4"></i><span>N/A</span></div>';
     
-    if (status === 'concluído' || status === 'feito') {
+    if (statusSlug === 'concluído' || statusSlug === 'feito') {
         if (doneDate && dueDate && doneDate > dueDate) {
             completionHtml = '<div class="completion-status status-atrasado"><i data-feather="check" class="h-4 w-4"></i><span>Feito (Atrasado)</span></div>';
         } else {
@@ -2299,4 +2307,3 @@ function openTimelineModal(taskId) {
     console.log("Abrir modal de Timeline para task:", taskId);
     showNotification("Modal de timeline ainda não implementado.", "info");
 }
-
