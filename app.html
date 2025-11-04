@@ -186,6 +186,9 @@
                     <!-- Link de Logout movido para o dropdown de perfil -->
                 </nav>
             </aside>
+            
+            <!-- Overlay para fechar sidebar mobile -->
+            <div id="sidebarOverlay"></div>
 
             <!-- 3. CONTEÚDO PRINCIPAL (MAIN) -->
             <main id="mainContent" class="main-content">
@@ -225,64 +228,67 @@
                     </div>
                 </div>
 
-                <!-- #listView (Projetos - REFORMULADO) -->
-                <div id="listView" class="view-content">
-                    <!-- O container de padding foi movido para dentro da view -->
-                    <div class="container mx-auto px-6 py-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <h1 class="text-3xl font-bold text-gray-800">Projetos</h1>
-                            <button class="btn btn-success" onclick="openCreateProjectModal()">
+                <!-- #listView (Projetos - REFORMULADO para Monday UI) -->
+                <div id="listView" class="view-content"> <!-- Fundo dark (slate-900) para a view inteira -->
+                    
+                    <!-- NOVO: Header da View (estilo Monday) -->
+                    <div class="view-header-dark">
+                        <div>
+                            <h1 id="viewProjectTitle">Projetos</h1>
+                            <!-- TODO: Adicionar abas aqui se o script suportar -->
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <!-- Botões de Ação (simplificado) -->
+                            <!-- TODO: Atualizar o onclick para o modal de tarefa correto -->
+                            <button class="btn btn-primary btn-small" onclick="openTaskModal(null)"> 
                                 <i data-feather="plus" class="h-4 w-4 mr-2"></i>
-                                <span>Novo Projeto</span>
+                                <span>Criar Tarefa</span>
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- A tabela agora fica fora do container para ter largura total -->
                     <div id="projectListContainer" class="project-table-container">
-                        <!-- Botão de "Adicionar Novo Projeto" (Grupo) -->
-                        <div class="project-table-controls">
-                            <button class="btn btn-primary btn-small" onclick="openCreateProjectModal()">
-                                <i data-feather="plus" class="h-4 w-4 mr-2"></i> Adicionar novo projeto
-                            </button>
-                        </div>
-
+                                                
                         <!-- Tabela de Projetos (Estilo Monday) -->
                         <table class="project-table-dark">
                             <thead>
                                 <tr>
-                                    <!-- Coluna de Projeto/Tarefa -->
-                                    <th style="min-width: 300px;">
-                                        <i data-feather="layers" class="h-4 w-4 mr-2"></i> Projeto / Tarefa
-                                    </th>
-                                    <!-- Novas Colunas -->
-                                    <th style="width: 150px;">
-                                        <i data-feather="user" class="h-4 w-4 mr-2"></i> Responsável
-                                    </th>
-                                    <th style="width: 150px;">
-                                        <i data-feather="bar-chart-2" class="h-4 w-4 mr-2"></i> Status
-                                    </th>
-                                    <th style="width: 200px;">
-                                        <i data-feather="calendar" class="h-4 w-4 mr-2"></i> Timeline
-                                    </th>
-                                    <th style="width: 120px;" class="esforco-header">
-                                        <i data-feather="clock" class="h-4 w-4 mr-2"></i> Esforço (h)
-                                    </th>
-                                    <th style="width: 150px;">
-                                        <i data-feather="check-circle" class="h-4 w-4 mr-2"></i> Status Conclusão
-                                    </th>
+                                    <th style="width: 40px; padding-left: 10px;"><input type="checkbox" class="table-checkbox" /></th>
+                                    <th style="min-width: 250px;">Tarefa</th>
+                                    <th style="width: 120px;">Resp.</th>
+                                    <th style="width: 140px;">Status</th>
+                                    <th style="width: 180px;">Timeline</th>
+                                    <th style="width: 100px;">Duração</th>
+                                    <th style="width: 150px;">Dependente de</th>
+                                    <th style="width: 130px;">Esforço previsto</th>
+                                    <th style="width: 130px;">Esforço utilizado</th>
+                                    <th style="width: 150px;">Data de conclusão</th>
+                                    <th style="width: 150px;">Status de conclusão</th>
+                                    <th style="width: 50px;"><i data-feather="more-horizontal" class="h-4 w-4"></i></th>
                                 </tr>
                             </thead>
-                            <!-- O JS vai popular isso aqui -->
+                            <!-- O JS (que o usuário ajustou) vai popular isso aqui -->
                             <tbody id="projectListBody">
                                 <!-- Exemplo Loading -->
                                 <tr id="projectListLoading">
-                                    <td colspan="6">
-                                        <div class="loading"><div class="spinner"></div> Carregando projetos...</div>
+                                    <td colspan="12"> <!-- Colspan atualizado para 12 -->
+                                        <div class="loading" style="color: #94a3b8; background: #1e293b; padding: 40px 0;">
+                                            <div class="spinner" style="border-top-color: var(--primary);"></div>
+                                            Carregando projetos...
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- Botão de "Adicionar Novo Grupo" (Estilo Monday, no final) -->
+                        <div class="project-table-footer">
+                            <button class="add-group-button" onclick="openCreateProjectModal()">
+                                <i data-feather="plus" class="h-4 w-4 mr-2"></i> Adicionar novo grupo
+                            </button>
+                        </div>
+
                     </div>
                 </div>
 
@@ -555,7 +561,7 @@
     <div id="projectModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-800">Novo Projeto</h3>
+                <h3 class="text-xl font-semibold text-gray-800">Novo Projeto (Grupo)</h3>
                  <button class="text-gray-500 hover:text-red-600" onclick="closeModal('projectModal')">
                     <i data-feather="x" class="h-6 w-6"></i>
                 </button>
@@ -586,7 +592,7 @@
     </div>
 
     <!-- Overlay transparente para fechar pop-ups -->
-    <div class="modal-overlay-transparent"></div>
+    <div class="modal-overlay-transparent" onclick="this.style.display='none'; document.getElementById('statusModal').style.display='none';"></div>
 
     <!-- NOVO: Modal genérico para Status (será populado pelo JS) -->
     <div id="statusModal" class="dropdown-menu-popup">
