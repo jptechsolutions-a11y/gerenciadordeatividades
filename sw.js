@@ -1,5 +1,5 @@
 // Service Worker Otimizado (sw.js)
-const CACHE_NAME = 'jprojects-v2'; // Mudei para v2 para forçar a reinstalação
+const CACHE_NAME = 'jprojects-v3'; // <--- ALTERADO DE v2 PARA v3
 const urlsToCache = [
    '/', 
     '/app.html', 
@@ -29,6 +29,7 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
+                    // Deleta todos os caches que NÃO sejam o novo (jprojects-v3)
                     if (cacheName !== CACHE_NAME) {
                         console.log('SW: Limpando cache antigo:', cacheName);
                         return caches.delete(cacheName);
@@ -58,6 +59,8 @@ self.addEventListener('fetch', event => {
                     // 1. Tenta servir do cache
                     if (cachedResponse) {
                         // Opcional: No background, atualiza o cache (Stale-While-Revalidate)
+                        // Isso garante que na *próxima* visita o app esteja atualizado,
+                        // mas a versão 'v3' já resolve o problema imediato.
                         fetch(event.request).then(networkResponse => {
                             caches.open(CACHE_NAME).then(cache => {
                                 cache.put(event.request, networkResponse);
@@ -96,4 +99,3 @@ self.addEventListener('fetch', event => {
             })
     );
 });
-
