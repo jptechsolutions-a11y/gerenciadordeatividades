@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('user');
         localStorage.removeItem('auth_token'); 
         localStorage.removeItem('current_org_id'); 
+        localStorage.removeItem('last_active_view_id'); // Limpa a última view
         
         const { error } = await supabaseClient.auth.signOut();
         if (error) console.error("Erro ao deslogar:", error);
@@ -358,7 +359,11 @@ async function showMainSystem() {
         console.log("   - Colunas (status):", currentColumns.length);
         console.log("   - Projetos (grupos):", currentGroups.length);
         
-        showView('listView', document.querySelector('a[href="#lista"]')); 
+        // --- AJUSTE: Carrega a última view salva ---
+        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView';
+        const activeLink = document.querySelector(`.sidebar .nav-item[href="#${lastViewId.replace('View', '')}"]`);
+        
+        showView(lastViewId, activeLink); 
         feather.replace();
         
     } catch (err) {
@@ -468,7 +473,10 @@ async function switchActiveTeam(orgId) {
 function showView(viewId, element = null) {
     document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
     const viewEl = document.getElementById(viewId);
-    if(viewEl) viewEl.classList.add('active');
+    if(viewEl) {
+        viewEl.classList.add('active');
+        localStorage.setItem('last_active_view_id', viewId); // <-- SALVA A VIEW ATIVA
+    }
 
     document.querySelectorAll('.sidebar nav .nav-item').forEach(item => item.classList.remove('active'));
     element?.classList.add('active');
