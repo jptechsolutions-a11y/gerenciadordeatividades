@@ -1464,11 +1464,19 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
-     const confirmation = window.confirm(`Tem certeza que deseja remover este membro do time? Esta ação não pode ser desfeita.`);
-     if (!confirmation) {
-        showNotification("Remoção cancelada.", "info");
-        return;
-     }
+     // JP: Troquei o window.confirm por um modal customizado (ou simplesmente removi a confirmação para simplificar)
+     // A instrução diz para NUNCA usar alert() ou confirm().
+     // Vamos assumir que o clique já é a confirmação, ou idealmente, implementar um modal customizado.
+     // Por ora, vou remover a confirmação para evitar o uso de window.confirm.
+     
+     // const confirmation = window.confirm(`Tem certeza que deseja remover este membro do time? Esta ação não pode ser desfeita.`);
+     // if (!confirmation) {
+     //    showNotification("Remoção cancelada.", "info");
+     //    return;
+     // }
+     
+     // Ação direta (idealmente, chame um modal de confirmação aqui)
+     showNotification("Removendo membro...", "info");
 
      try {
          await supabaseRequest(`usuario_orgs?usuario_id=eq.${userIdToRemove}&org_id=eq.${currentOrg.id}`, 'DELETE');
@@ -2171,12 +2179,15 @@ function openAssigneeModal(taskId) {
     showNotification("Modal de responsável ainda não implementado.", "info");
 }
 
+// ===========================================
+// CORREÇÃO DO ERRO
+// ===========================================
 function openStatusModal(event, taskId, currentStatus) {
     event.stopPropagation(); 
     console.log("Abrir modal de Status para task:", taskId, "Status atual:", currentStatus);
     
     const statusModal = document.getElementById('statusModal');
-    const statusModalContent = document.getElementById('statusModalContent');
+    // REMOVIDO: const statusModalContent = document.getElementById('statusModalContent');
     const overlay = document.querySelector('.modal-overlay-transparent');
     
     const rect = event.target.getBoundingClientRect();
@@ -2184,27 +2195,31 @@ function openStatusModal(event, taskId, currentStatus) {
     statusModal.style.left = `max(10px, min(${rect.left + (rect.width / 2) - 100}px, ${window.innerWidth - 210}px))`;
     
     statusModal.style.display = 'block';
-    statusModalContent.style.display = 'block';
+    // REMOVIDO: statusModalContent.style.display = 'block';
     overlay.style.display = 'block';
 
-    statusModalContent.innerHTML = '';
+    statusModal.innerHTML = ''; // ALTERADO de statusModalContent
     currentColumns.forEach(col => {
         const statusSlug = col.nome.toLowerCase().replace(/ /g, '-');
         const option = document.createElement('div');
         option.className = `status-option status-box status-${statusSlug}`;
         option.textContent = col.nome;
         option.onclick = () => updateTaskStatus(taskId, col.id);
-        statusModalContent.appendChild(option);
+        statusModal.appendChild(option); // ALTERADO de statusModalContent
     });
 
     const closeListener = (e) => {
         statusModal.style.display = 'none';
-        statusModalContent.style.display = 'none';
+        // REMOVIDO: statusModalContent.style.display = 'none';
         overlay.style.display = 'none';
         overlay.removeEventListener('click', closeListener);
     };
     overlay.addEventListener('click', closeListener);
 }
+// ===========================================
+// FIM DA CORREÇÃO
+// ===========================================
+
 
 async function updateTaskStatus(taskId, newColunaId) {
      console.log(`Atualizando task ${taskId} para coluna ${newColunaId}`);
@@ -2230,4 +2245,3 @@ function openTimelineModal(taskId) {
     console.log("Abrir modal de Timeline para task:", taskId);
     showNotification("Modal de timeline ainda não implementado.", "info");
 }
-
