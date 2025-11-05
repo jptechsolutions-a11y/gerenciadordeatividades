@@ -2222,3 +2222,74 @@ function openTimelineModal(taskId) {
     console.log("Abrir modal de Timeline para task:", taskId);
     showNotification("Modal de timeline ainda não implementado.", "info");
 }
+
+// ======================================================
+// NOVA FUNÇÃO (para criar a linha de resumo do grupo)
+// ======================================================
+function createProjectSummaryRow(project) {
+    const tr = document.createElement('tr');
+    // Esta classe esconde a linha por padrão
+    tr.className = 'project-summary-row'; 
+    tr.dataset.projectId = project.id;
+
+    const tasks = project.tarefas || [];
+    let totalDuracao = 0;
+    const statusCounts = {};
+    let totalEsforcoPrevisto = 0;
+    let totalEsforcoUtilizado = 0;
+    const totalTasks = tasks.length;
+
+    if (totalTasks > 0) {
+        tasks.forEach(task => {
+            // 1. Calcular Duração Total
+            if (task.data_inicio && task.data_entrega) {
+                const start = new Date(task.data_inicio);
+                const end = new Date(task.data_entrega);
+                const diffTime = Math.abs(end - start);
+                // Adiciona 1 para incluir o dia de início
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+                totalDuracao += diffDays;
+            }
+            
+            // 2. Contar Status
+            const statusName = task.status ? task.status.nome : 'A Fazer';
+            statusCounts[statusName] = (statusCounts[statusName] || 0) + 1;
+
+            // 3. Somar Esforços
+            totalEsforcoPrevisto += task.esforco_previsto || 0;
+            totalEsforcoUtilizado += task.esforco_utilizado || 0;
+        });
+    }
+
+    // --- Renderizar a Barra de Status ---
+    let statusBarHtml = '<div class="status-summary-bar-container">';
+    if (totalTasks > 0) {
+        // Itera sobre os status contados para criar os segmentos da barra
+        for (const [statusName, count] of Object.entries(statusCounts)) {
+            const statusSlug = statusName.toLowerCase().replace(/ /g, '-');
+            const widthPercent = (count / totalTasks) * 100;
+            statusBarHtml += `<div class="status-summary-bar-segment status-${statusSlug}" style="width: ${widthPercent}%;" title="${statusName}: ${count} ${count > 1 ? 'tarefas' : 'tarefa'}"></div>`;
+        }
+    }
+    statusBarHtml += '</div>';
+
+    // --- Montar HTML da Linha (com 9 colunas) ---
+    // Usamos 'colspan' para alinhar com as colunas certas
+    tr.innerHTML = `
+        <td class="summary-cell"></td> <td class="summary-cell" colspan="2"></td> <td class="summary-cell" style="text-align: right; font-weight: 500;">
+            ${totalDuracao > 0 ? totalDuracao + ' dias' : '-'}
+        </td>
+        
+        <td class="summary-cell">${statusBarHtml}</td>
+        
+        <td class="summary-cell"></td> <td class="summary-cell" style="text-align: right; font-weight: 500;">
+            ${totalEsforcoPrevisto > 0 ? totalEsforcoPrevisto + 'h' : '-'}
+        </td>
+        
+        <td class="summary-cell" style="text-align: right; font-weight: 500;">
+            ${totalEsforcoUtilizado > 0 ? totalEsforcoUtilizado + 'h' : '-'}
+        </td>
+        
+        <td class="summary-cell"></td> `;
+    return tr;
+}
