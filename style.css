@@ -1044,3 +1044,17 @@ input[type="file"]::file-selector-button {
 input[type="file"]::file-selector-button:hover {
     background: var(--accent);
 }
+/* NOVO CSS - Adicionar no fim de style.css */
+.dependency-tag {
+    background-color: var(--accent);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+}
