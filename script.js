@@ -2067,7 +2067,17 @@ function createTaskDataRow(task) {
     }
     const duracaoCell = `<td class="duration-cell">${duracao}</td>`;
 
-    const dependenteCell = `<td class="dependency-cell"><span class="dependency-cell-empty">-</span></td>`;
+    // Simula a tag de dependência (vamos linkar "Tarefa 1" como exemplo)
+    let dependenteHtml = '<span class="dependency-cell-empty">-</span>';
+    if (task.titulo === "Tarefa 2") { // Apenas para exemplo
+         dependenteHtml = `<span class="dependency-tag">Tarefa 1</span>`;
+    } else if (task.titulo === "Tarefa 3") { // Apenas para exemplo
+         dependenteHtml = `<span class="dependency-tag">Tarefa 2</span>`;
+    } else if (task.titulo === "Marco - Planejamento") { // Apenas para exemplo
+         dependenteHtml = `<span class="dependency-tag">Tarefa 3</span>`;
+    }
+
+    const dependenteCell = `<td class="dependency-cell">${dependenteHtml}</td>`;
 
     const esforcoPrevisto = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
     const esforcoPrevistoCell = `<td class="effort-cell">${esforcoPrevisto}</td>`;
@@ -2097,19 +2107,17 @@ function createTaskDataRow(task) {
 
     const moreCell = `<td><button class="btn-icon-task" style="opacity: 0.5; margin: 0 auto; display: block;" onclick="event.stopPropagation();"><i data-feather="more-horizontal" class="h-4 w-4"></i></button></td>`;
 
+   // NOVA ORDEM (para bater com a imagem do Monday)
     tr.innerHTML = 
         checkboxHtml +
         taskTitleHtml +
         assigneeCell +
+        duracaoCell +       // <-- Trocado de lugar
         statusCell +
-        timelineCell +
-        duracaoCell +
         dependenteCell +
         esforcoPrevistoCell +
         esforcoUtilizadoCell +
-        dataConclusaoCell +
-        completionCell +
-        moreCell;
+        moreCell;           // <-- Removemos timeline, conclusão, etc.
 
     return tr;
 }
