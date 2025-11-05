@@ -2258,7 +2258,7 @@ async function openAssigneeModal(event, taskId) {
     const searchInput = document.getElementById('assigneeSearchInput');
     
     list.innerHTML = '<div class="loading" style="padding: 10px 0;"><div class="spinner" style="width:16px;height:16px;border-width:2px;"></div></div>';
-    modal.style.display = 'flex';
+    modal.style.display = 'block';
     feather.replace();
 
     const rect = event.target.getBoundingClientRect();
