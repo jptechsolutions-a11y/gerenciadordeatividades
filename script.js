@@ -1938,6 +1938,8 @@ async function loadProjectListView(forceReload = false) {
                 }
                 
                 tbody.appendChild(createProjectHeaderRow(project));
+                tbody.appendChild(createProjectSummaryRow(project));
+                
                 if (project.tarefas && project.tarefas.length > 0) {
                     project.tarefas.forEach(task => {
                         tbody.appendChild(createTaskDataRow(task));
@@ -2145,19 +2147,35 @@ function createAddTaskRow(projectId) {
     return tr;
 }
 
+// SUBSTITUA A FUNÇÃO ANTIGA POR ESTA
 function toggleProjectGroup(projectId) {
     const headerRow = document.querySelector(`.project-header-row[data-project-id="${projectId}"]`);
     const taskRows = document.querySelectorAll(`.task-data-row[data-project-id="${projectId}"]`);
     const addRow = document.querySelector(`.add-task-row[data-project-id="${projectId}"]`);
+    
+   
+    const summaryRow = document.querySelector(`.project-summary-row[data-project-id="${projectId}"]`);
+
 
     if (headerRow.classList.contains('expanded')) {
+       
         headerRow.classList.remove('expanded');
         taskRows.forEach(row => row.style.display = 'none');
         if(addRow) addRow.style.display = 'none';
+        
+     
+        if(summaryRow) summaryRow.style.display = 'table-row'; 
+      
+        
     } else {
+       
         headerRow.classList.add('expanded');
         taskRows.forEach(row => row.style.display = 'table-row');
         if(addRow) addRow.style.display = 'table-row';
+        
+      
+        if(summaryRow) summaryRow.style.display = 'none'; 
+       
     }
 }
 
