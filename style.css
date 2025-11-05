@@ -582,8 +582,13 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     color: #e2e8f0;
     padding: 0 !important; 
     height: 100%;
-    display: flex;
+    /* display: flex;  <-- REMOVA ESTA LINHA */
     flex-direction: column;
+}
+
+/* ADICIONE ESTA NOVA REGRA LOGO ABAIXO */
+#listView.active {
+    display: flex;
 }
 #listView .view-header-dark {
      padding: 1rem 1.5rem;
