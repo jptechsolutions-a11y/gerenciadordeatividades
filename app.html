@@ -552,5 +552,46 @@
                 .catch(error => console.log('Falha ao registrar Service Worker:', error));
         }
     </script>
+    <button id="openAssignModalBtn">Atribuir Responsável</button>
+
+<div id="assignModal" class="modal">
+    <div class="modal-overlay"></div> <div class="modal-content">
+        <div class="modal-header">
+            <input type="text" class="search-input" placeholder="Pesquise nomes, funções ou equipes">
+            <span class="info-icon">ⓘ</span>
+        </div>
+
+        <div class="modal-body">
+            <div class="suggested-people">
+                <h4>Pessoas sugeridas</h4>
+                <div class="person-item">
+                    <div class="person-avatar"></div>
+                    <span>Juliano Patrick</span>
+                </div>
+            </div>
+
+            <div class="modal-options">
+                <a href="#" class="option-link">
+                    <span class="icon">👥</span>
+                    Convide um novo membro por e-mail
+                </a>
+                <a href="#" class="option-link">
+                    <span class="icon">✨</span>
+                    Atribuir pessoas automaticamente
+                </a>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div class="notification-toggle">
+                <span class="icon">🔔</span>
+                Os titulares serão notificados
+            </div>
+            <button class="silence-btn">Silenciar</button>
+        </div>
+
+        <button class="close-modal-btn">&times;</button>
+    </div>
+</div>
 </body>
 </html>
