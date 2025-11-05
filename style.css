@@ -21,35 +21,6 @@ body.system-active {
     background-color: #f7f9fc;
 }
 
-.hero-section {
-    background: var(--darker);
-    color: white;
-    padding: 100px 20px;
-}
-.hero-section h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.1;
-    max-width: 600px;
-    margin-bottom: 20px;
-}
-.hero-section p {
-    font-size: 1.25rem;
-    color: var(--light);
-    max-width: 500px;
-    margin-bottom: 30px;
-}
-.feature-section {
-    background: white;
-    padding: 80px 20px;
-}
-.feature-card {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    padding: 24px;
-    border-radius: 12px;
-}
-
 .auth-container {
     background: var(--darker);
     min-height: 100vh;
@@ -582,11 +553,8 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     color: #e2e8f0;
     padding: 0 !important; 
     height: 100%;
-    /* display: flex;  <-- REMOVA ESTA LINHA */
     flex-direction: column;
 }
-
-/* ADICIONE ESTA NOVA REGRA LOGO ABAIXO */
 #listView.active {
     display: flex;
 }
@@ -621,284 +589,6 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     flex-grow: 1;
     overflow: auto;
     border-top: 1px solid #334155;
-}
-.project-table-dark {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-}
-.project-table-dark thead th {
-    background-color: #0f172a;
-    border-bottom: 2px solid #334155;
-    padding: 10px 12px;
-    text-align: left;
-    font-weight: 500;
-    color: #94a3b8;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    white-space: nowrap;
-    text-transform: none;
-    font-size: 0.75rem;
-    letter-spacing: 0px;
-}
-.project-table-dark thead th:first-child {
-    padding-left: 10px;
-}
-.project-table-dark thead th .feather {
-    display: none;
-}
-.table-checkbox {
-    background-color: #334155;
-    border: 1px solid #64748b;
-    border-radius: 4px;
-    width: 14px;
-    height: 14px;
-    vertical-align: middle;
-}
-.project-header-row {
-    background-color: #1e293b;
-    font-weight: 600;
-    color: white;
-    border-bottom: 1px solid #334155;
-    position: sticky;
-    top: 39px;
-    z-index: 9;
-}
-.project-header-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 10px;
-    font-size: 0.85rem;
-}
-.project-toggle {
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    color: #94a3b8;
-}
-.project-header-row:not(.expanded) .project-toggle {
-    transform: rotate(-90deg);
-}
-.project-priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.project-priority-dot.priority-urgente { background-color: #dc2626; }
-.project-priority-dot.priority-alta { background-color: #f59e0b; }
-.project-priority-dot.priority-media { background-color: var(--accent); }
-.project-priority-dot.priority-baixa { background-color: #6b7280; }
-.project-task-count {
-    color: #64748b;
-    font-size: 0.75rem;
-    font-weight: 400;
-}
-.btn-icon-task {
-    background: transparent;
-    color: #94a3b8;
-    padding: 4px;
-    border-radius: 4px;
-    opacity: 0.5;
-    transition: all 0.2s ease;
-}
-.project-header-row:hover .btn-icon-task {
-    opacity: 1;
-}
-.btn-icon-task:hover {
-    background-color: #334155;
-    color: white;
-}
-.task-data-row {
-    border-bottom: 1px solid #334155;
-    transition: background-color 0.15s ease;
-}
-.task-data-row:hover {
-    background-color: #334155;
-}
-.task-data-row td {
-    padding: 8px 12px;
-    vertical-align: middle;
-    height: 36px;
-}
-.task-title-cell {
-    padding-left: 28px !important;
-    gap: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 250px;
-    cursor: pointer;
-}
-.task-title-cell .feather {
-    color: #64748b;
-    width: 14px; height: 14px;
-}
-.person-cell {
-    gap: 6px;
-    padding: 2px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
-}
-.person-cell:hover {
-    background-color: #334155;
-}
-.person-cell img {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.person-cell span {
-    font-size: 0.8rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px;
-    font-weight: 500;
-    color: #e2e8f0;
-}
-.person-cell.person-unassigned {
-    justify-content: center;
-    color: #64748b;
-}
-.person-cell.person-unassigned:hover {
-    color: white;
-}
-.person-cell.person-unassigned .feather {
-    width: 16px; height: 16px;
-}
-.status-box {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    text-transform: capitalize;
-}
-.status-box:hover {
-    filter: brightness(1.2);
-    transform: scale(1.03);
-}
-.status-box.status-feito { background-color: var(--primary); }
-.status-box.status-em-andamento { background-color: #f59e0b; }
-.status-box.status-parado { background-color: #ef4444; }
-.status-box.status-planejamento { background-color: var(--accent); }
-.status-box.status-a-fazer { background-color: #64748b; }
-.status-box.status-concluído { background-color: var(--primary); }
-.status-box.status-default { background-color: #64748b; }
-
-.timeline-box {
-    position: relative;
-    width: 100%;
-    height: 24px;
-    background-color: #334155;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-.timeline-bar {
-    position: absolute;
-    height: 100%;
-    border-radius: 4px;
-    opacity: 0.7;
-}
-.timeline-text {
-    position: relative;
-    z-index: 1;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-.duration-cell {
-    font-size: 0.8rem;
-    text-align: right;
-    color: #cbd5e1;
-    padding-right: 20px !important;
-}
-.dependency-cell {
-    font-size: 0.8rem;
-}
-.dependency-tag {
-    background-color: var(--accent);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 130px;
-}
-.dependency-cell-empty {
-    color: #64748b;
-    text-align: center;
-    font-size: 1.1rem;
-}
-.effort-cell {
-    font-size: 0.8rem;
-    text-align: right;
-    color: #cbd5e1;
-    padding-right: 20px !important;
-}
-.date-cell {
-    font-size: 0.8rem;
-    color: #cbd5e1;
-    font-weight: 500;
-}
-.completion-status {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.75rem;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-weight: 500;
-}
-.completion-status .feather {
-    width: 14px; height: 14px;
-}
-.completion-status.status-feito-a-tempo { color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
-.completion-status.status-atrasado { color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
-.completion-status.status-na { color: #64748b; background-color: rgba(100, 116, 139, 0.1); }
-
-.add-task-row {
-    border-bottom: 1px solid #334155;
-}
-.add-task-row td {
-    padding: 0 !important;
-}
-.add-task-button-dark {
-    cursor: pointer;
-    color: #64748b;
-    font-weight: 500;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    padding: 8px 12px;
-    padding-left: 28px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.add-task-button-dark .feather {
-    width: 14px; height: 14px;
-}
-.add-task-button-dark:hover {
-    background-color: #1e293b;
-    color: #94a3b8;
 }
 .project-table-footer {
     padding: 10px 1.5rem;
@@ -1044,80 +734,12 @@ input[type="file"]::file-selector-button {
 input[type="file"]::file-selector-button:hover {
     background: var(--accent);
 }
-/* NOVO CSS - Adicionar no fim de style.css */
-.dependency-tag {
-    background-color: var(--accent);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 130px;
-}
 
-/* --- NOVOS ESTILOS PARA O RESUMO DO GRUPO (estilo Monday) --- */
-
-/* A linha de resumo (escondida por padrão) */
-.project-summary-row {
-    display: none; 
-    background-color: #1e293b; /* Mesmo fundo do cabeçalho do grupo */
-    border-bottom: 1px solid #334155;
-    /* Transição suave ao aparecer */
-    opacity: 0;
-    transform: translateY(-5px);
-    animation: fadeInSummary 0.3s ease-out forwards;
-}
-
-@keyframes fadeInSummary {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Célula de resumo genérica */
-.summary-cell {
-    padding: 8px 12px;
-    height: 36px;
-    vertical-align: middle;
-    font-size: 0.8rem;
-    color: #94a3b8; /* Cinza claro */
-    white-space: nowrap;
-}
-
-/* O container da barra de status colorida */
-.status-summary-bar-container {
-    display: flex;
+.project-table-dark {
     width: 100%;
-    height: 16px;
-    border-radius: 4px;
-    overflow: hidden;
-    background-color: #334155; /* Fundo da barra */
+    border-collapse: collapse;
+    font-size: 0.8rem;
 }
-
-/* Cada segmento colorido da barra */
-.status-summary-bar-segment {
-    height: 100%;
-    transition: width 0.5s ease;
-}
-
-/* Cores dos segmentos (baseado nos seus status) */
-.status-summary-bar-segment.status-feito,
-.status-summary-bar-segment.status-concluído { background-color: var(--primary); }
-.status-summary-bar-segment.status-em-andamento { background-color: #f59e0b; }
-.status-summary-bar-segment.status-parado { background-color: #ef4444; }
-.status-summary-bar-segment.status-planejamento { background-color: var(--accent); }
-.status-summary-bar-segment.status-a-fazer { background-color: #64748b; }
-
-/* ============================================
-   MELHORIAS PARA ESTILO MONDAY.COM
-   ============================================ */
-
-/* 1. CABEÇALHO DA TABELA - Mais compacto e definido */
 .project-table-dark thead th {
     background-color: #0f172a;
     border-bottom: 2px solid #334155;
@@ -1133,8 +755,6 @@ input[type="file"]::file-selector-button:hover {
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
-
-/* 2. LINHA DE CABEÇALHO DO GRUPO - Mais destacada */
 .project-header-row {
     background-color: #1e293b;
     font-weight: 600;
@@ -1145,12 +765,11 @@ input[type="file"]::file-selector-button:hover {
     z-index: 9;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    border-top: 8px solid #0f172a;
 }
-
 .project-header-row:hover {
     background-color: #334155;
 }
-
 .project-header-content {
     display: flex;
     align-items: center;
@@ -1158,16 +777,12 @@ input[type="file"]::file-selector-button:hover {
     padding: 14px 10px;
     font-size: 0.9rem;
 }
-
-/* 3. TÍTULO DO PROJETO - Mais destaque */
 .project-title {
     font-size: 0.95rem;
     font-weight: 700;
     color: white;
     flex-grow: 1;
 }
-
-/* 4. CONTADOR DE TAREFAS - Estilo Monday */
 .project-task-count {
     color: #94a3b8;
     font-size: 0.75rem;
@@ -1176,20 +791,15 @@ input[type="file"]::file-selector-button:hover {
     padding: 3px 8px;
     border-radius: 12px;
 }
-
-/* 5. CÉLULAS DE DADOS - Mais compactas */
 .task-data-row td {
     padding: 10px 12px;
     vertical-align: middle;
     height: 44px;
     border-bottom: 1px solid #1e293b;
 }
-
 .task-data-row:hover {
     background-color: #1e293b;
 }
-
-/* 6. CÉLULA DE TÍTULO - Com ícone e hover */
 .task-title-cell {
     padding-left: 35px !important;
     display: flex;
@@ -1200,19 +810,15 @@ input[type="file"]::file-selector-button:hover {
     font-weight: 500;
     color: #e2e8f0;
 }
-
 .task-title-cell:hover {
     color: white;
 }
-
 .task-title-cell .feather {
     color: #64748b;
     width: 16px;
     height: 16px;
     flex-shrink: 0;
 }
-
-/* 7. STATUS - Estilo Monday com cores vibrantes */
 .status-box {
     padding: 6px 12px;
     border-radius: 6px;
@@ -1227,37 +833,28 @@ input[type="file"]::file-selector-button:hover {
     min-width: 100px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .status-box:hover {
     filter: brightness(1.15);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-
-/* Cores dos Status - Vibrantes como Monday */
 .status-box.status-feito,
 .status-box.status-concluído { 
     background-color: #00c875;
 }
-
 .status-box.status-em-andamento { 
     background-color: #fdab3d;
 }
-
 .status-box.status-parado { 
     background-color: #e2445c;
 }
-
 .status-box.status-planejamento { 
     background-color: #579bfc;
 }
-
 .status-box.status-a-fazer { 
     background-color: #c4c4c4;
     color: #323338;
 }
-
-/* 8. TIMELINE - Visual melhorado */
 .timeline-box {
     position: relative;
     width: 100%;
@@ -1272,12 +869,10 @@ input[type="file"]::file-selector-button:hover {
     border: 1px solid #334155;
     transition: all 0.2s ease;
 }
-
 .timeline-box:hover {
     border-color: #64748b;
     background-color: #334155;
 }
-
 .timeline-bar {
     position: absolute;
     height: 100%;
@@ -1286,7 +881,6 @@ input[type="file"]::file-selector-button:hover {
     opacity: 0.8;
     transition: width 0.3s ease;
 }
-
 .timeline-text {
     position: relative;
     z-index: 1;
@@ -1295,8 +889,6 @@ input[type="file"]::file-selector-button:hover {
     color: white;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
-
-/* 9. PESSOA/RESPONSÁVEL - Avatar melhorado */
 .person-cell {
     display: inline-flex;
     align-items: center;
@@ -1307,11 +899,9 @@ input[type="file"]::file-selector-button:hover {
     transition: background-color 0.2s ease;
     max-width: 150px;
 }
-
 .person-cell:hover {
     background-color: #334155;
 }
-
 .person-cell img {
     width: 24px;
     height: 24px;
@@ -1319,7 +909,6 @@ input[type="file"]::file-selector-button:hover {
     object-fit: cover;
     border: 2px solid #475569;
 }
-
 .person-cell span {
     font-size: 0.8rem;
     font-weight: 500;
@@ -1328,17 +917,13 @@ input[type="file"]::file-selector-button:hover {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .person-cell.person-unassigned {
     color: #64748b;
     justify-content: center;
 }
-
 .person-cell.person-unassigned:hover {
     color: #94a3b8;
 }
-
-/* 10. PRIORIDADE - Badges coloridos */
 .priority-badge {
     padding: 4px 10px;
     border-radius: 12px;
@@ -1347,44 +932,34 @@ input[type="file"]::file-selector-button:hover {
     text-transform: uppercase;
     display: inline-block;
 }
-
 .priority-badge.priority-urgente {
     background-color: #e2445c;
     color: white;
 }
-
 .priority-badge.priority-alta {
     background-color: #fdab3d;
     color: white;
 }
-
 .priority-badge.priority-media {
     background-color: #579bfc;
     color: white;
 }
-
 .priority-badge.priority-baixa {
     background-color: #c4c4c4;
     color: #323338;
 }
-
-/* 11. DURAÇÃO - Mais legível */
 .duration-cell {
     font-size: 0.85rem;
     text-align: center;
     color: #cbd5e1;
     font-weight: 600;
 }
-
-/* 12. ESFORÇO - Badges */
 .effort-cell {
     font-size: 0.8rem;
     text-align: center;
     color: #cbd5e1;
     font-weight: 600;
 }
-
-/* 13. DEPENDÊNCIAS - Tags mais visíveis */
 .dependency-tag {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -1395,13 +970,10 @@ input[type="file"]::file-selector-button:hover {
     display: inline-block;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 .dependency-cell-empty {
     color: #475569;
     text-align: center;
 }
-
-/* 14. BOTÃO ADICIONAR TAREFA - Mais discreto */
 .add-task-button-dark {
     cursor: pointer;
     color: #64748b;
@@ -1415,25 +987,20 @@ input[type="file"]::file-selector-button:hover {
     gap: 8px;
     border-radius: 4px;
 }
-
 .add-task-button-dark:hover {
     background-color: #1e293b;
     color: #94a3b8;
 }
-
-/* 15. RESUMO DO GRUPO - Melhor visualização */
 .project-summary-row {
     background-color: #1e293b;
     border-bottom: 2px solid #475569;
 }
-
 .summary-cell {
     padding: 10px 12px;
     font-size: 0.8rem;
     color: #94a3b8;
     font-weight: 600;
 }
-
 .status-summary-bar-container {
     display: flex;
     width: 100%;
@@ -1442,35 +1009,26 @@ input[type="file"]::file-selector-button:hover {
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .status-summary-bar-segment {
     height: 100%;
     transition: width 0.5s ease;
 }
-
-/* Cores dos segmentos - Mesmas do status */
 .status-summary-bar-segment.status-feito,
 .status-summary-bar-segment.status-concluído { 
     background-color: #00c875;
 }
-
 .status-summary-bar-segment.status-em-andamento { 
     background-color: #fdab3d;
 }
-
 .status-summary-bar-segment.status-parado { 
     background-color: #e2445c;
 }
-
 .status-summary-bar-segment.status-planejamento { 
     background-color: #579bfc;
 }
-
 .status-summary-bar-segment.status-a-fazer { 
     background-color: #c4c4c4;
 }
-
-/* 16. CHECKBOX - Estilo Monday */
 .table-checkbox {
     background-color: #1e293b;
     border: 2px solid #475569;
@@ -1480,17 +1038,13 @@ input[type="file"]::file-selector-button:hover {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .table-checkbox:hover {
     border-color: #64748b;
 }
-
 .table-checkbox:checked {
     background-color: #00c875;
     border-color: #00c875;
 }
-
-/* 17. ÍCONES DE AÇÃO - Mais sutis */
 .btn-icon-task {
     background: transparent;
     color: #64748b;
@@ -1499,192 +1053,107 @@ input[type="file"]::file-selector-button:hover {
     opacity: 0;
     transition: all 0.2s ease;
 }
-
 .project-header-row:hover .btn-icon-task,
 .task-data-row:hover .btn-icon-task {
     opacity: 1;
 }
-
 .btn-icon-task:hover {
     background-color: #334155;
     color: white;
 }
-
-/* 18. INDICADOR DE GRUPO EXPANDIDO/COLAPSADO */
 .project-toggle {
     transition: transform 0.3s ease;
     color: #cbd5e1;
 }
-
 .project-header-row.expanded .project-toggle {
     transform: rotate(0deg);
 }
-
 .project-header-row:not(.expanded) .project-toggle {
     transform: rotate(-90deg);
 }
-
-/* 19. ANIMAÇÕES SUAVES */
 .task-data-row,
 .project-summary-row {
     transition: all 0.2s ease;
 }
-
-/* 20. SCROLLBAR CUSTOMIZADA */
 .project-table-container::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
-
 .project-table-container::-webkit-scrollbar-track {
     background: #0f172a;
 }
-
 .project-table-container::-webkit-scrollbar-thumb {
     background: #334155;
     border-radius: 6px;
 }
-
 .project-table-container::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
-/* EM: style.css (adicione ao final) */
-
-/* 1. Faz as bordas da tabela se unirem (essencial para divisórias) */
 .project-table-dark {
-    border-collapse: collapse; /* Mude de 'separate' para 'collapse' */
+    border-collapse: collapse;
 }
-
-/* 2. Adiciona divisória vertical no CABEÇALHO (TH) */
 .project-table-dark thead th {
     border-right: 1px solid #334155;
 }
 .project-table-dark thead th:last-child {
-    border-right: none; /* Remove do último */
+    border-right: none;
 }
-
-/* 3. Estilos para as CÉLULAS DO HEADER DO GRUPO (onde fica o resumo) */
 .project-header-row td {
-    padding: 0; /* O padding será interno */
+    padding: 0;
     height: 48px; 
     vertical-align: middle;
     border-bottom: 2px solid #475569;
-    border-right: 1px solid #334155; /* Divisória vertical */
+    border-right: 1px solid #334155;
 }
 .project-header-row td:last-child {
     border-right: none;
 }
-
-/* 4. Célula especial do Título do Projeto */
 .project-header-row .project-title-cell {
-    padding: 0 !important; /* Reseta o padding */
+    padding: 0 !important;
     font-weight: 700;
     color: white;
-    /* O .project-header-content interno já tem padding */
 }
-
-/* 5. Adiciona divisória vertical nas LINHAS DE TAREFA */
 .task-data-row td {
     border-right: 1px solid #334155;
 }
 .task-data-row td:last-child {
     border-right: none;
 }
-
-/* 6. Estilo para os valores de resumo (Duração, Esforço) */
+.add-task-row {
+    border-bottom: 1px solid #334155;
+}
 .summary-value {
     text-align: center;
     font-size: 0.8rem;
     font-weight: 600;
     color: #cbd5e1;
 }
-
-/* 7. Ajusta a Barra de Status no Header do Grupo */
 .project-header-row .status-summary-bar-container {
-    width: 90%; /* Deixa uma pequena margem */
+    width: 90%;
     margin: 0 auto;
-    height: 18px; /* Mais compacta que a do resumo antigo */
+    height: 18px;
     border-radius: 4px;
 }
-/* --- Estilos do Modal --- */
 
-/* O fundo escuro (overlay) */
-.modal {
-    display: none; /* Escondido por padrão */
+#assigneeModal {
+    z-index: 1005;
+}
+#assigneeModal .modal-overlay {
+    background-color: transparent;
     position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; right: 0; bottom: 0;
 }
-
-/* Quando o modal está aberto (via JS) */
-.modal-open {
-    display: flex; /* Mude para flex para centralizar */
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Overlay escuro */
-}
-
-/* O conteúdo principal do modal */
-.modal-content {
-    position: relative;
-    background-color: #2C2C3A; /* Cor de fundo escura (do seu exemplo) */
-    color: #E0E0E0; /* Texto claro */
-    border-radius: 8px;
-    width: 400px; /* Largura do modal */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    z-index: 1001;
-    font-family: Arial, sans-serif;
-    overflow: hidden; /* Para conter os cantos arredondados */
-}
-
-/* --- Partes Internas do Modal --- */
-
-.modal-header {
-    padding: 16px;
-    border-bottom: 1px solid #444;
-    display: flex;
-    align-items: center;
-}
-
-.search-input {
+#assigneeModal .search-input {
     width: 100%;
     background-color: #1E1E28;
     border: 1px solid #555;
     border-radius: 4px;
-    padding: 10px 12px;
+    padding: 8px 10px 8px 34px;
     color: white;
     font-size: 14px;
 }
-
-.search-input::placeholder {
-    color: #888;
-}
-
-.info-icon {
-    margin-left: 10px;
-    color: #888;
-    cursor: pointer;
-}
-
-.modal-body {
-    padding: 16px;
-}
-
-.suggested-people h4 {
-    margin: 0 0 10px 0;
-    font-size: 13px;
-    color: #AAA;
-    font-weight: normal;
-}
+#assigneeModal .search-input::placeholder { color: #888; }
+#assigneeModal .search-input:focus { outline: none; border-color: #764ba2; }
 
 .person-item {
     display: flex;
@@ -1692,85 +1161,47 @@ input[type="file"]::file-selector-button:hover {
     padding: 8px;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
-
 .person-item:hover {
     background-color: #3A3A4A;
 }
-
-.person-avatar {
+.person-item img.person-avatar {
     width: 28px;
     height: 28px;
-    background-color: #555;
     border-radius: 50%;
     margin-right: 12px;
+    object-fit: cover;
 }
-
-.modal-options {
-    margin-top: 16px;
-    border-top: 1px solid #444;
-    padding-top: 16px;
+.person-item span.person-name {
+    font-size: 14px;
+    color: #E0E0E0;
 }
-
 .option-link {
     display: flex;
     align-items: center;
-    padding: 10px 8px;
-    text-decoration: none;
-    color: #E0E0E0;
+    padding: 8px;
     border-radius: 4px;
     font-size: 14px;
+    color: #E0E0E0;
+    text-decoration: none;
 }
-
 .option-link:hover {
     background-color: #3A3A4A;
 }
-
 .option-link .icon {
     margin-right: 12px;
-    font-size: 18px;
+    color: #94a3b8;
 }
-
-.modal-footer {
-    padding: 16px;
-    background-color: #22222E; /* Um pouco mais escuro */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-}
-
-.notification-toggle {
-    display: flex;
-    align-items: center;
-    color: #BBB;
-}
-
-.notification-toggle .icon {
-    margin-right: 8px;
-    color: #8A91F7; /* Cor azul/roxa do ícone */
-}
-
 .silence-btn {
     background-color: #3A3A4A;
     border: 1px solid #555;
     color: white;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 12px;
 }
-
 .silence-btn:hover {
     background-color: #4A4A5A;
-}
-
-.close-modal-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    color: #888;
-    font-size: 24px;
-    cursor: pointer;
 }
