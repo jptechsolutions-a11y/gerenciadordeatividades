@@ -535,16 +535,50 @@
     <div id="statusModal" class="dropdown-menu-popup">
         </div>
 
+    <div id="assigneeModal" class="modal" style="display: none; justify-content: flex-start; align-items: flex-start;">
+        <div class="modal-overlay" onclick="closeAssigneeModal()"></div>
+        
+        <div class="modal-content" id="assigneeModalContent" style="background-color: #2C2C3A; color: #E0E0E0; width: 300px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; position: absolute; margin: 0; animation: popIn 0.2s ease-out;">
+            
+            <div class="modal-header" style="padding: 12px; border-bottom: 1px solid #444;">
+                <div class="relative" style="width: 100%;">
+                    <i data-feather="search" class="h-4 w-4" style="position: absolute; left: 10px; top: 10px; color: #888;"></i>
+                    <input type="text" id="assigneeSearchInput" class="search-input" placeholder="Pesquise nomes...">
+                    <i data-feather="info" class="h-4 w-4" style="position: absolute; right: 10px; top: 10px; color: #888; cursor: pointer;"></i>
+                </div>
+            </div>
+
+            <div class="modal-body" style="padding: 8px 12px; max-height: 300px; overflow-y: auto;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #AAA; font-weight: normal; padding: 4px 0;">Pessoas sugeridas</h4>
+                <div id="assigneeSuggestedList">
+                </div>
+                
+                <a href="#" onclick="event.preventDefault(); openInviteModalFromAssignee();" class="option-link">
+                    <i data-feather="user-plus" class="h-5 w-5 icon"></i>
+                    <span>Convide um novo membro</span>
+                </a>
+            </div>
+
+            <div class="modal-footer" style="padding: 12px 16px; background-color: #22222E; display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                <div class="notification-toggle" style="display: flex; align-items: center; color: #BBB;">
+                    <i data-feather="bell" class="h-4 w-4 icon" style="margin-right: 8px; color: #8A91F7;"></i>
+                    Os titulares serão notificados
+                </div>
+                <button class="silence-btn">
+                    Silenciar
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <div id="notificationContainer"></div>
 
     <script>
-        // Configuração Inicial (Reutilizando sua API Proxy)
         const SUPABASE_PROXY_URL = '/api/proxy';
     </script>
     <script src="script.js?v=5"></script>
     <script>
-        // Inicializar ícones e PWA
         feather.replace();
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
