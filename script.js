@@ -9,12 +9,26 @@ let chartInstances = {};
 let currentNoteId = null; 
 let currentGroups = []; 
 
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+window.logout = async () => {
+    console.log("Deslogando usuário...");
+    currentUser = null;
+    currentOrg = null;
+    currentProject = null;
+    currentColumns = [];
+    currentGroups = [];
+    localStorage.removeItem('user');
+    localStorage.removeItem('auth_token'); 
+    localStorage.removeItem('current_org_id'); 
+    localStorage.removeItem('last_active_view_id'); 
+    
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) console.error("Erro ao deslogar:", error);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    // ======================================================
-    // ATUALIZAÇÃO: LIMPEZA DE SEGURANÇA (SAFETY CLEANUP)
-    // Força a remoção de classes 'active' de views antigas
-    // que possam estar presas no cache do HTML.
-    // ======================================================
     try {
         console.log("Executando limpeza de segurança de UI...");
         document.querySelectorAll('.view-content').forEach(view => {
@@ -24,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error("Erro na limpeza de segurança:", e);
     }
-    // ======================================================
 
     document.getElementById('taskForm')?.addEventListener('submit', handleTaskFormSubmit);
     document.getElementById('inviteForm')?.addEventListener('submit', handleInviteFormSubmit);
@@ -94,28 +107,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    window.logout = async () => {
-        console.log("Deslogando usuário...");
-        currentUser = null;
-        currentOrg = null;
-        currentProject = null;
-        currentColumns = [];
-        currentGroups = [];
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token'); 
-        localStorage.removeItem('current_org_id'); 
-        localStorage.removeItem('last_active_view_id'); // Limpa a última view
-        
-        const { error } = await supabaseClient.auth.signOut();
-        if (error) console.error("Erro ao deslogar:", error);
-        // onAuthStateChange cuidará do redirecionamento
-    };
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        console.log("Auth Event:", event);
+        if (event === 'SIGNED_OUT') {
+            window.location.href = 'login.html';
+        }
+    });
+
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            console.log("Sessão encontrada. Inicializando app.");
+            
+            initializeApp(session).catch(error => {
+                 console.error("Falha crítica na inicialização do app:", error);
+                 const mainContent = document.getElementById('mainContent') || document.body;
+                 document.body.innerHTML = ''; 
+                 document.body.appendChild(mainContent);
+                 mainContent.style.height = '100vh';
+                 mainContent.style.overflow = 'auto';
+                 document.body.classList.add('system-active');
+
+                 mainContent.innerHTML = `
+                    <div class="container mx-auto px-6 py-8">
+                        <div class="alert alert-error" style="background-color: #fef2f2; border-color: #fecaca; color: #b91c1c; border-width: 1px;">
+                            <h3 class="font-bold text-lg" style="color: #b91c1c;">Erro Crítico de Inicialização</h3>
+                            <p class="mt-2">Não foi possível carregar seu perfil do banco de dados.</p>
+                            <p class="text-sm mt-2"><strong>Causa provável:</strong> Políticas de RLS (Row Level Security) na tabela 'usuarios' estão bloqueando o acesso.</p>
+                            <p class="text-sm mt-1"><strong>Erro detalhado:</strong> ${escapeHTML(error.message)}</p>
+                            <p class="text-sm mt-4"><strong>Ação:</strong> Aplique o script SQL de RLS no seu banco Supabase e tente novamente.</p>
+                            <button class="btn btn-danger" style="background: #dc2626; color: white; margin-top: 1rem;" onclick="logout()">
+                                Sair
+                            </button>
+                        </div>
+                    </div>`;
+                 feather.replace();
+            });
+            
+        } else {
+            console.log("Nenhuma sessão encontrada. Redirecionando para login.");
+            window.location.href = 'login.html';
+        }
+    }).catch(error => {
+        console.error("Erro fatal ao pegar sessão (rede/config?):", error);
+        window.location.href = 'login.html';
+    });
 });
 
 async function initializeApp(session) {
-    
     localStorage.setItem('auth_token', session.access_token);
-    
     const authUser = session.user;
 
     try {
@@ -132,7 +171,6 @@ async function initializeApp(session) {
              };
              const createResponse = await supabaseRequest('usuarios', 'POST', newProfile);
              
-             // VALIDAÇÃO: Se RLS de INSERT falhar, createResponse será [null] ou []
              if (!createResponse || !createResponse[0]) {
                  throw new Error("Falha ao criar o perfil de usuário no banco de dados. (Verifique a política de INSERT na tabela 'usuarios')");
              }
@@ -144,7 +182,6 @@ async function initializeApp(session) {
              console.log("Perfil encontrado!");
         }
         
-        // VALIDAÇÃO: Se a RLS de SELECT falhar, profileResponse pode ser [null]
         if (!currentUser) {
             throw new Error("Falha ao carregar perfil. A política de RLS (SELECT) na tabela 'usuarios' retornou 'null'.");
         }
@@ -165,20 +202,10 @@ async function initializeApp(session) {
         
         redirectToDashboard();
 
-    // ======================================================
-    // AJUSTE CRÍTICO: Lançar erro em vez de chamar logout()
-    // ======================================================
     } catch (error) {
         console.error("Erro detalhado na inicialização:", error);
-        // NÃO chame logout() aqui.
-        // logout(); // <-- REMOVIDO
-
-        // Lança o erro para que o .catch() de getSession() possa tratá-lo.
         throw error;
     }
-    // ======================================================
-    // FIM DO AJUSTE
-    // ======================================================
 }
 
 function redirectToDashboard() {
@@ -365,8 +392,7 @@ async function showMainSystem() {
         console.log("   - Colunas (status):", currentColumns.length);
         console.log("   - Projetos (grupos):", currentGroups.length);
         
-        // --- CORREÇÃO: Carrega a view 'Projetos' (listView) como inicial ---
-        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView'; // <--- Mantido 'listView'
+        const lastViewId = localStorage.getItem('last_active_view_id') || 'listView';
         const activeLink = document.querySelector(`.sidebar .nav-item[href="#${lastViewId.replace('View', '')}"]`);
         
         showView(lastViewId, activeLink); 
@@ -383,7 +409,6 @@ async function showMainSystem() {
                         <i data-feather="alert-circle" class="h-6 w-6 text-red-500 mr-3"></i>
                         <h2 class="text-xl font-bold text-red-900">Erro na Inicialização</h2>
                     </div>
-                    <!-- Mensagem de erro atualizada para refletir o problema de script -->
                     <p class="text-red-700 mb-4">Falha ao carregar dados do quadro: ${escapeHTML(err.message)}</p>
                     <div class="bg-white p-4 rounded border border-red-200 mb-4">
                         <h3 class="font-semibold text-red-900 mb-2">Possíveis causas:</h3>
@@ -482,12 +507,11 @@ function showView(viewId, element = null) {
     const viewEl = document.getElementById(viewId);
     if(viewEl) {
         viewEl.classList.add('active');
-        localStorage.setItem('last_active_view_id', viewId); // <-- SALVA A VIEW ATIVA
+        localStorage.setItem('last_active_view_id', viewId);
     }
 
     document.querySelectorAll('.sidebar nav .nav-item').forEach(item => item.classList.remove('active'));
     
-    // Se nenhum elemento foi passado (ex: no carregamento inicial), encontra o elemento certo
     if (!element) {
          element = document.querySelector(`.sidebar .nav-item[href="#${viewId.replace('View', '')}"]`);
     }
@@ -545,7 +569,6 @@ async function loadActiveProject() {
     try {
         let projetos = await supabaseRequest(`projetos?${orgFilter}&select=id,nome&limit=1&order=created_at.asc`, 'GET');
         
-        // 🔧 CORREÇÃO 1: Filtra projetos válidos
         const projetosValidos = Array.isArray(projetos) ? projetos.filter(p => p && p.id) : [];
 
         if (projetosValidos.length === 0) {
@@ -559,7 +582,6 @@ async function loadActiveProject() {
             
             const createResponse = await supabaseRequest('projetos', 'POST', newProject);
             
-            // 🔧 CORREÇÃO 2: Valida a resposta de criação ANTES de atribuir
             if (!createResponse || !Array.isArray(createResponse) || !createResponse[0] || !createResponse[0].id) {
                 console.error("❌ Resposta inválida ao criar quadro:", createResponse);
                 throw new Error("Falha ao criar quadro padrão. Verifique as permissões RLS da tabela 'projetos'. A resposta foi: " + JSON.stringify(createResponse));
@@ -572,7 +594,6 @@ async function loadActiveProject() {
             console.log("✅ Quadro encontrado:", currentProject);
         }
 
-        // 🔧 CORREÇÃO 3: Valida currentProject (agora com mensagem mais clara)
         if (!currentProject || !currentProject.id) {
             console.error("❌ Erro fatal: currentProject (Quadro) inválido após lógica de carregamento/criação:", currentProject);
             console.error("❌ Isso indica que o Supabase retornou 'null' em vez de dados. Verifique:");
@@ -584,7 +605,6 @@ async function loadActiveProject() {
 
         console.log("✅ Quadro ativo carregado:", currentProject.nome, `(ID: ${currentProject.id})`);
 
-        // 🔧 CORREÇÃO 4: Filtra colunas com segurança
         let cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
         
         if (Array.isArray(cols)) {
@@ -599,7 +619,6 @@ async function loadActiveProject() {
             
             cols = await supabaseRequest(`colunas_kanban?projeto_id=eq.${currentProject.id}&select=id,nome,ordem&order=ordem.asc`, 'GET');
             
-            // 🔧 CORREÇÃO 5: Filtra colunas novamente após criar
             if (Array.isArray(cols)) {
                 currentColumns = cols.filter(c => c && c.id);
             } else {
@@ -613,7 +632,6 @@ async function loadActiveProject() {
         
         console.log("✅ Colunas (Status) carregadas:", currentColumns.length);
 
-        // 🔧 CORREÇÃO 6: Filtra grupos com segurança
         let groups = await supabaseRequest(`grupos_tarefas?projeto_id=eq.${currentProject.id}&select=id,nome,ordem,prioridade&order=ordem.asc`, 'GET');
         
         if (Array.isArray(groups)) {
@@ -647,11 +665,140 @@ async function createDefaultColumns(projectId) {
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
     
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!view.querySelector('.container')) {
-    //      view.innerHTML = `<div class="container mx-auto px-6 py-8">${view.innerHTML}</div>`;
-    // }
+    if (chartInstances.ganttChart) {
+        chartInstances.ganttChart.destroy();
+        chartInstances.ganttChart = null;
+    }
+    if (chartInstances.statusChart) {
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+    }
+    
+    if (!currentProject || !currentProject.id) {
+        console.error("❌ loadDashboardView: currentProject (Quadro) inválido:", currentProject);
+        view.innerHTML = `
+            <div class="container mx-auto px-6 py-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+                <div class="alert alert-error">
+                    <p>Erro: Quadro não carregado corretamente.</p>
+                    <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+                </div>
+            </div>`;
+        return;
+    }
+    
+    if (!currentColumns || currentColumns.length === 0) {
+        console.error("❌ loadDashboardView: Colunas (Status) não carregadas");
+        view.innerHTML = `
+            <div class="container mx-auto px-6 py-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+                <div class="alert alert-error">
+                    <p>Erro: Colunas (Status) não carregadas.</p>
+                    <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
+                </div>
+            </div>`;
+        return;
+    }
+    
+    console.log("📊 Carregando dashboard para quadro:", currentProject.nome);
+    
+    view.innerHTML = `
+        <div class="container mx-auto px-6 py-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">...</span><span class="stat-label">Tarefas Ativas</span></div>
+                <div class="stat-card-dash"><span class="stat-number" id="dashCompletedTasks">...</span><span class="stat-label">Tarefas Concluídas (Mês)</span></div>
+                <div class="stat-card-dash"><span class="stat-number" id="dashDueTasks">...</span><span class="stat-label">Tarefas Vencendo Hoje</span></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md chart-card">
+                    <h3 class="text-xl font-semibold mb-4">Progresso do Projeto (Gantt)</h3>
+                    <div class="relative h-96"><canvas id="ganttChart"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md chart-card">
+                    <h3 class="text-xl font-semibold mb-4">Tarefas por Status</h3>
+                    <div class="relative h-96"><canvas id="statusChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+     `;
 
+    try {
+        const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        const doneColumn = currentColumns.find(col => col.nome.toLowerCase() === 'concluído');
+        const doneColumnId = doneColumn ? doneColumn.id : null;
+        const activeColumnIds = currentColumns.filter(col => col.id !== doneColumnId).map(col => col.id);
+
+        let totalTasks = 0;
+        if (activeColumnIds.length > 0) {
+            const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
+            totalTasks = count;
+        }
+
+        let completedTasks = 0;
+        if (doneColumnId) {
+            const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+            const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=eq.${doneColumnId}&updated_at=gte.${firstDayOfMonth}&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
+            completedTasks = count;
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        let dueTasks = 0;
+        if (activeColumnIds.length > 0) {
+            const { count } = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=eq.${today}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
+            dueTasks = count;
+        }
+
+        document.getElementById('dashTotalTasks').textContent = totalTasks || 0;
+        document.getElementById('dashCompletedTasks').textContent = completedTasks || 0;
+        document.getElementById('dashDueTasks').textContent = dueTasks || 0;
+    } catch (error) {
+        console.error("❌ Erro ao carregar stats do dashboard:", error);
+    }
+
+    renderStatusChart();
+    renderGanttChart();
+}
+
+async function renderStatusChart() {
+    if (chartInstances.statusChart) {
+        chartInstances.statusChart.destroy();
+        chartInstances.statusChart = null;
+    }
+    
+    if (!currentProject || currentColumns.length === 0) return;
+    const ctx = document.getElementById('statusChart')?.getContext('2d');
+    if (!ctx) {
+        console.warn("Canvas 'statusChart' não encontrado para renderizar.");
+        return;
+    }
+
+    try {
+        const projectFilter = `projeto_id=eq.${currentProject.id}`;
+        const counts = await Promise.all(currentColumns.map(async (col) => {
+            const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=eq.${col.id}&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
+            return count || 0;
+        }));
+        const backgroundColors = [ '#0077B6', '#F77F00', '#00D4AA', '#00B4D8', '#90E0EF', '#023047'];
+        
+        chartInstances.statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: currentColumns.map(col => col.nome),
+                datasets: [{
+                    label: 'Tarefas por Status',
+                    data: counts,
+                    backgroundColor: backgroundColors.slice(0, currentColumns.length),
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    } catch (error) {
+        console.error("Erro ao renderizar gráfico de status:", error);
+    }
+}
+
+async function renderGanttChart() {
     if (chartInstances.ganttChart) {
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
@@ -738,11 +885,6 @@ let draggedTask = null;
 async function loadKanbanView() {
     const kanbanView = document.getElementById('projetosView'); 
     if (!kanbanView) return;
-    
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!kanbanView.querySelector('.container')) {
-    //      kanbanView.innerHTML = `<div class="container mx-auto px-6 py-8">${kanbanView.innerHTML}</div>`;
-    // }
     
     const kanbanBoard = document.getElementById('kanbanBoard');
     if (!kanbanBoard) {
@@ -1170,11 +1312,6 @@ async function handleProjectFormSubmit(e) {
 async function loadTimeView() {
     const teamView = document.getElementById('timeView');
     
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!teamView.querySelector('.container')) {
-    //      teamView.innerHTML = `<div class="container mx-auto px-6 py-8">${teamView.innerHTML}</div>`;
-    // }
-    
     const teamBody = document.getElementById('teamTableBody');
     const inviteCodeInput = document.getElementById('teamInviteCodeDisplay');
     teamBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div> Carregando membros...</td></tr>';
@@ -1293,18 +1430,6 @@ async function handleInviteFormSubmit(e) {
 }
 
 async function removeMember(userIdToRemove) {
-     // JP: Troquei o window.confirm por um modal customizado (ou simplesmente removi a confirmação para simplificar)
-     // A instrução diz para NUNCA usar alert() ou confirm().
-     // Vamos assumir que o clique já é a confirmação, ou idealmente, implementar um modal customizado.
-     // Por ora, vou remover a confirmação para evitar o uso de window.confirm.
-     
-     // const confirmation = window.confirm(`Tem certeza que deseja remover este membro do time? Esta ação não pode ser desfeita.`);
-     // if (!confirmation) {
-     //    showNotification("Remoção cancelada.", "info");
-     //    return;
-     // }
-     
-     // Ação direta (idealmente, chame um modal de confirmação aqui)
      showNotification("Removendo membro...", "info");
 
      try {
@@ -1341,11 +1466,6 @@ function copyInviteCode() {
 
 async function loadNotasView() {
     const notasView = document.getElementById('notasView');
-    
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!notasView.querySelector('.container')) {
-    //      notasView.innerHTML = `<div class="container mx-auto px-6 py-8">${notasView.innerHTML}</div>`;
-    // }
     
     const list = document.getElementById('noteList');
     list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>
@@ -1462,11 +1582,6 @@ async function saveNote() {
 async function loadCalendarView() {
     const calView = document.getElementById('calendarioView');
     
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!calView.querySelector('.container')) {
-    //      calView.innerHTML = `<div class="container mx-auto px-6 py-8">${calView.innerHTML}</div>`;
-    // }
-    
     const container = document.getElementById('calendarContainer');
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Carregando tarefas...</div>`;
 
@@ -1575,11 +1690,6 @@ function escapeHTML(str) {
 
 function loadPerfilView() {
     const perfilView = document.getElementById('perfilView');
-    
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!perfilView.querySelector('.container')) {
-    //      perfilView.innerHTML = `<div class="container mx-auto px-6 py-8">${perfilView.innerHTML}</div>`;
-    // }
     
     const form = document.getElementById('perfilForm');
     const alertContainer = document.getElementById('perfilAlert');
@@ -1703,11 +1813,6 @@ async function handlePerfilFormSubmit(event) {
 async function loadTimelineView() {
     const timelineView = document.getElementById('timelineView');
     
-    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
-    // if (!timelineView.querySelector('.container')) {
-    //      timelineView.innerHTML = `<div class="container mx-auto px-6 py-8">${timelineView.innerHTML}</div>`;
-    // }
-    
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando timeline...</div>';
 
@@ -1793,7 +1898,7 @@ async function loadProjectListView(forceReload = false) {
 
     const loadingHTML = `
         <tr id="projectListLoading">
-            <td colspan="12"> <!-- Ação: Colspan atualizado para 12 -->
+            <td colspan="12">
                 <div class="loading" style="color: #94a3b8; background: #1e293b; padding: 40px 0;">
                     <div class="spinner" style="border-top-color: var(--primary);"></div>
                     Carregando projetos...
@@ -1814,13 +1919,11 @@ async function loadProjectListView(forceReload = false) {
 
         const projectFilter = `projeto_id=eq.${currentProject.id}`;
 
-        // Ação: Adicionado 'esforco_utilizado' na query principal
         const query = `grupos_tarefas?${projectFilter}&select=id,nome,prioridade,tarefas(id,titulo,data_inicio,data_entrega,esforco_previsto,esforco_utilizado,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome))&order=ordem.asc&tarefas.order=ordem_na_coluna.asc`;
         
         console.log("Query Lista de Projetos:", query);
         const projectsList = await supabaseRequest(query, 'GET');
 
-        // Ação: Adicionado 'esforco_utilizado' na query de tarefas sem grupo
         const tasksWithoutGroupQuery = `tarefas?${projectFilter}&grupo_id=is.null&select=id,titulo,data_inicio,data_entrega,esforco_previsto,esforco_utilizado,data_conclusao_real,grupo_id,coluna_id,assignee:assignee_id(id,nome,profile_picture_url),status:coluna_id(id,nome)&order=ordem_na_coluna.asc`;
         
         console.log("Query Tarefas Sem Grupo:", tasksWithoutGroupQuery);
@@ -1875,7 +1978,7 @@ function createProjectHeaderRow(project) {
     tr.className = 'project-header-row expanded'; 
     tr.dataset.projectId = project.id;
     tr.onclick = (e) => {
-        if (e.target.closest('.btn-icon-task') || e.target.closest('.table-checkbox')) return; // Ação: Não colapsar ao clicar no checkbox ou botão
+        if (e.target.closest('.btn-icon-task') || e.target.closest('.table-checkbox')) return;
         toggleProjectGroup(project.id);
     };
 
@@ -1883,7 +1986,7 @@ function createProjectHeaderRow(project) {
     const priority = project.prioridade || 'baixa';
 
     tr.innerHTML = `
-        <td colspan="12"> <!-- Ação: Colspan atualizado para 12 -->
+        <td colspan="12">
             <div class="project-header-content">
                 <i data-feather="chevron-down" class="h-5 w-5 project-toggle"></i>
                 <span class="project-priority-dot priority-${priority}" title="Prioridade: ${priority}"></span>
@@ -1898,23 +2001,19 @@ function createProjectHeaderRow(project) {
     return tr;
 }
 
-// AÇÃO: Função TOTALMENTE REESCRITA
 function createTaskDataRow(task) {
     const tr = document.createElement('tr');
     tr.className = 'task-data-row';
     tr.dataset.taskId = task.id;
     tr.dataset.projectId = task.grupo_id || 'no-group';
     
-    // 1. Checkbox
     const checkboxHtml = `<td><input type="checkbox" class="table-checkbox" onclick="event.stopPropagation();" /></td>`;
 
-    // 2. Tarefa (Clicável para abrir modal)
     const taskTitleHtml = `
         <td class="task-title-cell" onclick='openTaskModal(${JSON.stringify(task)})'>
             <i data-feather="file-text" class="h-4 w-4"></i> ${escapeHTML(task.titulo)}
         </td>`;
 
-    // 3. Responsável
     let assigneeHtml = '';
     if (task.assignee) {
         assigneeHtml = `
@@ -1930,8 +2029,6 @@ function createTaskDataRow(task) {
     }
     const assigneeCell = `<td>${assigneeHtml}</td>`;
 
-    // 4. Status (Clicável)
-    // CORREÇÃO: Usar o nome da coluna (status) ou 'a-fazer' como fallback
     const statusName = task.status ? task.status.nome : 'A Fazer';
     const statusSlug = statusName.toLowerCase().replace(/ /g, '-');
     
@@ -1941,18 +2038,16 @@ function createTaskDataRow(task) {
         </div>`;
     const statusCell = `<td>${statusHtml}</td>`;
 
-    // 5. Timeline (Clicável)
     let timelineHtml = '<div class="timeline-box" onclick="event.stopPropagation(); openTimelineModal(\''+task.id+'\')">';
     if (task.data_inicio && task.data_entrega) {
         const start = new Date(task.data_inicio).getTime();
         const end = new Date(task.data_entrega).getTime();
         const today = new Date().getTime();
-        const totalDuration = (end - start) > 0 ? (end - start) : (24 * 60 * 60 * 1000); // Evita divisão por zero, assume 1 dia
+        const totalDuration = (end - start) > 0 ? (end - start) : (24 * 60 * 60 * 1000);
         const elapsed = today - start;
         let progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
 
-        // Define a cor da barra
-        const color = (statusSlug === 'concluído' || statusSlug === 'feito') ? 'var(--primary)' : '#f59e0b'; // Verde JP ou Laranja
+        const color = (statusSlug === 'concluído' || statusSlug === 'feito') ? 'var(--primary)' : '#f59e0b';
         
         timelineHtml += `<div class="timeline-bar" style="background-color: ${color}; width: ${progress}%;"></div>`;
         timelineHtml += `<span class="timeline-text">${formatDateRange(task.data_inicio, task.data_entrega)}</span>`;
@@ -1962,34 +2057,27 @@ function createTaskDataRow(task) {
     timelineHtml += '</div>';
     const timelineCell = `<td>${timelineHtml}</td>`;
     
-    // 6. Duração
     let duracao = '-';
     if (task.data_inicio && task.data_entrega) {
         const start = new Date(task.data_inicio);
         const end = new Date(task.data_entrega);
         const diffTime = Math.abs(end - start);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 para incluir o dia de início
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         duracao = `${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
     }
     const duracaoCell = `<td class="duration-cell">${duracao}</td>`;
 
-    // 7. Dependente de (Exemplo estático, idealmente viria do DB)
-    // TODO: Adicionar lógica de dependências se existir no 'task'
     const dependenteCell = `<td class="dependency-cell"><span class="dependency-cell-empty">-</span></td>`;
 
-    // 8. Esforço Previsto
     const esforcoPrevisto = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
     const esforcoPrevistoCell = `<td class="effort-cell">${esforcoPrevisto}</td>`;
 
-    // 9. Esforço Utilizado
     const esforcoUtilizado = task.esforco_utilizado ? `${task.esforco_utilizado}h` : '-';
     const esforcoUtilizadoCell = `<td class="effort-cell">${esforcoUtilizado}</td>`;
 
-    // 10. Data de Conclusão
     const dataConclusao = task.data_conclusao_real ? new Date(task.data_conclusao_real + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '-';
     const dataConclusaoCell = `<td class="date-cell">${dataConclusao}</td>`;
 
-    // 11. Status de Conclusão
     const today = new Date(); today.setHours(0,0,0,0);
     const dueDate = task.data_entrega ? new Date(task.data_entrega + 'T00:00:00') : null;
     const doneDate = task.data_conclusao_real ? new Date(task.data_conclusao_real + 'T00:00:00') : null;
@@ -2007,10 +2095,8 @@ function createTaskDataRow(task) {
     }
     const completionCell = `<td>${completionHtml}</td>`;
 
-    // 12. Mais Opções
     const moreCell = `<td><button class="btn-icon-task" style="opacity: 0.5; margin: 0 auto; display: block;" onclick="event.stopPropagation();"><i data-feather="more-horizontal" class="h-4 w-4"></i></button></td>`;
 
-    // Monta a linha completa
     tr.innerHTML = 
         checkboxHtml +
         taskTitleHtml +
@@ -2043,7 +2129,7 @@ function createAddTaskRow(projectId) {
     const groupId = (projectId === 'no-group' || !projectId) ? '' : projectId;
 
     tr.innerHTML = `
-        <td colspan="12"> <!-- Ação: Colspan atualizado para 12 -->
+        <td colspan="12">
             <div class="add-task-button-dark" onclick="openTaskModal(null, null, '${groupId}')">
                 <i data-feather="plus" class="h-4 w-4"></i> Adicionar Tarefa
             </div>
@@ -2072,15 +2158,11 @@ function openAssigneeModal(taskId) {
     showNotification("Modal de responsável ainda não implementado.", "info");
 }
 
-// ===========================================
-// CORREÇÃO DO ERRO
-// ===========================================
 function openStatusModal(event, taskId, currentStatus) {
     event.stopPropagation(); 
     console.log("Abrir modal de Status para task:", taskId, "Status atual:", currentStatus);
     
     const statusModal = document.getElementById('statusModal');
-    // REMOVIDO: const statusModalContent = document.getElementById('statusModalContent');
     const overlay = document.querySelector('.modal-overlay-transparent');
     
     const rect = event.target.getBoundingClientRect();
@@ -2088,31 +2170,25 @@ function openStatusModal(event, taskId, currentStatus) {
     statusModal.style.left = `max(10px, min(${rect.left + (rect.width / 2) - 100}px, ${window.innerWidth - 210}px))`;
     
     statusModal.style.display = 'block';
-    // REMOVIDO: statusModalContent.style.display = 'block';
     overlay.style.display = 'block';
 
-    statusModal.innerHTML = ''; // ALTERADO de statusModalContent
+    statusModal.innerHTML = '';
     currentColumns.forEach(col => {
         const statusSlug = col.nome.toLowerCase().replace(/ /g, '-');
         const option = document.createElement('div');
         option.className = `status-option status-box status-${statusSlug}`;
         option.textContent = col.nome;
         option.onclick = () => updateTaskStatus(taskId, col.id);
-        statusModal.appendChild(option); // ALTERADO de statusModalContent
+        statusModal.appendChild(option);
     });
 
     const closeListener = (e) => {
         statusModal.style.display = 'none';
-        // REMOVIDO: statusModalContent.style.display = 'none';
         overlay.style.display = 'none';
         overlay.removeEventListener('click', closeListener);
     };
     overlay.addEventListener('click', closeListener);
 }
-// ===========================================
-// FIM DA CORREÇÃO
-// ===========================================
-
 
 async function updateTaskStatus(taskId, newColunaId) {
      console.log(`Atualizando task ${taskId} para coluna ${newColunaId}`);
