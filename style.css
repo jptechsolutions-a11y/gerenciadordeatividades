@@ -1548,3 +1548,61 @@ input[type="file"]::file-selector-button:hover {
 .project-table-container::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+/* EM: style.css (adicione ao final) */
+
+/* 1. Faz as bordas da tabela se unirem (essencial para divisórias) */
+.project-table-dark {
+    border-collapse: collapse; /* Mude de 'separate' para 'collapse' */
+}
+
+/* 2. Adiciona divisória vertical no CABEÇALHO (TH) */
+.project-table-dark thead th {
+    border-right: 1px solid #334155;
+}
+.project-table-dark thead th:last-child {
+    border-right: none; /* Remove do último */
+}
+
+/* 3. Estilos para as CÉLULAS DO HEADER DO GRUPO (onde fica o resumo) */
+.project-header-row td {
+    padding: 0; /* O padding será interno */
+    height: 48px; 
+    vertical-align: middle;
+    border-bottom: 2px solid #475569;
+    border-right: 1px solid #334155; /* Divisória vertical */
+}
+.project-header-row td:last-child {
+    border-right: none;
+}
+
+/* 4. Célula especial do Título do Projeto */
+.project-header-row .project-title-cell {
+    padding: 0 !important; /* Reseta o padding */
+    font-weight: 700;
+    color: white;
+    /* O .project-header-content interno já tem padding */
+}
+
+/* 5. Adiciona divisória vertical nas LINHAS DE TAREFA */
+.task-data-row td {
+    border-right: 1px solid #334155;
+}
+.task-data-row td:last-child {
+    border-right: none;
+}
+
+/* 6. Estilo para os valores de resumo (Duração, Esforço) */
+.summary-value {
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+/* 7. Ajusta a Barra de Status no Header do Grupo */
+.project-header-row .status-summary-bar-container {
+    width: 90%; /* Deixa uma pequena margem */
+    margin: 0 auto;
+    height: 18px; /* Mais compacta que a do resumo antigo */
+    border-radius: 4px;
+}
