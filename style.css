@@ -1112,3 +1112,439 @@ input[type="file"]::file-selector-button:hover {
 .status-summary-bar-segment.status-parado { background-color: #ef4444; }
 .status-summary-bar-segment.status-planejamento { background-color: var(--accent); }
 .status-summary-bar-segment.status-a-fazer { background-color: #64748b; }
+
+/* ============================================
+   MELHORIAS PARA ESTILO MONDAY.COM
+   ============================================ */
+
+/* 1. CABEÇALHO DA TABELA - Mais compacto e definido */
+.project-table-dark thead th {
+    background-color: #0f172a;
+    border-bottom: 2px solid #334155;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #94a3b8;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* 2. LINHA DE CABEÇALHO DO GRUPO - Mais destacada */
+.project-header-row {
+    background-color: #1e293b;
+    font-weight: 600;
+    color: white;
+    border-bottom: 2px solid #475569;
+    position: sticky;
+    top: 39px;
+    z-index: 9;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.project-header-row:hover {
+    background-color: #334155;
+}
+
+.project-header-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 10px;
+    font-size: 0.9rem;
+}
+
+/* 3. TÍTULO DO PROJETO - Mais destaque */
+.project-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    flex-grow: 1;
+}
+
+/* 4. CONTADOR DE TAREFAS - Estilo Monday */
+.project-task-count {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(148, 163, 184, 0.1);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+/* 5. CÉLULAS DE DADOS - Mais compactas */
+.task-data-row td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    height: 44px;
+    border-bottom: 1px solid #1e293b;
+}
+
+.task-data-row:hover {
+    background-color: #1e293b;
+}
+
+/* 6. CÉLULA DE TÍTULO - Com ícone e hover */
+.task-title-cell {
+    padding-left: 35px !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+.task-title-cell:hover {
+    color: white;
+}
+
+.task-title-cell .feather {
+    color: #64748b;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* 7. STATUS - Estilo Monday com cores vibrantes */
+.status-box {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: white;
+    text-transform: capitalize;
+    display: inline-block;
+    min-width: 100px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-box:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Cores dos Status - Vibrantes como Monday */
+.status-box.status-feito,
+.status-box.status-concluído { 
+    background-color: #00c875;
+}
+
+.status-box.status-em-andamento { 
+    background-color: #fdab3d;
+}
+
+.status-box.status-parado { 
+    background-color: #e2445c;
+}
+
+.status-box.status-planejamento { 
+    background-color: #579bfc;
+}
+
+.status-box.status-a-fazer { 
+    background-color: #c4c4c4;
+    color: #323338;
+}
+
+/* 8. TIMELINE - Visual melhorado */
+.timeline-box {
+    position: relative;
+    width: 100%;
+    height: 28px;
+    background-color: #1e293b;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #334155;
+    transition: all 0.2s ease;
+}
+
+.timeline-box:hover {
+    border-color: #64748b;
+    background-color: #334155;
+}
+
+.timeline-bar {
+    position: absolute;
+    height: 100%;
+    left: 0;
+    border-radius: 6px;
+    opacity: 0.8;
+    transition: width 0.3s ease;
+}
+
+.timeline-text {
+    position: relative;
+    z-index: 1;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* 9. PESSOA/RESPONSÁVEL - Avatar melhorado */
+.person-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    max-width: 150px;
+}
+
+.person-cell:hover {
+    background-color: #334155;
+}
+
+.person-cell img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #475569;
+}
+
+.person-cell span {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.person-cell.person-unassigned {
+    color: #64748b;
+    justify-content: center;
+}
+
+.person-cell.person-unassigned:hover {
+    color: #94a3b8;
+}
+
+/* 10. PRIORIDADE - Badges coloridos */
+.priority-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.priority-badge.priority-urgente {
+    background-color: #e2445c;
+    color: white;
+}
+
+.priority-badge.priority-alta {
+    background-color: #fdab3d;
+    color: white;
+}
+
+.priority-badge.priority-media {
+    background-color: #579bfc;
+    color: white;
+}
+
+.priority-badge.priority-baixa {
+    background-color: #c4c4c4;
+    color: #323338;
+}
+
+/* 11. DURAÇÃO - Mais legível */
+.duration-cell {
+    font-size: 0.85rem;
+    text-align: center;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+/* 12. ESFORÇO - Badges */
+.effort-cell {
+    font-size: 0.8rem;
+    text-align: center;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+/* 13. DEPENDÊNCIAS - Tags mais visíveis */
+.dependency-tag {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dependency-cell-empty {
+    color: #475569;
+    text-align: center;
+}
+
+/* 14. BOTÃO ADICIONAR TAREFA - Mais discreto */
+.add-task-button-dark {
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    padding: 10px 12px;
+    padding-left: 35px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px;
+}
+
+.add-task-button-dark:hover {
+    background-color: #1e293b;
+    color: #94a3b8;
+}
+
+/* 15. RESUMO DO GRUPO - Melhor visualização */
+.project-summary-row {
+    background-color: #1e293b;
+    border-bottom: 2px solid #475569;
+}
+
+.summary-cell {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.status-summary-bar-container {
+    display: flex;
+    width: 100%;
+    height: 20px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-summary-bar-segment {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+/* Cores dos segmentos - Mesmas do status */
+.status-summary-bar-segment.status-feito,
+.status-summary-bar-segment.status-concluído { 
+    background-color: #00c875;
+}
+
+.status-summary-bar-segment.status-em-andamento { 
+    background-color: #fdab3d;
+}
+
+.status-summary-bar-segment.status-parado { 
+    background-color: #e2445c;
+}
+
+.status-summary-bar-segment.status-planejamento { 
+    background-color: #579bfc;
+}
+
+.status-summary-bar-segment.status-a-fazer { 
+    background-color: #c4c4c4;
+}
+
+/* 16. CHECKBOX - Estilo Monday */
+.table-checkbox {
+    background-color: #1e293b;
+    border: 2px solid #475569;
+    border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.table-checkbox:hover {
+    border-color: #64748b;
+}
+
+.table-checkbox:checked {
+    background-color: #00c875;
+    border-color: #00c875;
+}
+
+/* 17. ÍCONES DE AÇÃO - Mais sutis */
+.btn-icon-task {
+    background: transparent;
+    color: #64748b;
+    padding: 6px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.project-header-row:hover .btn-icon-task,
+.task-data-row:hover .btn-icon-task {
+    opacity: 1;
+}
+
+.btn-icon-task:hover {
+    background-color: #334155;
+    color: white;
+}
+
+/* 18. INDICADOR DE GRUPO EXPANDIDO/COLAPSADO */
+.project-toggle {
+    transition: transform 0.3s ease;
+    color: #cbd5e1;
+}
+
+.project-header-row.expanded .project-toggle {
+    transform: rotate(0deg);
+}
+
+.project-header-row:not(.expanded) .project-toggle {
+    transform: rotate(-90deg);
+}
+
+/* 19. ANIMAÇÕES SUAVES */
+.task-data-row,
+.project-summary-row {
+    transition: all 0.2s ease;
+}
+
+/* 20. SCROLLBAR CUSTOMIZADA */
+.project-table-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.project-table-container::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+.project-table-container::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 6px;
+}
+
+.project-table-container::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
