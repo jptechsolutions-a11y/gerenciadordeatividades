@@ -94,73 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const { createClient } = supabase;
-    
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        console.log("Auth Event:", event);
-        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-            if (session) {
-                // Não é mais necessário chamar initializeApp aqui,
-                // getSession() abaixo cuidará disso.
-            }
-        } else if (event === 'SIGNED_OUT') {
-            window.location.href = 'login.html';
-        }
-    });
-
-    // ======================================================
-    // AJUSTE CRÍTICO: Capturar falhas na inicialização
-    // ======================================================
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-            console.log("Sessão encontrada. Inicializando app.");
-            
-            // ADICIONAMOS UM .catch() AQUI:
-            // Se initializeApp() falhar (ex: RLS bloqueia perfil),
-            // este .catch() será acionado.
-            initializeApp(session).catch(error => {
-                 console.error("Falha crítica na inicialização do app:", error);
-                 
-                 // Mostra o erro na tela de forma segura
-                 const mainContent = document.getElementById('mainContent') || document.body;
-                 
-                 // Limpa a tela para mostrar apenas o erro
-                 document.body.innerHTML = ''; 
-                 document.body.appendChild(mainContent);
-                 mainContent.style.height = '100vh';
-                 mainContent.style.overflow = 'auto';
-                 document.body.classList.add('system-active'); // Fundo claro
-
-                 mainContent.innerHTML = `
-                    <div class="container mx-auto px-6 py-8">
-                        <div class="alert alert-error" style="background-color: #fef2f2; border-color: #fecaca; color: #b91c1c; border-width: 1px;">
-                            <h3 class="font-bold text-lg" style="color: #b91c1c;">Erro Crítico de Inicialização</h3>
-                            <p class="mt-2">Não foi possível carregar seu perfil do banco de dados.</p>
-                            <p class="text-sm mt-2"><strong>Causa provável:</strong> Políticas de RLS (Row Level Security) na tabela 'usuarios' estão bloqueando o acesso.</p>
-                            <p class="text-sm mt-1"><strong>Erro detalhado:</strong> ${escapeHTML(error.message)}</p>
-                            <p class="text-sm mt-4"><strong>Ação:</strong> Aplique o script SQL de RLS no seu banco Supabase e tente novamente.</p>
-                            <button class="btn btn-danger" style="background: #dc2626; color: white; margin-top: 1rem;" onclick="logout()">
-                                Sair
-                            </button>
-                        </div>
-                    </div>`;
-                 // Não chame logout() automaticamente, pois causa loop.
-            });
-            
-        } else {
-            console.log("Nenhuma sessão encontrada. Redirecionando para login.");
-            window.location.href = 'login.html';
-        }
-    }).catch(error => {
-        console.error("Erro fatal ao pegar sessão (rede/config?):", error);
-        window.location.href = 'login.html';
-    });
-    // ======================================================
-    // FIM DO AJUSTE CRÍTICO
-    // ======================================================
-
     window.logout = async () => {
         console.log("Deslogando usuário...");
         currentUser = null;
@@ -714,140 +647,11 @@ async function createDefaultColumns(projectId) {
 async function loadDashboardView() {
     const view = document.getElementById('dashboardView');
     
-    if (chartInstances.ganttChart) {
-        chartInstances.ganttChart.destroy();
-        chartInstances.ganttChart = null;
-    }
-    if (chartInstances.statusChart) {
-        chartInstances.statusChart.destroy();
-        chartInstances.statusChart = null;
-    }
-    
-    if (!currentProject || !currentProject.id) {
-        console.error("❌ loadDashboardView: currentProject (Quadro) inválido:", currentProject);
-        view.innerHTML = `
-            <div class="container mx-auto px-6 py-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
-                <div class="alert alert-error">
-                    <p>Erro: Quadro não carregado corretamente.</p>
-                    <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
-                </div>
-            </div>`;
-        return;
-    }
-    
-    if (!currentColumns || currentColumns.length === 0) {
-        console.error("❌ loadDashboardView: Colunas (Status) não carregadas");
-        view.innerHTML = `
-            <div class="container mx-auto px-6 py-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
-                <div class="alert alert-error">
-                    <p>Erro: Colunas (Status) não carregadas.</p>
-                    <button class="btn btn-primary mt-4" onclick="location.reload()">Recarregar</button>
-                </div>
-            </div>`;
-        return;
-    }
-    
-    console.log("📊 Carregando dashboard para quadro:", currentProject.nome);
-    
-    view.innerHTML = `
-        <div class="container mx-auto px-6 py-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="stat-card-dash"><span class="stat-number" id="dashTotalTasks">...</span><span class="stat-label">Tarefas Ativas</span></div>
-                <div class="stat-card-dash"><span class="stat-number" id="dashCompletedTasks">...</span><span class="stat-label">Tarefas Concluídas (Mês)</span></div>
-                <div class="stat-card-dash"><span class="stat-number" id="dashDueTasks">...</span><span class="stat-label">Tarefas Vencendo Hoje</span></div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow-md chart-card">
-                    <h3 class="text-xl font-semibold mb-4">Progresso do Projeto (Gantt)</h3>
-                    <div class="relative h-96"><canvas id="ganttChart"></canvas></div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md chart-card">
-                    <h3 class="text-xl font-semibold mb-4">Tarefas por Status</h3>
-                    <div class="relative h-96"><canvas id="statusChart"></canvas></div>
-                </div>
-            </div>
-        </div>
-     `;
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!view.querySelector('.container')) {
+    //      view.innerHTML = `<div class="container mx-auto px-6 py-8">${view.innerHTML}</div>`;
+    // }
 
-    try {
-        const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        const doneColumn = currentColumns.find(col => col.nome.toLowerCase() === 'concluído');
-        const doneColumnId = doneColumn ? doneColumn.id : null;
-        const activeColumnIds = currentColumns.filter(col => col.id !== doneColumnId).map(col => col.id);
-
-        let totalTasks = 0;
-        if (activeColumnIds.length > 0) {
-            const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
-            totalTasks = count;
-        }
-
-        let completedTasks = 0;
-        if (doneColumnId) {
-            const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-            const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=eq.${doneColumnId}&updated_at=gte.${firstDayOfMonth}&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
-            completedTasks = count;
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        let dueTasks = 0;
-        if (activeColumnIds.length > 0) {
-            const { count } = await supabaseRequest(`tarefas?${projectFilter}&data_entrega=eq.${today}&coluna_id=in.(${activeColumnIds.join(',')})&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
-            dueTasks = count;
-        }
-
-        document.getElementById('dashTotalTasks').textContent = totalTasks || 0;
-        document.getElementById('dashCompletedTasks').textContent = completedTasks || 0;
-        document.getElementById('dashDueTasks').textContent = dueTasks || 0;
-    } catch (error) {
-        console.error("❌ Erro ao carregar stats do dashboard:", error);
-    }
-
-    renderStatusChart();
-    renderGanttChart();
-}
-
-async function renderStatusChart() {
-    if (chartInstances.statusChart) {
-        chartInstances.statusChart.destroy();
-        chartInstances.statusChart = null;
-    }
-    
-    if (!currentProject || currentColumns.length === 0) return;
-    const ctx = document.getElementById('statusChart')?.getContext('2d');
-    if (!ctx) {
-        console.warn("Canvas 'statusChart' não encontrado para renderizar.");
-        return;
-    }
-
-    try {
-        const projectFilter = `projeto_id=eq.${currentProject.id}`;
-        const counts = await Promise.all(currentColumns.map(async (col) => {
-            const { count } = await supabaseRequest(`tarefas?${projectFilter}&coluna_id=eq.${col.id}&select=id`, 'GET', null, { 'Prefer': 'count=exact' });
-            return count || 0;
-        }));
-        const backgroundColors = [ '#0077B6', '#F77F00', '#00D4AA', '#00B4D8', '#90E0EF', '#023047'];
-        
-        chartInstances.statusChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: currentColumns.map(col => col.nome),
-                datasets: [{
-                    label: 'Tarefas por Status',
-                    data: counts,
-                    backgroundColor: backgroundColors.slice(0, currentColumns.length),
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    } catch (error) {
-        console.error("Erro ao renderizar gráfico de status:", error);
-    }
-}
-
-async function renderGanttChart() {
     if (chartInstances.ganttChart) {
         chartInstances.ganttChart.destroy();
         chartInstances.ganttChart = null;
@@ -935,9 +739,10 @@ async function loadKanbanView() {
     const kanbanView = document.getElementById('projetosView'); 
     if (!kanbanView) return;
     
-    if (!kanbanView.querySelector('.container')) {
-         kanbanView.innerHTML = `<div class="container mx-auto px-6 py-8">${kanbanView.innerHTML}</div>`;
-    }
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!kanbanView.querySelector('.container')) {
+    //      kanbanView.innerHTML = `<div class="container mx-auto px-6 py-8">${kanbanView.innerHTML}</div>`;
+    // }
     
     const kanbanBoard = document.getElementById('kanbanBoard');
     if (!kanbanBoard) {
@@ -1364,9 +1169,11 @@ async function handleProjectFormSubmit(e) {
 
 async function loadTimeView() {
     const teamView = document.getElementById('timeView');
-    if (!teamView.querySelector('.container')) {
-         teamView.innerHTML = `<div class="container mx-auto px-6 py-8">${teamView.innerHTML}</div>`;
-    }
+    
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!teamView.querySelector('.container')) {
+    //      teamView.innerHTML = `<div class="container mx-auto px-6 py-8">${teamView.innerHTML}</div>`;
+    // }
     
     const teamBody = document.getElementById('teamTableBody');
     const inviteCodeInput = document.getElementById('teamInviteCodeDisplay');
@@ -1534,9 +1341,11 @@ function copyInviteCode() {
 
 async function loadNotasView() {
     const notasView = document.getElementById('notasView');
-    if (!notasView.querySelector('.container')) {
-         notasView.innerHTML = `<div class="container mx-auto px-6 py-8">${notasView.innerHTML}</div>`;
-    }
+    
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!notasView.querySelector('.container')) {
+    //      notasView.innerHTML = `<div class="container mx-auto px-6 py-8">${notasView.innerHTML}</div>`;
+    // }
     
     const list = document.getElementById('noteList');
     list.innerHTML = `<button class="btn btn-primary w-full mb-4" onclick="createNewNote()">+ Nova Nota</button>
@@ -1652,9 +1461,11 @@ async function saveNote() {
 
 async function loadCalendarView() {
     const calView = document.getElementById('calendarioView');
-    if (!calView.querySelector('.container')) {
-         calView.innerHTML = `<div class="container mx-auto px-6 py-8">${calView.innerHTML}</div>`;
-    }
+    
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!calView.querySelector('.container')) {
+    //      calView.innerHTML = `<div class="container mx-auto px-6 py-8">${calView.innerHTML}</div>`;
+    // }
     
     const container = document.getElementById('calendarContainer');
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Carregando tarefas...</div>`;
@@ -1764,9 +1575,11 @@ function escapeHTML(str) {
 
 function loadPerfilView() {
     const perfilView = document.getElementById('perfilView');
-    if (!perfilView.querySelector('.container')) {
-         perfilView.innerHTML = `<div class="container mx-auto px-6 py-8">${perfilView.innerHTML}</div>`;
-    }
+    
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!perfilView.querySelector('.container')) {
+    //      perfilView.innerHTML = `<div class="container mx-auto px-6 py-8">${perfilView.innerHTML}</div>`;
+    // }
     
     const form = document.getElementById('perfilForm');
     const alertContainer = document.getElementById('perfilAlert');
@@ -1889,9 +1702,11 @@ async function handlePerfilFormSubmit(event) {
 
 async function loadTimelineView() {
     const timelineView = document.getElementById('timelineView');
-    if (!timelineView.querySelector('.container')) {
-         timelineView.innerHTML = `<div class="container mx-auto px-6 py-8">${timelineView.innerHTML}</div>`;
-    }
+    
+    // CORREÇÃO: Removida a lógica de reescrever o .innerHTML
+    // if (!timelineView.querySelector('.container')) {
+    //      timelineView.innerHTML = `<div class="container mx-auto px-6 py-8">${timelineView.innerHTML}</div>`;
+    // }
     
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando timeline...</div>';
