@@ -1,6 +1,3 @@
-
-
-/* Variáveis Globais de Cor */
 :root {
     --primary: #00D4AA;
     --secondary: #00B4D8;
@@ -10,800 +7,51 @@
     --light: #90E0EF;
     --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
     --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
-    --accent-gradient: linear-gradient(135deg, #0077B6 0%, #023047 100%);
 }
 
-/* Estilos Base do Corpo */
 body {
     font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-    background-color: #f4f7fa;
+    background-color: var(--darker);
+    transition: none;
+    color: var(--dark);
+    overflow: hidden;
 }
 
-/* Estrutura Principal com Sidebar */
-.sidebar {
-    width: 260px;
-    transition: transform 0.3s ease-in-out;
+body.system-active {
+    background-color: #f7f9fc;
+}
+
+.hero-section {
     background: var(--darker);
     color: white;
-    flex-shrink: 0;
-    /* CORREÇÃO: Garante que o sidebar tenha altura total e scroll, se necessário */
-    height: 100vh; 
-    overflow-y: auto;
+    padding: 100px 20px;
 }
-
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        position: fixed;
-        height: 100vh;
-        z-index: 1000;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .main-content {
-        width: 100%;
-    }
-}
-
-.nav-item {
-    transition: all 0.2s ease;
-    color: var(--light);
-}
-.nav-item:hover, .nav-item.active {
-    background-color: rgba(0, 180, 216, 0.2);
-    border-left: 4px solid var(--primary);
-    color: white;
-}
-
-/* Estilos dos Cards de Estatística do Home */
-.stat-card-dash {
-    background: var(--primary-gradient);
-    color: white;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
-}
-
-/* Grid do Home */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
-
-/* Ícones de funcionalidades (Emojis) */
-.feature-icon {
-    display: inline-block; width: 16px; height: 16px; margin-right: 8px; font-style: normal;
-    font-weight: 700; color: var(--primary); vertical-align: middle; text-align: center; line-height: 16px;
-}
-.feature-icon.truck::before { content: "🚚"; color: var(--accent); }
-.feature-icon.store::before { content: "🏢"; color: var(--primary); }
-.feature-icon.package::before { content: "📦"; color: var(--primary); }
-.feature-icon.rolltrainer::before { content: "🔄"; color: var(--secondary); }
-.feature-icon.dock::before { content: "⚓"; color: var(--accent); }
-.feature-icon.user::before { content: "👤"; color: var(--dark); }
-.feature-icon.clock::before { content: "⏰"; color: #F77F00; }
-.feature-icon.calendar::before { content: "📅"; color: #F77F00; }
-.feature-icon.note::before { content: "📝"; color: var(--primary); }
-.feature-icon.clipboard::before { content: "📋"; color: #F77F00; }
-.feature-icon.email::before { content: "📧"; color: white; }
-.feature-icon.info::before { content: "ℹ️"; color: var(--primary); }
-.feature-icon.building::before { content: "🏢"; color: var(--primary); }
-.feature-icon.history::before { content: "📜"; color: var(--light); }
-
-/* Estilos da tela de seleção de filial (do código original) */
-.filial-selection-container {
-     background: var(--primary-gradient);
-     min-height: 100vh;
-     padding: 20px;
-     text-align: center;
-}
-.filial-selection {
-    max-width: 900px;
-    margin: auto;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 16px 32px rgba(0, 119, 182, 0.2);
-    padding: 40px 20px;
-    text-align: center;
-}
-.filial-selection h2 {
-    color: var(--dark); font-size: 2rem; margin-bottom: 20px; font-weight: 700;
-}
-.filial-selection p {
-    color: var(--secondary); font-size: 1.1rem; margin-bottom: 40px; line-height: 1.5;
-}
-.filiais-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;
-}
-.filial-card {
-    /* Novo estilo profissional e clean */
-    background: white; 
-    border: 1px solid #eee; /* Borda mais suave */
-    border-radius: 12px;
-    padding: 30px; 
-    cursor: pointer; 
-    transition: all 0.3s ease; 
-    text-align: center; 
-    position: relative; 
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Sombra suave */
-}
-.filial-card:hover {
-    transform: translateY(-3px); 
-    border-color: var(--primary); 
-    box-shadow: 0 10px 30px rgba(0, 212, 170, 0.2); /* Sombra mais destacada no hover */
-}
-.filial-card h3 { 
-    color: var(--dark); 
-    font-size: 1.6rem; /* Aumentado o tamanho do código da filial */
-    margin-bottom: 5px; 
-    font-weight: 800; 
-}
-.filial-card p { 
-    color: #888; /* Cor mais neutra para a descrição */
-    font-size: 1rem; 
-    font-weight: 500;
-}
-
-.filial-card::before {
-    content: ''; 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    right: 0; 
-    height: 4px; 
-    background: var(--primary); /* Cor primária sólida no topo */
-    border-radius: 12px 12px 0 0;
-}
-
-/* Demais estilos adaptados do sistema original */
-.view-content { display: none; }
-.view-content.active { display: block; animation: fadeIn 0.5s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-.form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
-@media (min-width: 768px) { .form-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } }
-.form-group label { margin-bottom: 6px; font-weight: 600; color: var(--dark); font-size: 0.9rem; }
-.form-group input, .form-group select, .form-group textarea {
-    padding: 12px 16px; border: 2px solid rgba(0, 212, 170, 0.3); border-radius: 8px; font-size: 1rem;
-    background: rgba(255, 255, 255, 0.9); transition: all 0.3s ease;
-}
-.form-group input:focus, .form-group select:focus {
-    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
-}
-.btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; text-transform: uppercase; transition: all 0.3s ease; }
-.btn-primary { background: var(--primary-gradient); color: white; }
-.btn-success { background: linear-gradient(135deg, #00D4AA, #00B4D8); color: white; }
-.btn-danger { background: linear-gradient(135deg, #D62828, #F77F00); color: white; }
-.btn-warning { background: linear-gradient(135deg, #F77F00, #FCBF49); color: white; }
-.btn-small { padding: 8px 12px; font-size: 0.85rem; }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3); }
-.table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-th { background-color: #f9fafb; font-weight: 600; color: #374151; }
-.status-badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; }
-.status-carregado { background-color: #d1fae5; color: #065f46; }
-.status-em_carregamento { background-color: #fef3c7; color: #92400e; }
-.status-pendente { background-color: #fee2e2; color: #991b1b; }
-.status-aguardando_faturamento { background-color: #e0e7ff; color: #3730a3; }
-.status-faturamento_iniciado { background-color: #fef3c7; color: #92400e; }
-.status-faturado { background-color: #d1fae5; color: #065f46; }
-.status-saiu_para_entrega { background-color: #cffafe; color: #0e7490; }
-.status-retornando_cd { background-color: #e5e7eb; color: #1f2937; }
-.status-retornando_com_imobilizado { background-color: #dbeafe; color: #1e40af; }
-.status-descarregando_imobilizado { background-color: #fef9c3; color: #854d0e; }
-.status-disponivel { background-color: #d1fae5; color: #065f46; }
-.status-em_viagem { background-color: #fef3c7; color: #92400e; }
-.status-folga { background-color: #e5e7eb; color: #374151; }
-.status-aguardando_agrupamento { background-color: #fae8ff; color: #701a75; }
-.status-aguardando_veiculo { background-color: #e0e7ff; color: #3730a3; }
-.status-entregue { background-color: #f3f4f6; color: #4b5563; }
-.status-cancelado { background-color: #e5e7eb; color: #4b5563; }
-.status-manutencao { background-color: #fde68a; color: #92400e; }
-.status-em_uso { background-color: #fef3c7; color: #92400e; }
-.status-aguardando_faturamento { background-color: #e0e7ff; color: #3730a3; }
-.status-faturamento_iniciado { background-color: #fef3c7; color: #92400e; }
-.status-em_carregamento_faturando { background-color: #fef3c7; color: #92400e; } 
-.status-faturado { background-color: #d1fae5; color: #065f46; }
-
-.modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);
-    justify-content: center; align-items: center; z-index: 1001; padding: 10px; overflow-y: auto;
-}
-.modal-content {
-    background: white; padding: 24px; border-radius: 12px; max-width: 95vw; width: 500px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); animation: popIn 0.3s ease;
-}
-#editExpeditionModal .modal-content { width: 90vw; max-width: 700px; }
-#addFormModal .modal-content { width: 90vw; max-width: 600px; }
-@keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.alert { padding: 12px 16px; margin: 16px 0; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
-.alert-success { background: rgba(0, 212, 170, 0.1); color: var(--secondary); border: 1px solid var(--primary); }
-.alert-error { background: rgba(214, 40, 40, 0.1); color: #D62828; border: 1px solid #F77F00; }
-
-/* Estilos dos cards, tabelas e outros componentes do sistema original */
-.sub-tabs { display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
-.sub-tab { padding: 10px 20px; cursor: pointer; color: #6b7280; border: none; background: none; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; }
-.sub-tab.active { color: var(--dark); border-bottom: 3px solid var(--primary); }
-.sub-tab-content { display: none; }
-.sub-tab-content.active { display: block; }
-
-/* ESTILOS ADICIONADOS */
-.transport-card, .faturamento-card, .motorista-card, .historico-card {
-    background: white; padding: 20px; border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 119, 182, 0.1); margin-bottom: 20px;
-}
- .availability-info {
-    display: flex; justify-content: center; gap: 20px; background: rgba(240, 249, 255, 1);
-    padding: 12px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(0, 180, 216, 0.2);
-}
-.availability-stat { text-align: center; }
-.availability-stat .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--dark); }
-.availability-stat .stat-label { font-size: 0.85rem; color: var(--secondary); }
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: var(--primary-gradient); color: white; padding: 15px; border-radius: 12px; text-align: center; }
-.stat-number { font-size: 1.8rem; font-weight: 700; margin-bottom: 4px; }
-.stat-label { font-size: 0.8rem; opacity: 0.9; }
-.loading { text-align: center; padding: 40px 20px; color: var(--secondary); }
-.spinner { border: 3px solid rgba(0, 212, 170, 0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.form-group.selected { background: rgba(144, 224, 239, 0.4) !important; border: 2px solid var(--primary); transform: scale(1.02); box-shadow: 0 4px 15px rgba(0, 119, 182, 0.15); }
-#cargasDisponiveisList .form-group { transition: all 0.2s ease-in-out; }
-.veiculo-option.incapacitated { background-color: #fee2e2 !important; color: #991b1b !important; font-weight: 700; }
-.time-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.time-stat-card { background: linear-gradient(135deg, #7209B7, #A663CC); color: white; padding: 16px; border-radius: 10px; text-align: center; box-shadow: 0 6px 20px rgba(114, 9, 183, 0.2); }
-.time-stat-card .stat-number { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
-.time-stat-card .stat-label { font-size: 0.75rem; opacity: 0.95; font-weight: 500; line-height: 1.2; }
-.time-display { background: rgba(240, 249, 255, 1); padding: 8px 12px; border-radius: 6px; margin: 6px 0; font-size: 0.8rem; font-weight: 600; color: var(--dark); border-left: 3px solid var(--primary); }
-.motorista-status-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; background: #fff; border: 1px solid #e5e7eb; }
-.loja-descarga-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-.filters-section { background: rgba(240, 249, 255, 1); padding: 16px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(0, 180, 216, 0.2); }
-.filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-.progress-container { width: 100%; background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; height: 1.25rem; }
-.progress-bar { height: 100%; border-radius: 9999px; transition: width 0.4s ease-in-out; text-align: center; color: white; font-size: 0.75rem; font-weight: 600; line-height: 1.25rem; }
-.progress-green { background-color: #10b981; }
-.progress-orange { background-color: #f59e0b; }
-.progress-red { background-color: #ef4444; }
-
-/* NOVO: Estilos para o sistema de notificação */
-#notificationContainer {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 2000;
-}
-
-.notification {
-    width: 300px;
-    background: #fff;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateX(100%);
-    animation: slideIn 0.5s forwards;
-    position: relative;
-    overflow: hidden;
-}
-
-@keyframes slideIn {
-    to { transform: translateX(0); }
-}
-
-.notification.hide {
-    animation: slideOut 0.5s forwards;
-}
-
-@keyframes slideOut {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(100%); opacity: 0; }
-}
-
-.notification.success { border-left: 4px solid var(--primary); }
-.notification.error { border-left: 4px solid #D62828; }
-.notification.info { border-left: 4px solid var(--accent); }
-
-.notification-header {
-    font-weight: 600;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-}
-
-.notification.success .notification-header { color: var(--primary); }
-.notification.error .notification-header { color: #D62828; }
-.notification.info .notification-header { color: var(--accent); }
-
-.notification-body { font-size: 0.9rem; color: #555; }
-/* Estilos para rastreio em tempo real */
-.tracking-card {
-    background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-left: 4px solid #3b82f6; transition: all 0.3s ease; padding: 1.5rem;
-}
-/* Adicionar no final do CSS existente */
-.custom-marker {
-    background: transparent !important;
-    border: none !important;
-}
-
-.leaflet-popup-content {
-    margin: 8px 12px !important;
-    line-height: 1.4 !important;
-}
-
-#map {
-    z-index: 1;
-}
-
-.modal-overlay {
-    z-index: 1001;
-}
-.tracking-card.in-transit { border-left-color: #3b82f6; }
-.tracking-card.unloading { border-left-color: #f59e0b; }
-.tracking-card.returning { border-left-color: #10b981; }
-.status-indicator {
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;
-}
-.status-indicator.transit { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-.status-indicator.unloading { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.status-indicator.returning { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
-.pulse-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
-.pulse-dot.blue { background-color: #3b82f6; }
-.pulse-dot.orange { background-color: #f59e0b; }
-.pulse-dot.green { background-color: #10b981; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.route-item { display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem; transition: background-color 0.2s; }
-.route-item:hover { background-color: #f9fafb; }
-.route-item.completed { background-color: #ecfdf5; }
-.route-item.current { background-color: #fef3c7; }
-.gps-coords { font-family: 'Courier New', monospace; font-size: 0.75rem; color: #6b7280; }
-
-/* Estilos para proximidade de pontos */
-.proximity-alert {
-    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin: 8px 0;
-    animation: proximityPulse 2s infinite;
-}
-
-@keyframes proximityPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-}
-
-.proximity-icon {
-    display: inline-block;
-    margin-right: 8px;
-    animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-4px); }
-    60% { transform: translateY(-2px); }
-}
-/* Estilos para o modal de detalhes */
-#detalhesExpedicaoModal .modal-content {
-    background: white;
-    border-radius: 8px;
-}
-
-/* Estilos para a planilha de controle */
-.planilha-controle {
-    border: 2px solid #333;
-    font-family: Arial, sans-serif;
-    font-size: 13px;
-    width: 100%;
-    margin: 10px 0;
-    background: white;
-}
-
-.planilha-header {
-    background-color: #4a90e2;
-    color: white;
-    text-align: center;
-    font-weight: bold;
-    padding: 10px;
-    border-bottom: 2px solid #333;
-    font-size: 16px;
-}
-
-.planilha-row {
-    display: flex;
-    align-items: center;
-}
-
-.planilha-cell {
-    border: 1px solid #666;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    font-weight: bold;
-    color: #333;
-    text-align: right;
-}
-
-.planilha-value {
-    border: 1px solid #666;
-    padding: 8px 12px;
-    background: white;
-    flex: 1;
-    color: #000;
-    font-weight: 500;
-}
-.horario-cell {
-    border: 1px solid #000;
-    padding: 8px;
-    text-align: center;
-    background: #d9d9d9;
-    font-weight: bold;
-}
-
-.horario-value {
-    border: 1px solid #000;
-    padding: 8px;
-    text-align: center;
-    background: white;
-}
-
-.loja-section {
+.hero-section h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    max-width: 600px;
     margin-bottom: 20px;
-    border: 2px solid #000;
-    padding: 10px;
 }
-
-/* Estilos para impressão */
-@media print {
-    .no-print {
-        display: none !important;
-    }
-    
-    .modal-overlay {
-        position: static !important;
-        background: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    
-    .modal-content {
-        box-shadow: none !important;
-        border: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        max-height: none !important;
-        overflow: visible !important;
-    }
-    
-    /* Configurações da página */
-    @page {
-        size: A4;
-        margin: 1cm;
-    }
-    
-    /* Cada planilha deve ocupar exatamente uma página */
-    .planilha-controle {
-        page-break-inside: avoid;
-        page-break-after: always;
-        font-size: 12px;
-        width: 100%;
-        height: auto;
-        margin: 0 !important;
-        padding: 0;
-        border: 2px solid #333;
-        box-sizing: border-box;
-    }
-    
-    /* A última planilha não deve quebrar página depois */
-    .planilha-controle:last-child {
-        page-break-after: avoid;
-    }
-    
-    /* Remover quebras de página manuais na impressão */
-    div[style*="page-break-before: always"] {
-        page-break-before: always;
-        height: 0;
-        margin: 0;
-        padding: 0;
-    }
-    
-    /* Otimizar espaçamentos para impressão */
-    .planilha-header {
-        padding: 8px !important;
-        font-size: 14px !important;
-        margin: 0 !important;
-    }
-    
-    .planilha-row {
-        margin-bottom: 4px !important;
-    }
-    
-    .planilha-cell, .planilha-value {
-        padding: 6px 8px !important;
-        font-size: 11px !important;
-        line-height: 1.2;
-    }
-    
-    /* Ajustar grid para impressão */
-    div[style*="grid-template-columns: 1fr 1fr"] {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 10px !important;
-        margin: 10px 0 !important;
-    }
-    
-    /* Remover margens desnecessárias */
-    div[style*="margin-top: 20px"] {
-        margin-top: 10px !important;
-    }
-    
-    div[style*="margin-bottom: 30px"] {
-        margin-bottom: 0 !important;
-    }
-    
-    body * {
-        visibility: hidden;
-    }
-    
-    #detalhesExpedicaoModal, #detalhesExpedicaoModal * {
-        visibility: visible;
-    }
-    
-    #detalhesExpedicaoModal {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
+.hero-section p {
+    font-size: 1.25rem;
+    color: var(--light);
+    max-width: 500px;
+    margin-bottom: 30px;
 }
-/* Estilos para o mapa da home */
-#homeMap {
-    border: 2px solid rgba(0, 180, 216, 0.2);
-    transition: all 0.3s ease;
-}
-
-#homeMap:hover {
-    border-color: var(--primary);
-}
-
-#homeMapControls {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.95) !important;
-    border: 1px solid rgba(0, 180, 216, 0.2);
-}
-
-/* Melhorar legibilidade dos marcadores */
-.leaflet-marker-icon {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-/* Estilo para popups */
-.leaflet-popup-content-wrapper {
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.leaflet-popup-content {
-    font-family: 'Inter', sans-serif !important;
-}
-
-/* NOVO: Estilos para a lista de ordenação de carregamento */
-#ordemLojasList li {
-    padding: 12px;
-    background-color: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    cursor: move;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: background-color 0.2s, opacity 0.2s;
-}
-#ordemLojasList li:hover {
-    background-color: #f3f4f6;
-}
-#ordemLojasList li.dragging {
-    opacity: 0.5;
-    background: #dbeafe; /* Azul claro para indicar que está sendo arrastado */
-}
-#ordemLojasList .drag-handle {
-    color: #9ca3af;
-}
-/* Estilos para impressão de identificação */
-.identificacao-card {
+.feature-section {
     background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 16px;
-    transition: all 0.2s ease;
+    padding: 80px 20px;
+}
+.feature-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    border-radius: 12px;
 }
 
-.identificacao-card:hover {
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.15);
-}
-
-.print-identification {
-    display: none;
-}
-
-@media print {
-    @page {
-        size: A4 landscape;
-        margin: 0;
-        padding: 0;
-    }
-    
-    * {
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
-    }
-    
-    html, body {
-        width: 297mm !important;
-        height: 210mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-    }
-    
-    body * {
-        visibility: hidden !important;
-    }
-    
-    .print-identification,
-    .print-identification *,
-    .etiqueta-page,
-    .etiqueta-page *,
-    .etiqueta-container,
-    .etiqueta-container *,
-    .etiqueta-quadro,
-    .etiqueta-quadro * {
-        visibility: visible !important;
-    }
-    
-    .print-identification {
-        display: block !important;
-        position: relative !important;
-        width: 100% !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        z-index: 9999 !important;
-    }
-    
-    .etiqueta-page {
-        width: 297mm !important;
-        height: 210mm !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        position: relative !important;
-        box-sizing: border-box !important;
-        page-break-after: always !important;
-        page-break-inside: avoid !important;
-        break-after: page !important;
-        break-inside: avoid !important;
-    }
-    
-    .etiqueta-page:last-child {
-        page-break-after: auto !important;
-        break-after: auto !important;
-    }
-    
-    .etiqueta-container {
-        text-align: center !important;
-        font-family: Arial, sans-serif !important;
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
-        padding: 10mm !important;
-        box-sizing: border-box !important;
-    }
-    
-    .etiqueta-quadro {
-        border: 10px solid #000 !important;
-        padding: 30mm 25mm !important;
-        background: white !important;
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border-radius: 20px !important;
-        box-shadow: inset 0 0 0 5px #333 !important;
-        box-sizing: border-box !important;
-    }
-    
-    .etiqueta-numero {
-        font-size: 120px !important;
-        font-weight: 900 !important;
-        color: #000 !important;
-        margin: 0 !important;
-        line-height: 0.9 !important;
-        letter-spacing: 4px !important;
-        text-transform: uppercase !important;
-    }
-    
-    .etiqueta-info {
-        font-size: 48px !important;
-        font-weight: 700 !important;
-        color: #333 !important;
-        margin: 0 !important;
-        line-height: 1.1 !important;
-        letter-spacing: 3px !important;
-        text-transform: uppercase !important;
-    }
-    
-    .etiqueta-data {
-        font-size: 60px !important;
-        font-weight: 700 !important;
-        color: #000 !important;
-        margin: 0 !important;
-        line-height: 1 !important;
-        letter-spacing: 3px !important;
-    }
-    
-    .etiqueta-contador {
-        font-size: 90px !important;
-        font-weight: 900 !important;
-        color: #000 !important;
-        border: 8px solid #000 !important;
-        padding: 25px 50px !important;
-        margin: 0 !important;
-        line-height: 1 !important;
-        display: inline-block !important;
-        border-radius: 15px !important;
-        background: #f0f0f0 !important;
-        letter-spacing: 4px !important;
-        box-shadow: inset 0 0 0 3px #666 !important;
-    }
-    
-    .etiqueta-lojas {
-        font-size: 42px !important;
-        font-weight: 700 !important;
-        color: #000 !important;
-        margin: 0 !important;
-        line-height: 1.2 !important;
-        text-align: center !important;
-        max-width: 100% !important;
-        word-wrap: break-word !important;
-        text-transform: uppercase !important;
-        letter-spacing: 2px !important;
-    }
-    
-    .etiqueta-divider {
-        width: 90% !important;
-        height: 2px !important;
-        background: linear-gradient(to right, transparent, #ddd 20%, #999 50%, #ddd 80%, transparent) !important;
-        margin: 25px auto !important;
-        border-radius: 1px !important;
-        opacity: 0.7 !important;
-    }
-}
-/* Estilos da nova tela de login */
 .auth-container {
-    background: var(--primary-gradient);
+    background: var(--darker);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -842,1609 +90,26 @@ th { background-color: #f9fafb; font-weight: 600; color: #374151; }
     margin-top: 5px;
 }
 
-/* NO ARQUIVO: genteegestapojp/teste/TESTE-SA/style.css */
-
-/* Estilo para a placa destacada */
-.placa-animada {
-    /* REMOVER ANIMAÇÃO DE PULSO E GRADIENTE DE FUNDO */
-    background: #0077B6; /* Cor sólida principal */
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin-left: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
-    display: inline-block;
-    /* REMOVIDO: animation: pulsePlaca 1.5s infinite; */ 
-}
-
-@keyframes pulsePlaca {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.02); opacity: 0.9; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* Garantir que os gráficos ocupem todo o espaço disponível */
-#frotaProdutividadeChart,
-#lojaDesempenhoChart,
-#ocupacaoTotalChart,
-#fleetUtilizationChart {
-    width: 100% !important;
-    height: 100% !important;
-}
-
-/* Container dos gráficos com altura fixa */
-.relative[style*="height"] canvas {
-    width: 100% !important;
-    height: 100% !important;
-}
-
-/* Força o Chart.js a respeitar o tamanho do container */
-.chartjs-render-monitor {
-    animation: chartFadeIn 0.3s ease-in-out;
-}
-
-@keyframes chartFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* Correção específica para o gráfico de ranking de motoristas */
-#frotaProdutividadeChart {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-}
-
-/* Remove qualquer padding ou margin indesejada do canvas */
-canvas#frotaProdutividadeChart {
-    max-width: 100%;
-    max-height: 100%;
-}
-
-/* Força o container a manter a altura */
-.relative[style*="height: 350px"] {
-    position: relative;
-    overflow: hidden;
-}
-
-/* Remove tooltips duplicados do ChartDataLabels */
-.chartjs-render-monitor {
-    position: relative !important;
-}
-
-/* Estilo para o card do gráfico */
-.bg-white.rounded-xl.shadow-md.p-6 {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
-}
-
-/* Otimização do gráfico de ranking de motoristas */
-#motoristasRankingChart {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 350px;
-}
-
-/* Container do gráfico de ranking */
-.relative[style*="height: 350px"] {
-    position: relative;
-    overflow: visible !important;
-    min-height: 350px;
-}
-
-/* Força o canvas a ocupar todo o espaço */
-canvas#motoristasRankingChart {
-    display: block !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-}
-
-/* Remove scroll indesejado */
-.bg-white.p-4.rounded-lg.shadow-md {
-    overflow: visible !important;
-}
-
-/* Esconder painel de instruções do Leaflet Routing */
-.leaflet-routing-container {
-    display: none !important;
-}
-
-.leaflet-routing-alt {
-    display: none !important;
-}
-
-/* Estilo para linha de fallback */
-.leaflet-interactive[stroke-dasharray] {
-    animation: dashAnimation 1s linear infinite;
-}
-
-@keyframes dashAnimation {
-    to {
-        stroke-dashoffset: -20;
-    }
-}
-
-/* Painel de estatísticas customizado */
-.leaflet-control.leaflet-bar {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    border-radius: 8px !important;
-}
-/* ========================================
-   ANIMAÇÃO DA PLACA - STATUS DA FROTA
-   ======================================== */
-
-/* ========================================
-   NOVO ESTILO DA PLACA - SUTIL E PROFISSIONAL
-   ======================================== */
-
-/* Estilo base da placa sutil */
-.placa-destaque {
-    /* Manter um gradiente estático para cor, mas sem animação */
-    background: linear-gradient(135deg, #0077B6, #00D4AA);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 1px; /* Letra mais próxima para mais profissionalismo */
-    margin-left: 10px;
-    display: inline-block;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
-    border: 1px solid rgba(255, 255, 255, 0.5); /* Borda sutil */
-    position: relative;
-    overflow: hidden;
-    /* REMOVIDO: ANIMAÇÕES */
-    transition: all 0.2s ease-in-out; /* Adiciona transição para o hover */
-}
-
-/* REMOVIDO: @keyframes gradientShift { ... } */
-/* REMOVIDO: @keyframes pulseGlow { ... } */
-/* REMOVIDO: @keyframes bounce { ... } */
-
-/* REMOVIDO: Efeito de brilho deslizante (::before) */
-.placa-destaque::before {
-    content: none !important;
-}
-
-/* Hover para um destaque leve (sem animação forçada) */
-.placa-destaque:hover {
-    animation: none;
-    transform: scale(1.02); /* Escala suave */
-    box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
-    cursor: default; /* Remove o 'pointer' se não for clicável */
-}
-
-/* Variação de cor baseada no status do veículo */
-.placa-destaque.em-viagem {
-    background: linear-gradient(135deg, #F59E0B, #FCBF49);
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
-}
-
-.placa-destaque.em-viagem:hover {
-    box-shadow: 0 6px 15px rgba(245, 158, 11, 0.4);
-}
-
-.placa-destaque.retornando {
-    background: linear-gradient(135deg, #10B981, #00D4AA);
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
-}
-
-.placa-destaque.retornando:hover {
-    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
-}
-
-.placa-destaque.disponivel {
-    background: linear-gradient(135deg, #6B7280, #9CA3AF);
-    box-shadow: 0 4px 10px rgba(107, 114, 128, 0.1);
-    animation: none; /* Desativa a animação gentlePulse */
-}
-
-/* Badge de destaque adicional (opcional) */
-.placa-destaque::after {
-    /* REMOVIDO o after que continha o emoji de caminhão e a animação de rotação */
-    content: none !important;
-}
-
-/* REMOVIDO: @keyframes rotate { ... } */
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .placa-destaque {
-        font-size: 0.75rem;
-        padding: 4px 10px;
-        margin-left: 6px;
-    }
-}
-
-/* Adicionar no final do CSS existente para forçar o alinhamento */
-/* NOVO: Estilo para cartões de tempo no histórico */
-.historico-time-card {
-    /* Garante que o cartão ocupe o espaço e não se sobreponha */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.historico-time-card .time-stat-card {
-    /* Garante que o cartão interno preencha o espaço restante */
-    flex-grow: 1; 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Ajusta o grid para 4 colunas em telas grandes */
-@media (min-width: 1024px) {
-    /* 5 Colunas para os Tempos Operacionais */
-    #indicadoresTimeSummary {
-        grid-template-columns: repeat(5, 1fr) !important;
-    }
-    /* 6 Colunas para Volume e Eficiência */
-    #indicadoresVolumeStats {
-        grid-template-columns: repeat(6, 1fr) !important;
-    }
-}
-/* CORREÇÃO GERAL DE CHART: Adiciona padding para evitar que os datalabels sejam cortados */
-.bg-white.p-4.rounded-lg.shadow-md {
-    padding: 20px !important; /* Aumenta o padding do container do gráfico */
-}
-/* Adicionar no final do CSS existente para forçar o alinhamento */
-/* NOVO: Estilo para cartões de tempo no histórico */
-.historico-time-card {
-    /* Garante que o cartão ocupe o espaço e não se sobreponha */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.historico-time-card .time-stat-card {
-    /* Garante que o cartão interno preencha o espaço restante */
-    flex-grow: 1; 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Ajusta o grid para 4 colunas em telas grandes */
-@media (min-width: 1024px) {
-    /* 5 Colunas para os Tempos Operacionais */
-    #indicadoresTimeSummary {
-        grid-template-columns: repeat(5, 1fr) !important;
-    }
-    /* 6 Colunas para Volume e Eficiência */
-    #indicadoresVolumeStats {
-        grid-template-columns: repeat(6, 1fr) !important;
-    }
-}
-/* CORREÇÃO GERAL DE CHART: Adiciona padding para evitar que os datalabels sejam cortados */
-.bg-white.p-4.rounded-lg.shadow-md {
-    padding: 20px !important; /* Aumenta o padding do container do gráfico */
-}
-
-/* Adicione ou modifique estes no final do seu style.css */
-
-/* Status específicos de Baixa de Consumo */
-.status-aguardando_aprovacao { background-color: #fef9c3; color: #854d0e; } /* Amarelo */
-.status-aprovada { background-color: #dbeafe; color: #1e40af; } /* Azul claro */
-.status-negada { background-color: #fee2e2; color: #991b1b; } /* Vermelho claro */
-.status-executando { background-color: #e0e7ff; color: #3730a3; } /* Indigo claro */
-.status-aguardando_retirada { background-color: #fef3c7; color: #92400e; } /* Laranja claro */
-.status-finalizada { background-color: #d1fae5; color: #065f46; } /* Verde claro (igual entregue) */
-
-/* Ajuste para input file */
-input[type="file"] {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-}
-input[type="file"]::file-selector-button {
-    margin-right: 8px;
-    border: none;
-    background: var(--secondary);
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    transition: background-color .2s ease-in-out;
-    font-size: 0.9em;
-}
-input[type="file"]::file-selector-button:hover {
-    background: var(--accent);
-}
-
-/* ========================================
-   NOVO: Botão Flutuante Ajuda CGO
-   ======================================== */
-#helpCgoButton {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    background: var(--primary-gradient);
-    color: white;
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 119, 182, 0.4);
-    cursor: pointer;
-    z-index: 999;
-    transition: all 0.3s ease;
-}
-
-#helpCgoButton:hover {
-    transform: scale(1.1) translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 119, 182, 0.5);
-}
-
-/* ========================================
-   NOVO: Estilos do Painel de Consulta CGO
-   ======================================== */
-
-#cgoSearchInput {
-    border: 2px solid #e0e7ff;
-    border-radius: 8px;
-    background: #f9fafb;
-}
-#cgoSearchInput:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
-    background: white;
-}
-
-.cgo-item-card {
-    background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    padding: 12px 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-    transition: all 0.2s ease;
-}
-
-.cgo-item-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 212, 170, 0.1);
-}
-
-.cgo-item-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-}
-
-.cgo-item-codigo {
-    background: var(--darker);
-    color: white;
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: 'Courier New', monospace;
-}
-
-.cgo-item-descricao {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.cgo-item-obs {
-    font-size: 0.9rem;
-    color: #555;
-    padding-left: 10px;
-    border-left: 3px solid var(--secondary);
-}
-
-/* Mensagem de "Nenhum resultado" para o filtro */
-#cgoConsultaEmptyState {
-    text-align: center;
-    padding: 20px;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-/* Adicionar ao final de style.css */
-
-/* Novo status de pedido */
-.status-parcialmente_executado {
-    background-color: #fef3c7; /* Amarelo (igual aguardando) */
-    color: #92400e;
-}
-
-/* Status de item (alguns podem ser repetidos, mas garante) */
-.status-executada {
-    background-color: #dbeafe; /* Azul claro (igual aprovada) */
-    color: #1e40af;
-}
-
-/* Estilos para o novo modal de execução (lista de itens) */
-#executarItensList .bg-gray-50 {
-    border: 1px solid #e5e7eb;
-}
-
-#executarItensList input[type="checkbox"]:checked + div {
-     border-left: 3px solid var(--primary);
-}
-
-/* Estilos para o novo modal de produto (lista de CGOs) */
-#produtoCgosCheckboxes label {
-    transition: all 0.2s ease;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-#produtoCgosCheckboxes label:hover {
-    background-color: #e0e7ff;
-}
-#produtoCgosCheckboxes input[type="checkbox"]:checked + span {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-/* Adicionar ao final do style.css */
-.input-error {
-    border-color: red !important;
-    background-color: #fee2e2 !important; /* Cor de fundo vermelha clara */
-}
-
-/* ... (todo o código CSS existente) ... */
-
-/* Adicionar ao final do style.css */
-.input-error {
-    border-color: red !important;
-    background-color: #fee2e2 !important; /* Cor de fundo vermelha clara */
-}
-
-/* NOVO: Estilos para o gráfico */
-.relative[style*="height"] canvas {
-    width: 100% !important;
-    height: 100% !important;
-}
-
-/* Estilo para a Projeção (opcional) */
-#desvioOrcamentarioLinhas {
-    font-size: 0.9rem;
-    color: #374151;
-}
-
-/* Base para a nova tela de administração */
-#lancamentoManualFormContainer .form-group input,
-#lancamentoManualFormContainer .form-group select {
-    text-align: right; /* Alinha o texto do input de valor à direita */
-}
-
-/* Garante que o input file não tenha alinhamento forçado */
-input[type="file"] {
-    text-align: left; 
-}
-/* Modifique este bloco existente */
-body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-    /* INICIALMENTE, usa o fundo escuro da tela de login */
-    background-color: var(--darker);
-    /* Remove a transição que pode causar o flash */
-    transition: none;
-}
-
-/* Adicione este novo bloco */
-body.system-active {
-    background-color: #f4f7fa; /* Volta para o cinza claro */
-}
-/* Variáveis Globais de Cor */
-:root {
-    --primary: #00D4AA;
-    --secondary: #00B4D8;
-    --accent: #0077B6;
-    --dark: #023047;
-    --darker: #011627;
-    --light: #90E0EF;
-    --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
-    --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
-    --accent-gradient: linear-gradient(135deg, #0077B6 0%, #023047 100%);
-}
-
-/* Estilos Base do Corpo */
-body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-    background-color: var(--darker);
-    transition: none;
-}
-body.system-active {
-    background-color: #f4f7fa; /* Volta para o cinza claro */
-}
-
-/* Estrutura Principal com Sidebar */
-.sidebar {
-    width: 260px;
-    transition: transform 0.3s ease-in-out;
-    background: var(--darker);
-    color: white;
-    flex-shrink: 0;
-    height: 100vh; 
-    overflow-y: auto;
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        position: fixed;
-        height: 100vh;
-        z-index: 1000;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .main-content {
-        width: 100%;
-    }
-}
-
-.nav-item {
-    transition: all 0.2s ease;
-    color: var(--light);
-}
-.nav-item:hover, .nav-item.active {
-    background-color: rgba(0, 180, 216, 0.2);
-    border-left: 4px solid var(--primary);
-    color: white;
-}
-
-/* Estilos da tela de seleção de filial (do código original) */
-.filial-selection-container {
-     background: var(--primary-gradient);
-     min-height: 100vh;
-     padding: 20px;
-     text-align: center;
-}
-/* Demais estilos adaptados do sistema original */
-.view-content { display: none; }
-.view-content.active { display: block; animation: fadeIn 0.5s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-.form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
-@media (min-width: 768px) { .form-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } }
-.form-group label { margin-bottom: 6px; font-weight: 600; color: var(--dark); font-size: 0.9rem; }
-.form-group input, .form-group select, .form-group textarea {
-    padding: 12px 16px; border: 2px solid rgba(0, 212, 170, 0.3); border-radius: 8px; font-size: 1rem;
-    background: rgba(255, 255, 255, 0.9); transition: all 0.3s ease;
-}
-.form-group input:focus, .form-group select:focus {
-    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
-}
-.btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; text-transform: uppercase; transition: all 0.3s ease; }
-.btn-primary { background: var(--primary-gradient); color: white; }
-.btn-success { background: linear-gradient(135deg, #00D4AA, #00B4D8); color: white; }
-.btn-danger { background: linear-gradient(135deg, #D62828, #F77F00); color: white; }
-.btn-warning { background: linear-gradient(135deg, #F77F00, #FCBF49); color: white; }
-.btn-small { padding: 8px 12px; font-size: 0.85rem; }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3); }
-.table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-th { background-color: #f9fafb; font-weight: 600; color: #374151; }
-.status-badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; }
-
-/* Status de Baixa de Consumo (Reutilizados) */
-.status-aguardando_aprovacao { background-color: #fef9c3; color: #854d0e; }
-.status-aprovada { background-color: #dbeafe; color: #1e40af; }
-.status-negada { background-color: #fee2e2; color: #991b1b; }
-.status-executando { background-color: #e0e7ff; color: #3730a3; }
-.status-aguardando_retirada { background-color: #fef3c7; color: #92400e; }
-.status-finalizada { background-color: #d1fae5; color: #065f46; }
-
-.modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);
-    justify-content: center; align-items: center; z-index: 1001; padding: 10px; overflow-y: auto;
-}
-.modal-content {
-    background: white; padding: 24px; border-radius: 12px; max-width: 95vw; width: 500px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); animation: popIn 0.3s ease;
-}
-@keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.alert { padding: 12px 16px; margin: 16px 0; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
-.alert-success { background: rgba(0, 212, 170, 0.1); color: var(--secondary); border: 1px solid var(--primary); }
-.alert-error { background: rgba(214, 40, 40, 0.1); color: #D62828; border: 1px solid #F77F00; }
-.alert-info { background: rgba(0, 119, 182, 0.1); color: var(--accent); border: 1px solid var(--accent); }
-
-
-/* NOVO: Estilos para o sistema de notificação */
-#notificationContainer {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 2000;
-}
-.notification {
-    width: 300px;
-    background: #fff;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateX(100%);
-    animation: slideIn 0.5s forwards;
-    position: relative;
-    overflow: hidden;
-}
-@keyframes slideIn { to { transform: translateX(0); } }
-.notification.hide { animation: slideOut 0.5s forwards; }
-@keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-.notification.success { border-left: 4px solid var(--primary); }
-.notification.error { border-left: 4px solid #D62828; }
-.notification.info { border-left: 4px solid var(--accent); }
-.notification-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; }
-.notification.success .notification-header { color: var(--primary); }
-.notification.error .notification-header { color: #D62828; }
-.notification.info .notification-header { color: var(--accent); }
-.notification-body { font-size: 0.9rem; color: #555; }
-
-/* Estilos da nova tela de login */
-.auth-container {
-    background: var(--primary-gradient);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
-}
-
-/* Estilos de Projetos/Notas (Área Pessoal) */
-.note-card, .personal-project-card {
-    background: #ffffff;
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-}
-
-.note-card:hover, .personal-project-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 119, 182, 0.1);
-}
-
-.note-color {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    margin-right: 10px;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-/* Classes para Gráficos */
-.chart-card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-}
-.summary-cards {
-    display: grid;
-    gap: 1rem;
-}
-@media (min-width: 768px) { .summary-cards { grid-template-columns: repeat(5, 1fr); } }
-
-.stat-card {
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-/* Loading Spinner */
-.loading { text-align: center; padding: 20px 0; color: var(--secondary); display: flex; justify-content: center; align-items: center; }
-.spinner { border: 3px solid rgba(0, 212, 170, 0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 10px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* ========================================
-   IDENTIDADE VISUAL (DA REFERÊNCIA)
-   ======================================== */
-:root {
-    --primary: #00D4AA;
-    --secondary: #00B4D8;
-    --accent: #0077B6;
-    --dark: #023047;
-    --darker: #011627;
-    --light: #90E0EF;
-    --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
-    --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
-}
-
-body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-    background-color: var(--darker); /* Fundo escuro inicial (Login) */
-    transition: none; /* Sem transição no load */
-}
-
-body.system-active {
-    background-color: #f4f7fa; /* Fundo claro (Sistema) */
-}
-
-/* ========================================
-   LAYOUT (DA REFERÊNCIA)
-   ======================================== */
-.sidebar {
-    width: 260px;
-    background: var(--darker);
-    color: white;
-    flex-shrink: 0;
-    height: 100vh; 
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-}
-.sidebar nav {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-#logoutLink {
-    margin-top: auto; /* Empurra o logout para baixo */
-}
-
-.nav-item {
-    transition: all 0.2s ease;
-    color: var(--light);
-}
-.nav-item:hover, .nav-item.active {
-    background-color: rgba(0, 180, 216, 0.2);
-    border-left: 4px solid var(--primary);
-    color: white;
-    font-weight: 600;
-}
-
-.main-content {
-    flex-1;
-    overflow-auto;
-    height: 100vh;
-}
-
-.view-content { display: none; }
-.view-content.active { display: block; animation: fadeIn 0.5s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ========================================
-   COMPONENTES (DA REFERÊNCIA)
-   ======================================== */
-/* Cards de Estatística (Dashboard) */
-.stat-card-dash {
-    background: white;
-    border-left: 5px solid var(--primary);
-    color: var(--dark);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
-}
-.stat-card-dash .stat-number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    display: block;
-    line-height: 1;
-}
-.stat-card-dash .stat-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--accent);
-    display: block;
-    margin-top: 4px;
-}
-
-/* Forms */
-.form-group label { margin-bottom: 6px; font-weight: 600; color: var(--dark); font-size: 0.9rem; }
-.form-group input, .form-group select, .form-group textarea {
-    padding: 12px 16px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 1rem;
-    background: #f9fafb; transition: all 0.3s ease;
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
-    background: white;
-}
-/* Botões */
-.btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; text-transform: uppercase; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
-.btn-primary { background: var(--primary-gradient); color: white; }
-.btn-success { background: linear-gradient(135deg, #00D4AA, #00B4D8); color: white; }
-.btn-danger { background: linear-gradient(135deg, #D62828, #F77F00); color: white; }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3); }
-
-/* Modais */
-.modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);
-    justify-content: center; align-items: center; z-index: 1001; padding: 10px; overflow-y: auto;
-}
-.modal-content {
-    background: white; padding: 24px; border-radius: 12px; max-width: 95vw; width: 500px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); animation: popIn 0.3s ease;
-}
-@keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-/* Alertas */
-.alert { padding: 12px 16px; margin: 16px 0; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
-.alert-success { background: rgba(0, 212, 170, 0.1); color: var(--secondary); border: 1px solid var(--primary); }
-.alert-error { background: rgba(214, 40, 40, 0.1); color: #D62828; border: 1px solid #F77F00; }
-
-/* Notificações (Toast) */
-#notificationContainer { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 2000; }
-.notification { width: 300px; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transform: translateX(100%); animation: slideIn 0.5s forwards; position: relative; overflow: hidden; }
-@keyframes slideIn { to { transform: translateX(0); } }
-.notification.hide { animation: slideOut 0.5s forwards; }
-@keyframes slideOut { to { transform: translateX(100%); opacity: 0; } }
-.notification.success { border-left: 4px solid var(--primary); }
-.notification.error { border-left: 4px solid #D62828; }
-.notification.info { border-left: 4px solid var(--accent); }
-.notification-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; }
-.notification.success .notification-header { color: var(--primary); }
-.notification.error .notification-header { color: #D62828; }
-.notification.info .notification-header { color: var(--accent); }
-.notification-body { font-size: 0.9rem; color: #555; }
-
-/* Tabelas */
-.table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-th { background-color: #f9fafb; font-weight: 600; color: #374151; }
-tbody tr:hover { background-color: #f9fafb; }
-
-/* ========================================
-   NOVOS ESTILOS: KANBAN
-   ======================================== */
-.kanban-container {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto; /* Permite scroll horizontal */
-    padding-bottom: 16px;
-    min-height: calc(100vh - 200px); /* Altura mínima */
-}
-
-.kanban-column {
-    flex: 0 0 320px; /* Largura fixa da coluna */
-    background-color: #f1f5f9; /* Cinza claro, mais suave que branco */
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-}
-
-.kanban-column-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--dark);
-    padding: 16px;
-    border-bottom: 3px solid var(--secondary);
-}
-
-.kanban-column-content {
-    padding: 12px;
-    flex-grow: 1;
-    min-height: 150px; /* Altura mínima para dropar */
-    transition: background-color 0.2s;
-}
-
-.kanban-column-content.drag-over {
-    background-color: rgba(0, 212, 170, 0.1); /* Destaque ao arrastar sobre */
-}
-
-.kanban-card {
-    background: white;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-    cursor: grab;
-    border-left: 5px solid var(--accent);
-    transition: all 0.2s ease;
-}
-.kanban-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-}
-.kanban-card.dragging {
-    opacity: 0.5;
-    transform: rotate(3deg);
-}
-
-.kanban-card-title {
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 8px;
-}
-.kanban-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 12px;
-    font-size: 0.8rem;
-    color: #64748b;
-}
-.kanban-card-priority {
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-}
-/* Cores de Prioridade */
-.priority-urgente { border-color: #D62828; color: #D62828; background: #fee2e2; }
-.priority-alta { border-color: #F77F00; color: #F77F00; background: #fef3c7; }
-.priority-media { border-color: var(--accent); color: var(--accent); background: #dbeafe; }
-.priority-baixa { border-color: #6b7280; color: #6b7280; background: #f3f4f6; }
-
-/* ========================================
-   NOVOS ESTILOS: Bloco de Notas
-   ======================================== */
-.note-container {
-    display: flex;
-    height: calc(100vh - 200px);
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
-    overflow: hidden;
-}
-.note-list {
-    flex: 0 0 280px;
-    border-right: 1px solid #e5e7eb;
-    padding: 16px;
-    overflow-y: auto;
-    background: #f9fafb;
-}
-.note-list-item {
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    border-bottom: 1px solid #e5e7eb;
-}
-.note-list-item:hover {
-    background: #f3f4f6;
-}
-.note-list-item.active {
-    background: var(--primary-gradient);
-    color: white;
-}
-.note-list-item.active .note-list-title { color: white; }
-.note-list-item.active .note-list-excerpt { color: #e0f2f1; }
-
-.note-list-title {
-    font-weight: 600;
-    color: var(--dark);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.note-list-excerpt {
-    font-size: 0.85rem;
-    color: #64748b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.note-editor {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-#noteTitle {
-    border: none;
-    padding: 20px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--dark);
-    border-bottom: 1px solid #e5e7eb;
-}
-#noteTitle:focus {
-    outline: none;
-    box-shadow: none;
-    border-color: var(--primary);
-}
-#noteBody {
-    flex-grow: 1;
-    border: none;
-    padding: 20px;
-    font-size: 1rem;
-    line-height: 1.6;
-    resize: none;
-}
-#noteBody:focus {
-    outline: none;
-    box-shadow: none;
-}
-.note-editor .btn {
-    margin: 20px;
-    width: fit-content;
-    align-self: flex-end;
-}
-
-/* ========================================
-   RESPONSIVIDADE (Mobile)
-   ======================================== */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        position: fixed;
-        height: 100vh;
-        z-index: 1000;
-        /* Adicionar botão de fechar/abrir (requer JS) */
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .main-content {
-        width: 100%;
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-    .kanban-container {
-        flex-direction: column; /* Colunas em linha no mobile */
-        gap: 24px;
-        min-height: auto;
-    }
-    .kanban-column {
-        flex: 1 1 auto; /* Colunas ocupam largura total */
-    }
-    .note-container {
-        flex-direction: column;
-        height: auto;
-    }
-    .note-list {
-        flex: 0 0 auto;
-        border-right: none;
-        border-bottom: 1px solid #e5e7eb;
-    }
-}
-/* ========================================
-   NOVOS ESTILOS: Timeline
-   ======================================== */
-.timeline-item {
-    padding: 16px;
-    background-color: white;
-    border-left: 4px solid var(--secondary);
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.07);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.timeline-item-icon {
-    flex-shrink: 0;
-    color: var(--accent);
-}
-.timeline-item-content p {
-    margin: 0;
-    line-height: 1.4;
-}
-.timeline-item-content .task-title {
-    font-weight: 600;
-    color: var(--dark);
-}
-.timeline-item-content .user-name {
-    font-weight: 500;
-    color: var(--accent);
-}
-.timeline-item-timestamp {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-left: auto; /* Empurra a data para a direita */
-    white-space: nowrap;
-}
-
-/* Ajuste de status na timeline */
-.timeline-item.created { border-left-color: #0077B6; } /* Azul */
-.timeline-item.updated { border-left-color: #F77F00; } /* Laranja */
-.timeline-item.completed { border-left-color: #00D4AA; } /* Verde */
-
-
-/* ========================================
-   NOVOS ESTILOS: Perfil
-   ======================================== */
- #perfilPicturePreview {
-    border: 3px solid white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
- }
-
-/* ========================================
-   IDENTIDADE VISUAL (DA REFERÊNCIA)
-   ======================================== */
-:root {
-    --primary: #00D4AA;
-    --secondary: #00B4D8;
-    --accent: #0077B6;
-    --dark: #023047;
-    --darker: #011627;
-    --light: #90E0EF;
-    --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
-    --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
-}
-
-body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-    background-color: var(--darker); /* Fundo escuro inicial (Login) */
-    transition: none; /* Sem transição no load */
-    color: var(--dark); /* Cor de texto padrão */
-}
-
-body.system-active {
-    background-color: #f7f9fc; /* Fundo ligeiramente azulado, estilo Asana */
-}
-
-/* ========================================
-   LAYOUT (DA REFERÊNCIA + Asana Touch)
-   ======================================== */
-.sidebar {
-    width: 260px;
-    background: var(--darker);
-    color: white;
-    flex-shrink: 0;
-    height: 100vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid #e5e7eb1a; /* Borda sutil */
-}
-.sidebar nav {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-#logoutLink {
-    margin-top: auto; /* Empurra o logout para baixo */
-}
-
-.nav-item {
-    transition: all 0.2s ease;
-    color: var(--light);
-    font-weight: 500; /* Peso um pouco mais leve */
-    border-left: 4px solid transparent; /* Borda transparente por padrão */
-}
-.nav-item:hover {
-    background-color: rgba(0, 180, 216, 0.1);
-    color: white;
-}
-.nav-item.active {
-    background-color: rgba(0, 180, 216, 0.2);
-    border-left-color: var(--primary); /* Borda aparece só no ativo */
-    color: white;
-    font-weight: 600;
-}
-
-.main-content {
-    flex: 1;
-    overflow: auto;
-    height: 100vh;
-}
-
-.view-content { display: none; }
-.view-content.active { display: block; animation: fadeIn 0.4s ease-out; } /* Animação mais suave */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Títulos das Views (Asana Style) */
-.view-content h1 {
-    font-size: 1.8rem; /* Ligeiramente menor */
-    font-weight: 700; /* Mais forte */
-    color: var(--dark);
-    margin-bottom: 1.5rem; /* Mais espaçamento */
-}
-
-
-/* ========================================
-   COMPONENTES (DA REFERÊNCIA + Asana Touch)
-   ======================================== */
-/* Cards de Estatística (Dashboard) */
-.stat-card-dash {
-    background: white;
-    border: 1px solid #e5e7eb; /* Borda suave */
-    color: var(--dark);
-    border-radius: 10px; /* Menos arredondado */
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04); /* Sombra muito sutil */
-    border-top: 4px solid var(--primary); /* Destaque superior */
-}
-.stat-card-dash .stat-number {
-    font-size: 2rem; /* Menor */
-    font-weight: 700;
-    display: block;
-    line-height: 1.1;
-    margin-bottom: 4px;
-}
-.stat-card-dash .stat-label {
-    font-size: 0.85rem; /* Menor */
-    font-weight: 500; /* Mais leve */
-    color: #64748b; /* Cinza */
-    display: block;
-}
-
-/* Cards Genéricos (Gráficos, etc) */
-.chart-card, .bg-white.p-6.rounded-lg.shadow-md {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 24px; /* Padronizado */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.chart-card h3, .bg-white.p-6.rounded-lg.shadow-md h3 {
-    font-size: 1.1rem; /* Menor */
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 16px;
-}
-
-/* Forms */
-.form-group label { margin-bottom: 6px; font-weight: 500; color: #4b5563; font-size: 0.85rem; }
-.form-group input, .form-group select, .form-group textarea {
-    padding: 10px 14px; /* Ligeiramente menor */
-    border: 1px solid #d1d5db; /* Cinza */
-    border-radius: 6px; /* Menos arredondado */
-    font-size: 0.95rem;
-    background: #ffffff;
-    transition: all 0.2s ease;
-    width: 100%; /* Garante largura total */
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    outline: none;
-    border-color: var(--accent); /* Azul no foco */
-    box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
-    background: white;
-}
-.form-group input[disabled] {
-    background-color: #f3f4f6;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-/* Botões */
-.btn {
-    padding: 10px 18px; /* Ligeiramente menor */
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem; /* Menor */
-    font-weight: 600;
-    text-transform: none; /* Sem uppercase */
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Sombra sutil */
-}
-.btn-primary { background: var(--accent); color: white; border: 1px solid var(--accent); } /* Azul sólido */
-.btn-success { background: var(--primary); color: white; border: 1px solid var(--primary); } /* Verde sólido */
-.btn-danger { background: #dc2626; color: white; border: 1px solid #dc2626; } /* Vermelho sólido */
-.btn-secondary, .btn-danger[onclick^="closeModal"] { background: white; color: #4b5563; border: 1px solid #d1d5db; } /* Botão cinza/branco */
-
-.btn:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.1); /* Ilumina um pouco */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-.btn-secondary:hover { background-color: #f9fafb; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-.btn-small { padding: 6px 12px; font-size: 0.8rem; }
-
-/* Modais */
-.modal-overlay {
-    /* ... (igual) ... */
-     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); /* Menos escuro */
-    justify-content: center; align-items: center; z-index: 1001; padding: 20px; overflow-y: auto;
-}
-.modal-content {
-    background: white; padding: 28px; border-radius: 10px; max-width: 95vw; width: 500px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); animation: popIn 0.3s ease-out; /* Sombra e animação */
-}
-/* Alertas */
-.alert { padding: 12px 16px; margin: 16px 0; border-radius: 6px; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent; }
-.alert-success { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-.alert-error { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
-.alert-info { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-.alert-warning { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
-
-
-/* Notificações (Toast) */
-#notificationContainer { /* ... (igual) ... */ }
-.notification { /* ... (sombra mais suave) ... */
-     width: 320px; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-     transform: translateX(100%); animation: slideIn 0.5s forwards; position: relative; overflow: hidden; border-left-width: 4px;
-}
-/* ... (restante igual) ... */
-
-/* Tabelas */
-.table-container { /* ... (igual) ... */ }
-table { width: 100%; border-collapse: separate; border-spacing: 0; } /* Separate para border-radius */
-th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; font-size: 0.9rem; }
-th { background-color: #f9fafb; font-weight: 600; color: #374151; }
-tbody tr:hover { background-color: #f3f4f6; } /* Hover mais sutil */
-/* Arredondar cantos da tabela */
-.table-container { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
-th:first-child { border-top-left-radius: 10px; }
-th:last-child { border-top-right-radius: 10px; }
-tr:last-child td:first-child { border-bottom-left-radius: 10px; }
-tr:last-child td:last-child { border-bottom-right-radius: 10px; }
-
-
-/* ========================================
-   ESTILOS KANBAN (Asana Touch)
-   ======================================== */
-.kanban-container {
-    display: flex;
-    gap: 20px; /* Mais espaço */
-    overflow-x: auto;
-    padding-bottom: 20px;
-    min-height: calc(100vh - 220px);
-}
-
-.kanban-column {
-    flex: 0 0 300px; /* Pouco mais estreito */
-    background-color: #f0f2f5; /* Cinza Asana */
-    border-radius: 8px; /* Menos redondo */
-    /* box-shadow: none; Borda em vez de sombra */
-    border: 1px solid #e5e7eb;
-    display: flex;
-    flex-direction: column;
-}
-
-.kanban-column-title {
-    font-size: 0.95rem; /* Menor */
-    font-weight: 600;
-    color: var(--dark);
-    padding: 12px 16px; /* Menos padding */
-    border-bottom: 1px solid #e5e7eb; /* Linha divisória */
-    /* background-color: #f9fafb; Fundo ligeiramente diferente */
-}
-
-.kanban-column-content {
-    padding: 10px; /* Menos padding */
-    flex-grow: 1;
-    min-height: 100px;
-    transition: background-color 0.2s;
-}
-.kanban-column-content.drag-over { background-color: rgba(0, 180, 216, 0.1); } /* Destaque azul */
-
-.kanban-card {
-    background: white;
-    border-radius: 6px;
-    padding: 12px; /* Menos padding */
-    margin-bottom: 10px; /* Menos margem */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06); /* Sombra muito sutil */
-    cursor: grab;
-    border: 1px solid #e5e7eb; /* Borda leve */
-    border-left-width: 4px; /* Mantém a borda de prioridade */
-    transition: all 0.2s ease;
-}
-.kanban-card:hover {
-    transform: none; /* Sem levantar */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra um pouco maior no hover */
-    border-color: #d1d5db;
-}
-.kanban-card.dragging { opacity: 0.6; transform: rotate(2deg); }
-
-.kanban-card-title {
-    font-weight: 500; /* Mais leve */
-    color: var(--dark);
-    margin-bottom: 6px;
-    font-size: 0.9rem; /* Menor */
-}
-.kanban-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    font-size: 0.75rem; /* Menor */
-    color: #6b7280;
-}
-.kanban-card-priority { /* Mantido igual */ }
-
-/* Cores de Prioridade */
-.kanban-card.priority-urgente { border-left-color: #dc2626; } /* Vermelho */
-.kanban-card.priority-alta { border-left-color: #f59e0b; } /* Laranja */
-.kanban-card.priority-media { border-left-color: var(--accent); } /* Azul */
-.kanban-card.priority-baixa { border-left-color: #6b7280; } /* Cinza */
-
-.kanban-card .kanban-card-priority { /* Remove fundo colorido, usa só texto */
-    background: none;
-    border: none;
-    padding: 0;
-    font-weight: 600;
-}
-.kanban-card .priority-urgente { color: #dc2626; }
-.kanban-card .priority-alta { color: #f59e0b; }
-.kanban-card .priority-media { color: var(--accent); }
-.kanban-card .priority-baixa { color: #6b7280; }
-
-/* Adiciona avatar pequeno (se tiver) */
-.kanban-card-footer img {
-    width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;
-}
-
-/* Botão de adicionar tarefa na coluna */
-.kanban-column .btn-small {
-    width: 100%;
-    padding: 6px;
-    background: transparent;
-    color: #6b7280;
-    border: 1px dashed #d1d5db;
-    box-shadow: none;
-}
-.kanban-column .btn-small:hover {
-    background: #e5e7eb;
-    color: var(--dark);
-    border-style: solid;
-    border-color: #9ca3af;
-}
-
-
-/* ========================================
-   ESTILOS BLOCO DE NOTAS (Asana Touch)
-   ======================================== */
-.note-container {
-    display: flex;
-    height: calc(100vh - 200px);
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    border: 1px solid #e5e7eb;
-    overflow: hidden;
-}
-.note-list {
-    flex: 0 0 260px; /* Pouco mais estreito */
-    border-right: 1px solid #e5e7eb;
-    padding: 12px;
-    overflow-y: auto;
-    background: #f9fafb; /* Fundo levemente diferente */
-}
-.note-list .btn { margin-bottom: 12px; }
-
-.note-list-item {
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    border-bottom: none; /* Remove borda inferior */
-    margin-bottom: 4px; /* Espaço entre itens */
-}
-.note-list-item:hover { background: #f0f2f5; }
-.note-list-item.active { background: #e0f2fe; /* Azul bem claro */ color: var(--accent); }
-.note-list-item.active .note-list-title { color: var(--accent); font-weight: 600; }
-.note-list-item.active .note-list-excerpt { color: #075985; }
-
-.note-list-title { font-weight: 500; color: var(--dark); font-size: 0.9rem; /* ... (overflow igual) ... */ }
-.note-list-excerpt { font-size: 0.8rem; color: #6b7280; /* ... (overflow igual) ... */ }
-
-.note-editor { flex-grow: 1; display: flex; flex-direction: column; }
-#noteTitle {
-    border: none; padding: 16px 20px; font-size: 1.25rem; font-weight: 600; color: var(--dark); border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb; /* Fundo do título */
-}
-#noteTitle:focus { outline: none; box-shadow: none; border-color: var(--accent); background: white; }
-#noteBody { flex-grow: 1; border: none; padding: 20px; font-size: 0.95rem; line-height: 1.6; resize: none; }
-#noteBody:focus { outline: none; box-shadow: none; }
-.note-editor .btn { margin: 16px 20px; }
-
-/* ========================================
-   ESTILOS TIMELINE (Asana Touch)
-   ======================================== */
-.timeline-item {
-    padding: 12px 16px; background-color: white; border-left: 3px solid #9ca3af; /* Cinza padrão */
-    border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px;
-    border-top: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; /* Bordas sutis */
-}
-.timeline-item-icon { flex-shrink: 0; color: #6b7280; /* Cinza */ }
-.timeline-item-content p { margin: 0; line-height: 1.4; font-size: 0.9rem; }
-.timeline-item-content .task-title { font-weight: 500; color: var(--dark); }
-.timeline-item-content .user-name { font-weight: 500; color: var(--accent); }
-.timeline-item-timestamp { font-size: 0.75rem; color: #9ca3af; margin-left: auto; white-space: nowrap; }
-
-/* Ajuste de status na timeline */
-.timeline-item.created { border-left-color: var(--accent); } /* Azul */
-.timeline-item.updated { border-left-color: #f59e0b; } /* Laranja */
-.timeline-item.completed { border-left-color: var(--primary); } /* Verde */
-.timeline-item.created .timeline-item-icon { color: var(--accent); }
-.timeline-item.updated .timeline-item-icon { color: #f59e0b; }
-.timeline-item.completed .timeline-item-icon { color: var(--primary); }
-
-/* ========================================
-   ESTILOS PERFIL (Asana Touch)
-   ======================================== */
- #perfilPicturePreview {
-    border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
- }
- #perfilView .form-group input[disabled] { border: 1px solid #e5e7eb; } /* Borda cinza para email */
-
-/* ========================================
-   RESPONSIVIDADE (Ajustes Finais)
-   ======================================== */
-@media (max-width: 768px) {
-    /* ... (sidebar igual) ... */
-    .main-content { padding-left: 1rem; padding-right: 1rem; }
-    .view-content h1 { font-size: 1.5rem; margin-bottom: 1rem; }
-
-    .kanban-container { flex-direction: column; gap: 16px; min-height: auto; }
-    .kanban-column { flex: 1 1 auto; }
-
-    .note-container { flex-direction: column; height: auto; }
-    .note-list { flex: 0 0 auto; border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 200px; }
-
-    .stat-card-dash .stat-number { font-size: 1.8rem; }
-    .stat-card-dash .stat-label { font-size: 0.8rem; }
-
-    /* Ajuste de padding geral */
-    .bg-white.p-6.rounded-lg.shadow-md, .chart-card { padding: 16px; }
-
-    /* Ajuste modal */
-    .modal-content { padding: 20px; }
-
-    /* Ajuste form perfil */
-     #perfilView .flex-col.sm\:flex-row { flex-direction: column; }
-     #perfilPicturePreview { margin-right: 0; margin-bottom: 1rem; }
-
-     /* Ajusta grid forms */
-     .grid.grid-cols-1.md\:grid-cols-2 { grid-template-columns: 1fr; }
-}
-
-/* Ajustes finos */
-.loading { display: flex; justify-content: center; align-items: center; padding: 30px; color: var(--secondary); font-size: 0.9rem; }
-.spinner { width: 24px; height: 24px; margin-right: 8px; }
-
-/* ========================================
-   IDENTIDADE VISUAL (DA REFERÊNCIA)
-   ======================================== */
-:root {
-    --primary: #00D4AA;
-    --secondary: #00B4D8;
-    --accent: #0077B6;
-    --dark: #023047;
-    --darker: #011627;
-    --light: #90E0EF;
-    --primary-gradient: linear-gradient(135deg, #00D4AA 0%, #00B4D8 50%, #0077B6 100%);
-    --secondary-gradient: linear-gradient(135deg, #90E0EF 0%, #00D4AA 100%);
-}
-
-body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-    background-color: var(--darker); /* Fundo escuro inicial (Login) */
-    transition: none; /* Sem transição no load */
-    color: var(--dark); /* Cor de texto padrão */
-    overflow: hidden; /* Evita scroll no body */
-}
-
-body.system-active {
-    background-color: #f7f9fc; /* Fundo ligeiramente azulado, estilo Asana */
-}
-
-/* ========================================
-   NOVO: BARRA SUPERIOR (TOPBAR)
-   ======================================== */
 #topBar {
     display: flex;
     align-items: center;
-    gap: 1rem; /* 16px */
+    gap: 1rem;
     background: var(--darker);
     color: white;
-    padding: 0 1.5rem; /* 24px */
+    padding: 0 1.5rem;
     height: 64px;
-    border-bottom: 1px solid #334155; /* Cor escura (slate-700) */
+    border-bottom: 1px solid #334155;
     flex-shrink: 0;
 }
 #topBar .separator {
     width: 1px;
     height: 24px;
-    background-color: #334155; /* slate-700 */
+    background-color: #334155;
 }
 #topBar .btn-icon {
     background: transparent;
     color: var(--light);
-    padding: 0.5rem; /* 8px */
+    padding: 0.5rem;
     border-radius: 6px;
     transition: all 0.2s ease;
 }
@@ -2453,15 +118,15 @@ body.system-active {
 }
 #topBarSearch {
     background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid #334155; /* slate-700 */
+    border: 1px solid #334155;
     color: white;
     font-size: 0.9rem;
-    padding: 0.5rem 1rem; /* 8px 16px */
+    padding: 0.5rem 1rem;
     border-radius: 6px;
     transition: all 0.2s ease;
 }
 #topBarSearch::placeholder {
-    color: #94a3b8; /* slate-400 */
+    color: #94a3b8;
 }
 #topBarSearch:focus {
     outline: none;
@@ -2470,65 +135,65 @@ body.system-active {
     box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.3);
 }
 
-/* NOVO: Dropdown de Perfil */
 #profileDropdownButton {
     transition: background-color 0.2s ease;
 }
 .dropdown-menu {
-    display: none; /* Escondido por padrão */
+    display: none;
     position: absolute;
-    top: 120%; /* Abaixo do botão */
+    top: 120%;
     right: 0;
     width: 240px;
-    background: #1e293b; /* slate-800 */
-    border: 1px solid #334155; /* slate-700 */
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 8px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     z-index: 1010;
     overflow: hidden;
+    animation: popIn 0.2s ease-out;
 }
-/* Mostra o menu quando o dropdown está 'open' */
-#profileDropdown.open .dropdown-menu {
+#teamSelectorMenu {
+    right: auto;
+    left: 0;
+    width: 280px;
+}
+.dropdown-menu.open, .relative.open .dropdown-menu {
     display: block;
 }
 .dropdown-item {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem; /* 12px 16px */
+    padding: 0.75rem 1rem;
     font-size: 0.9rem;
-    color: #e2e8f0; /* slate-200 */
+    color: #e2e8f0;
     transition: background-color 0.2s ease;
+    text-decoration: none;
 }
-.dropdown-item:hover {
-    background-color: #334155; /* slate-700 */
+.dropdown-item:hover, .dropdown-item.active {
+    background-color: #334155;
     color: white;
 }
 .dropdown-item .feather {
-    color: #94a3b8; /* slate-400 */
+    color: #94a3b8;
     margin-right: 0.75rem;
 }
 
-/* ========================================
-   LAYOUT (ATUALIZADO)
-   ======================================== */
 #mainSystem {
     display: flex;
     flex: 1;
-    overflow: hidden; /* Crucial para o scroll do main-content */
+    overflow: hidden;
 }
 
-/* Barra Lateral (Sidebar) - ATUALIZADA */
 .sidebar {
-    width: 260px; /* Largura padrão */
+    width: 260px;
     background: var(--darker);
     color: white;
     flex-shrink: 0;
-    height: 100%; /* Ocupa a altura do container pai (#mainSystem) */
     overflow-y: auto;
-    overflow-x: hidden; /* Esconde o texto ao encolher */
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #334155; /* slate-700 */
+    border-right: 1px solid #334155;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .sidebar nav {
@@ -2537,37 +202,34 @@ body.system-active {
     flex-direction: column;
 }
 
-/* Estado Recolhido (Collapsed) */
 .sidebar.collapsed {
-    width: 73px; /* Largura recolhida (ícone + padding) */
+    width: 73px;
 }
 .sidebar.collapsed .nav-item {
-    padding-left: 1.5rem; /* 24px */
-    padding-right: 1.5rem; /* 24px */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
     justify-content: center;
 }
 .sidebar.collapsed .nav-item .mr-3 {
-    margin-right: 0; /* Remove margem do ícone */
+    margin-right: 0;
 }
 .sidebar.collapsed .nav-text {
     opacity: 0;
     pointer-events: none;
     width: 0;
-    margin-left: -10px; /* Efeito suave de desaparecimento */
+    margin-left: -10px;
     white-space: nowrap;
 }
 .sidebar.collapsed .nav-item[title="Gerenciar Time"],
 .sidebar.collapsed .nav-item[title="Meu Perfil"] {
-    display: none; /* Esconde links de admin/perfil quando recolhido (opcional) */
+    display: none;
 }
 
-
-/* Itens da Barra Lateral (Nav) */
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1.5rem; /* 12px 24px */
-    margin: 0.25rem 0.5rem; /* 4px 8px */
+    padding: 0.75rem 1.5rem;
+    margin: 0.25rem 0.5rem;
     border-radius: 6px;
     transition: all 0.2s ease;
     color: var(--light);
@@ -2594,20 +256,24 @@ body.system-active {
     transition: margin-right 0.3s ease;
 }
 
-
-/* Conteúdo Principal (Main) - ATUALIZADO */
 .main-content {
     flex: 1;
-    overflow-auto; /* Permite scroll SÓ no conteúdo principal */
-    height: 100%; /* Ocupa a altura do container pai (#mainSystem) */
-    background-color: #f7f9fc; /* Cor de fundo Asana */
+    overflow: auto;
+    background-color: #f7f9fc;
 }
 
-.view-content { display: none; }
-.view-content.active { display: block; animation: fadeIn 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.view-content { 
+    display: none; 
+}
+.view-content.active { 
+    display: block; 
+    animation: fadeIn 0.4s ease-out; 
+}
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(8px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
 
-/* Títulos das Views (Asana Style) */
 .view-content h1 {
     font-size: 1.8rem;
     font-weight: 700;
@@ -2615,11 +281,6 @@ body.system-active {
     margin-bottom: 1.5rem;
 }
 
-
-/* ========================================
-   COMPONENTES (Estilo Asana/Jira)
-   ======================================== */
-/* Cards de Estatística (Dashboard) */
 .stat-card-dash {
     background: white;
     border: 1px solid #e5e7eb;
@@ -2639,11 +300,10 @@ body.system-active {
 .stat-card-dash .stat-label {
     font-size: 0.85rem;
     font-weight: 500;
-    color: #64748b; /* slate-500 */
+    color: #64748b;
     display: block;
 }
 
-/* Cards Genéricos (Gráficos, etc) */
 .chart-card, .bg-white.p-6.rounded-lg.shadow-md {
     background: white;
     border: 1px solid #e5e7eb;
@@ -2658,11 +318,10 @@ body.system-active {
     margin-bottom: 16px;
 }
 
-/* Forms */
 .form-group label { margin-bottom: 6px; font-weight: 500; color: #4b5563; font-size: 0.85rem; }
 .form-group input, .form-group select, .form-group textarea {
     padding: 10px 14px;
-    border: 1px solid #d1d5db; /* gray-300 */
+    border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 0.95rem;
     background: #ffffff;
@@ -2681,7 +340,6 @@ body.system-active {
     opacity: 0.7;
 }
 
-/* Botões */
 .btn {
     padding: 10px 18px;
     border: none;
@@ -2689,7 +347,7 @@ body.system-active {
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 600;
-    text-transform: none; /* Sem uppercase */
+    text-transform: none;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
@@ -2700,7 +358,6 @@ body.system-active {
 .btn-success { background: var(--primary); color: white; border: 1px solid var(--primary); }
 .btn-danger { background: #dc2626; color: white; border: 1px solid #dc2626; }
 .btn-secondary, .btn-danger[onclick^="closeModal"] { background: white; color: #4b5563; border: 1px solid #d1d5db; }
-
 .btn:hover {
     transform: translateY(-1px);
     filter: brightness(1.1);
@@ -2710,7 +367,6 @@ body.system-active {
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 .btn-small { padding: 6px 12px; font-size: 0.8rem; }
 
-/* Modais */
 .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);
     justify-content: center; align-items: center; z-index: 1001; padding: 20px; overflow-y: auto;
@@ -2721,14 +377,12 @@ body.system-active {
 }
 @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* Alertas */
 .alert { padding: 12px 16px; margin: 16px 0; border-radius: 6px; font-weight: 500; font-size: 0.9rem; border: 1px solid transparent; }
 .alert-success { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
 .alert-error { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 .alert-info { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
 .alert-warning { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
 
-/* Notificações (Toast) */
 #notificationContainer { position: fixed; top: 84px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 2000; }
 .notification {
      width: 320px; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -2746,7 +400,6 @@ body.system-active {
 .notification.info .notification-header { color: var(--accent); }
 .notification-body { font-size: 0.9rem; color: #555; }
 
-/* Tabelas */
 .table-container { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
 table { width: 100%; border-collapse: separate; border-spacing: 0; }
 th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; font-size: 0.9rem; }
@@ -2757,33 +410,25 @@ th:last-child { border-top-right-radius: 10px; }
 tr:last-child td:first-child { border-bottom-left-radius: 10px; }
 tr:last-child td:last-child { border-bottom-right-radius: 10px; }
 
-/* Status */
 .status-badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; }
-.status-aguardando_aprovacao { background-color: #fef9c3; color: #854d0e; }
-.status-aprovada { background-color: #dbeafe; color: #1e40af; }
-.status-negada { background-color: #fee2e2; color: #991b1b; }
-.status-executando { background-color: #e0e7ff; color: #3730a3; }
-.status-aguardando_retirada { background-color: #fef3c7; color: #92400e; }
-.status-finalizada { background-color: #d1fae5; color: #065f46; }
+.status-concluído { background-color: #d1fae5; color: #065f46; }
+.status-parado { background-color: #fee2e2; color: #991b1b; }
 
-/* ========================================
-   ESTILOS KANBAN (Asana Touch)
-   ======================================== */
 .kanban-container {
     display: flex;
-    gap: 16px; /* Reduzido para caber mais */
+    gap: 16px;
     overflow-x: auto;
     padding-bottom: 20px;
     min-height: calc(100vh - 220px);
 }
 .kanban-column {
     flex: 0 0 300px;
-    background-color: #f0f2f5; /* Cinza Asana */
+    background-color: #f0f2f5;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 240px); /* Altura máxima para scroll interno */
+    max-height: calc(100vh - 240px);
 }
 .kanban-column-title {
     font-size: 0.95rem;
@@ -2798,7 +443,7 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     flex-grow: 1;
     min-height: 100px;
     transition: background-color 0.2s;
-    overflow-y: auto; /* Permite scroll *dentro* da coluna */
+    overflow-y: auto;
 }
 .kanban-column-content.drag-over { background-color: rgba(0, 180, 216, 0.1); }
 .kanban-card {
@@ -2822,7 +467,7 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     color: var(--dark);
     margin-bottom: 6px;
     font-size: 0.9rem;
-    white-space: normal; /* Permite quebra de linha */
+    white-space: normal;
 }
 .kanban-card-footer {
     display: flex;
@@ -2832,7 +477,6 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     font-size: 0.75rem;
     color: #6b7280;
 }
-/* Cores de Prioridade */
 .kanban-card.priority-urgente { border-left-color: #dc2626; }
 .kanban-card.priority-alta { border-left-color: #f59e0b; }
 .kanban-card.priority-media { border-left-color: var(--accent); }
@@ -2866,9 +510,6 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     border-color: #9ca3af;
 }
 
-/* ========================================
-   ESTILOS BLOCO DE NOTAS (Asana Touch)
-   ======================================== */
 .note-container {
     display: flex;
     height: calc(100vh - 200px);
@@ -2914,9 +555,6 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
 #noteBody:focus { outline: none; box-shadow: none; }
 .note-editor .btn { margin: 16px 20px; align-self: flex-end; }
 
-/* ========================================
-   ESTILOS TIMELINE (Asana Touch)
-   ======================================== */
 .timeline-item {
     padding: 12px 16px; background-color: white; border-left: 3px solid #9ca3af;
     border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px;
@@ -2934,42 +572,416 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
 .timeline-item.updated .timeline-item-icon { color: #f59e0b; }
 .timeline-item.completed .timeline-item-icon { color: var(--primary); }
 
-/* ========================================
-   ESTILOS PERFIL (Asana Touch)
-   ======================================== */
  #perfilPicturePreview {
     border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
  }
  #perfilView .form-group input[disabled] { border: 1px solid #e5e7eb; }
 
-/* ========================================
-   RESPONSIVIDADE (Ajustes Finais)
-   ======================================== */
+#listView {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    padding: 0 !important; 
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+#listView .view-header-dark {
+     padding: 1rem 1.5rem;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     border-bottom: 1px solid #334155;
+     background-color: #1e293b;
+     flex-shrink: 0;
+}
+#listView .view-header-dark h1 {
+    color: #ffffff;
+    font-size: 1.25rem;
+    margin: 0;
+}
+#listView .btn-primary {
+    background-color: var(--primary);
+    border: none;
+    font-size: 0.8rem;
+    padding: 8px 14px;
+    text-transform: none;
+}
+#listView .btn-primary:hover {
+    filter: brightness(1.1);
+}
+.project-table-container {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    width: 100%;
+    flex-grow: 1;
+    overflow: auto;
+    border-top: 1px solid #334155;
+}
+.project-table-dark {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+.project-table-dark thead th {
+    background-color: #0f172a;
+    border-bottom: 2px solid #334155;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 500;
+    color: #94a3b8;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+    text-transform: none;
+    font-size: 0.75rem;
+    letter-spacing: 0px;
+}
+.project-table-dark thead th:first-child {
+    padding-left: 10px;
+}
+.project-table-dark thead th .feather {
+    display: none;
+}
+.table-checkbox {
+    background-color: #334155;
+    border: 1px solid #64748b;
+    border-radius: 4px;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+}
+.project-header-row {
+    background-color: #1e293b;
+    font-weight: 600;
+    color: white;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 39px;
+    z-index: 9;
+}
+.project-header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 10px;
+    font-size: 0.85rem;
+}
+.project-toggle {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    color: #94a3b8;
+}
+.project-header-row:not(.expanded) .project-toggle {
+    transform: rotate(-90deg);
+}
+.project-priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.project-priority-dot.priority-urgente { background-color: #dc2626; }
+.project-priority-dot.priority-alta { background-color: #f59e0b; }
+.project-priority-dot.priority-media { background-color: var(--accent); }
+.project-priority-dot.priority-baixa { background-color: #6b7280; }
+.project-task-count {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+.btn-icon-task {
+    background: transparent;
+    color: #94a3b8;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+.project-header-row:hover .btn-icon-task {
+    opacity: 1;
+}
+.btn-icon-task:hover {
+    background-color: #334155;
+    color: white;
+}
+.task-data-row {
+    border-bottom: 1px solid #334155;
+    transition: background-color 0.15s ease;
+}
+.task-data-row:hover {
+    background-color: #334155;
+}
+.task-data-row td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    height: 36px;
+}
+.task-title-cell {
+    padding-left: 28px !important;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+    cursor: pointer;
+}
+.task-title-cell .feather {
+    color: #64748b;
+    width: 14px; height: 14px;
+}
+.person-cell {
+    gap: 6px;
+    padding: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+.person-cell:hover {
+    background-color: #334155;
+}
+.person-cell img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.person-cell span {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    font-weight: 500;
+    color: #e2e8f0;
+}
+.person-cell.person-unassigned {
+    justify-content: center;
+    color: #64748b;
+}
+.person-cell.person-unassigned:hover {
+    color: white;
+}
+.person-cell.person-unassigned .feather {
+    width: 16px; height: 16px;
+}
+.status-box {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    text-transform: capitalize;
+}
+.status-box:hover {
+    filter: brightness(1.2);
+    transform: scale(1.03);
+}
+.status-box.status-feito { background-color: var(--primary); }
+.status-box.status-em-andamento { background-color: #f59e0b; }
+.status-box.status-parado { background-color: #ef4444; }
+.status-box.status-planejamento { background-color: var(--accent); }
+.status-box.status-a-fazer { background-color: #64748b; }
+.status-box.status-concluído { background-color: var(--primary); }
+.status-box.status-default { background-color: #64748b; }
+
+.timeline-box {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    background-color: #334155;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.timeline-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 4px;
+    opacity: 0.7;
+}
+.timeline-text {
+    position: relative;
+    z-index: 1;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.duration-cell {
+    font-size: 0.8rem;
+    text-align: right;
+    color: #cbd5e1;
+    padding-right: 20px !important;
+}
+.dependency-cell {
+    font-size: 0.8rem;
+}
+.dependency-tag {
+    background-color: var(--accent);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+}
+.dependency-cell-empty {
+    color: #64748b;
+    text-align: center;
+    font-size: 1.1rem;
+}
+.effort-cell {
+    font-size: 0.8rem;
+    text-align: right;
+    color: #cbd5e1;
+    padding-right: 20px !important;
+}
+.date-cell {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    font-weight: 500;
+}
+.completion-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+.completion-status .feather {
+    width: 14px; height: 14px;
+}
+.completion-status.status-feito-a-tempo { color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
+.completion-status.status-atrasado { color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
+.completion-status.status-na { color: #64748b; background-color: rgba(100, 116, 139, 0.1); }
+
+.add-task-row {
+    border-bottom: 1px solid #334155;
+}
+.add-task-row td {
+    padding: 0 !important;
+}
+.add-task-button-dark {
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    padding: 8px 12px;
+    padding-left: 28px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.add-task-button-dark .feather {
+    width: 14px; height: 14px;
+}
+.add-task-button-dark:hover {
+    background-color: #1e293b;
+    color: #94a3b8;
+}
+.project-table-footer {
+    padding: 10px 1.5rem;
+    background-color: #0f172a;
+    border-top: 1px solid #334155;
+    position: sticky;
+    bottom: 0;
+    z-index: 8;
+}
+.add-group-button {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+.add-group-button:hover {
+    background-color: #1e293b;
+    color: #94a3b8;
+}
+.add-group-button .feather {
+    width: 14px; height: 14px;
+}
+
+.modal-overlay-transparent {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1005;
+}
+.dropdown-menu-popup {
+    display: none;
+    position: absolute;
+    width: 200px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1010;
+    padding: 8px;
+}
+.status-option {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+}
+.status-option:last-child {
+    margin-bottom: 0;
+}
+.status-option:hover {
+    filter: brightness(1.2);
+    transform: scale(1.02);
+}
+
 @media (max-width: 768px) {
-    /* TopBar Mobile */
     #topBar { padding: 0 1rem; height: 60px; }
-    #topBarSearch { display: none; } /* Esconde busca no mobile */
-    #topBarProjectName { display: none; } /* Esconde nome do projeto */
-    #topBar .btn-success .hidden { display: none; } /* Esconde texto "Nova Tarefa" */
+    #topBarSearch { display: none; }
+    #topBarProjectName { display: none; }
+    #topBar .btn-success .hidden { display: none; }
     #topBar .btn-success { padding: 0.5rem; }
     #topBar .btn-success .mr-2 { margin-right: 0; }
     
-    /* Sidebar Mobile (agora é um overlay) */
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
         height: 100vh;
-        z-index: 1020; /* Acima de tudo, exceto modais */
+        z-index: 1020;
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 280px; /* Largura fixa no mobile */
+        width: 280px;
     }
     body.sidebar-open .sidebar {
         transform: translateX(0);
         box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
-    /* Overlay escuro */
     #sidebarOverlay {
         display: none;
         position: fixed;
@@ -2980,17 +992,15 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     body.sidebar-open #sidebarOverlay {
         display: block;
     }
-    /* Esconde sidebar recolhida (não faz sentido no mobile) */
     .sidebar.collapsed {
         transform: translateX(-100%);
     }
 
-    /* Conteúdo Principal */
     .main-content { padding-left: 1rem; padding-right: 1rem; }
     .view-content h1 { font-size: 1.5rem; margin-bottom: 1rem; }
 
     .kanban-container { flex-direction: column; gap: 16px; min-height: auto; max-height: none; }
-    .kanban-column { flex: 1 1 auto; max-height: 400px; } /* Altura max p/ colunas no mobile */
+    .kanban-column { flex: 1 1 auto; max-height: 400px; }
 
     .note-container { flex-direction: column; height: auto; }
     .note-list { flex: 0 0 auto; border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 200px; }
@@ -3005,1385 +1015,27 @@ tr:last-child td:last-child { border-bottom-right-radius: 10px; }
     .grid.grid-cols-1.md\:grid-cols-2 { grid-template-columns: 1fr; }
 }
 
-/* Ajustes finos */
 .loading { display: flex; justify-content: center; align-items: center; padding: 30px; color: var(--secondary); font-size: 0.9rem; }
 .spinner { width: 24px; height: 24px; margin-right: 8px; border: 3px solid rgba(0, 212, 170, 0.1); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* ... existing code ... */
-    document.body.classList.remove('sidebar-open');
-}
-/* ... existing code ... */
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* ========================================
-   NOVOS ESTILOS: Tabela de Lista (Monday Style)
-   ======================================== */
-
-.task-list-table {
-    width: 100%;
-    border-collapse: collapse; /* Borda única */
-    font-size: 0.9rem;
-    color: var(--dark);
-}
-
-.task-list-table thead th {
-    background-color: #f9fafb; /* Cinza claro */
-    border-bottom: 2px solid #e5e7eb; /* Borda mais grossa no header */
-    padding: 12px 16px;
-    text-align: left;
-    font-weight: 600;
-    color: #4b5563; /* Cinza escuro */
-    position: sticky; /* Header pegajoso */
-    top: 0;
-}
-
-.task-list-table tbody tr {
-    border-bottom: 1px solid #e5e7eb; /* Borda de linha */
-    transition: background-color 0.15s ease;
-}
-
-.task-list-table tbody tr:hover {
-    background-color: #f3f4f6; /* Hover sutil */
-}
-
-.task-list-table td {
-    padding: 14px 16px;
-    vertical-align: middle;
-}
-
-.task-list-table .task-name-cell {
-    font-weight: 500;
-    color: var(--accent);
-    cursor: pointer;
-}
-.task-list-table .task-name-cell:hover {
-    text-decoration: underline;
-}
-
-.task-list-table .assignee-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.task-list-table .assignee-cell img {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid #eee;
-}
-.task-list-table .assignee-cell .no-assignee {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-}
-
-.task-list-table .status-cell span {
-    padding: 3px 10px;
-    border-radius: 99px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: capitalize;
-}
-/* Cores baseadas no nome do status (exemplo) */
-.task-list-table .status-a-fazer { background-color: #e0e7ff; color: #3730a3; }
-.task-list-table .status-em-andamento { background-color: #fef3c7; color: #92400e; }
-.task-list-table .status-concluído { background-color: #d1fae5; color: #065f46; }
-.task-list-table .status-default { background-color: #e5e7eb; color: #4b5563; }
-
-.task-list-table .date-cell {
-    font-weight: 500;
-}
-.task-list-table .date-cell.is-late {
-    color: #dc2626; /* Vermelho para datas atrasadas */
-}
-
-/* ... (todo o seu CSS existente) ... */
-/* ========================================
-   15. NOVA LÓGICA: Lista de Tarefas (View)
-   ======================================== */
-/* ... (estilos da lista de tarefas existente) ... */
-
-/* NOVOS ESTILOS PARA GRUPOS (Monday Style) */
-.task-group-header {
-    background-color: #f7f9fc; /* Fundo levemente azulado */
-    font-weight: 600;
-    color: var(--dark);
-    border-top: 2px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
-}
-.task-group-header:first-child {
-    border-top: none;
-}
-.task-group-header td {
-    padding: 12px 16px;
-    font-size: 1rem;
-}
-.group-toggle {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
+input[type="file"] {
+    padding: 8px;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    transition: all 0.2s ease;
+    background-color: white;
+}
+input[type="file"]::file-selector-button {
     margin-right: 8px;
-}
-.group-toggle:hover {
-    background-color: #e5e7eb;
-}
-.group-toggle .feather-chevron-right {
-    display: block;
-}
-.group-toggle .feather-chevron-down {
-    display: none;
-}
-.task-group-header.expanded .group-toggle .feather-chevron-right {
-    display: none;
-}
-.task-group-header.expanded .group-toggle .feather-chevron-down {
-    display: block;
-}
-
-/* Linha de resumo (quando recolhido) */
-.task-group-summary {
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    display: none; /* Começa escondido */
-}
-.task-group-summary td {
-    padding: 10px 16px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #4b5563;
-}
-.task-group-summary .summary-label {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-/* Linha "Adicionar Tarefa" */
-.add-task-row td {
-    padding: 8px 16px;
-}
-.add-task-button {
-    cursor: pointer;
-    color: #6b7280;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: color 0.2s;
-}
-.add-task-button:hover {
-    color: var(--accent);
-}
-
-/* Ocultar linhas de tarefa quando o grupo está recolhido */
-.task-group-header:not(.expanded) + .task-row {
-    display: none;
-}
-.task-group-header:not(.expanded) + .task-row + .task-row {
-    display: none;
-}
-/* (Isso é simplificado, o JS vai controlar) */
-
-/* Novas colunas de Esforço (alinhadas à direita) */
-.task-list-table .esforco-cell {
-    text-align: right;
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #4b5563;
-}
-.task-list-table th.esforco-header {
-    text-align: right;
-}
-/* ... (todo o seu CSS existente) ... */
-/* ========================================
-   15. NOVA LÓGICA: Lista de Tarefas (View)
-   ======================================== */
-/* ... (estilos da lista de tarefas existente) ... */
-
-/* NOVOS ESTILOS PARA GRUPOS (Monday Style) */
-.task-group-header {
-    background-color: #f7f9fc; /* Fundo levemente azulado */
-    font-weight: 600;
-    color: var(--dark);
-    border-top: 2px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
-}
-.task-group-header:first-child {
-    border-top: none;
-}
-.task-group-header td {
-    padding: 12px 16px;
-    font-size: 1rem;
-}
-.group-toggle {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    margin-right: 8px;
-}
-.group-toggle:hover {
-    background-color: #e5e7eb;
-}
-.group-toggle .feather-chevron-right {
-    display: block;
-}
-.group-toggle .feather-chevron-down {
-    display: none;
-}
-.task-group-header.expanded .group-toggle .feather-chevron-right {
-    display: none;
-}
-.task-group-header.expanded .group-toggle .feather-chevron-down {
-    display: block;
-}
-
-/* Linha de resumo (quando recolhido) */
-.task-group-summary {
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    display: none; /* Começa escondido */
-}
-.task-group-summary td {
-    padding: 10px 16px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #4b5563;
-}
-.task-group-summary .summary-label {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-/* Linha "Adicionar Tarefa" */
-.add-task-row td {
-    padding: 8px 16px;
-}
-.add-task-button {
-    cursor: pointer;
-    color: #6b7280;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: color 0.2s;
-}
-.add-task-button:hover {
-    color: var(--accent);
-}
-
-/* Ocultar linhas de tarefa quando o grupo está recolhido */
-.task-group-header:not(.expanded) + .task-row {
-    display: none;
-}
-.task-group-header:not(.expanded) + .task-row + .task-row {
-    display: none;
-}
-/* (Isso é simplificado, o JS vai controlar) */
-
-/* Novas colunas de Esforço (alinhadas à direita) */
-.task-list-table .esforco-cell {
-    text-align: right;
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #4b5563;
-}
-.task-list-table th.esforco-header {
-    text-align: right;
-}
-
-/* ... existing code ... */
-.task-list-table th.esforco-header {
-    text-align: right;
-}
-
-/* ========================================
-   CORREÇÃO DROPDOWNS (TOPBAR)
-   ======================================== */
-
-/* O dropdown-menu (perfil e seletor de time) */
-.dropdown-menu {
-    display: none; /* Escondido por padrão */
-    position: absolute;
-    top: 120%; /* Abaixo do botão */
-    right: 0;
-    width: 240px;
-    background: #1e293b; /* Cor de fundo (slate-800) */
-    border: 1px solid #334155; /* Borda (slate-700) */
-    border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    z-index: 1010;
-    overflow: hidden;
-    animation: popIn 0.2s ease-out; /* Animação sutil */
-}
-
-/* Seletor de time (que é a esquerda) */
-#teamSelectorMenu {
-    right: auto;
-    left: 0;
-    width: 280px;
-}
-
-/* ESTA É A REGRA FALTANTE: */
-/* Mostra o menu quando ele (ou seu pai) tem a classe .open */
-.dropdown-menu.open, .relative.open .dropdown-menu {
-    display: block;
-}
-
-/* Links dentro do dropdown */
-.dropdown-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem; /* 12px 16px */
-    font-size: 0.9rem;
-    color: #e2e8f0; /* slate-200 */
-    transition: background-color 0.2s ease;
-    text-decoration: none; /* Garante que não seja sublinhado */
-}
-.dropdown-item:hover, .dropdown-item.active {
-    background-color: #334155; /* slate-700 */
-    color: white;
-}
-.dropdown-item .feather {
-    color: #94a3b8; /* slate-400 */
-    margin-right: 0.75rem;
-}
-/* ... (Todo o CSS anterior) ... */
-
-/* ========================================
-   REMOÇÃO DE ESTILOS ANTIGOS DA LISTA
-   ======================================== */
-
-/* Removemos os estilos antigos da .task-list-table que estava no modo claro */
-.task-list-table, .task-group-header, .task-group-summary, .add-task-row, .task-list-table .assignee-cell, .task-list-table .status-cell span, .task-list-table .date-cell {
-    /* Esses estilos foram substituídos pelos novos .project-table-dark */
-    /* Deixá-los aqui causaria conflito */
-}
-
-
-/* ========================================
-   NOVOS ESTILOS: Tabela de Projetos (Modo Dark - Monday Style)
-   ======================================== */
-
-/* Container da view de lista */
-#listView .container {
-    /* Removemos o padding para a tabela ir de ponta a ponta */
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    max-width: 100% !important;
-}
-#listView .container .mb-6 {
-    /* Adicionamos o padding de volta para o H1 e botão */
-    padding-left: 1.5rem; /* 24px */
-    padding-right: 1.5rem; /* 24px */
-}
-
-/* Container da Tabela */
-.project-table-container {
-    background-color: #1e293b; /* Fundo escuro (slate-800) */
-    color: #e2e8f0; /* Texto claro (slate-200) */
-    width: 100%;
-    overflow-x: auto; /* Permite scroll horizontal na tabela */
-    border-top: 1px solid #334155; /* slate-700 */
-    border-bottom: 1px solid #334155; /* slate-700 */
-}
-
-.project-table-controls {
-    padding: 12px 1.5rem; /* 24px */
-    background-color: #1e293b; /* slate-800 */
-    border-bottom: 1px solid #334155; /* slate-700 */
-}
-
-.project-table-dark {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem; /* Fonte menor */
-}
-
-/* Header da Tabela */
-.project-table-dark thead th {
-    background-color: #1e293b; /* slate-800 */
-    border-bottom: 2px solid #0f172a; /* slate-900 */
-    padding: 12px 16px;
-    text-align: left;
-    font-weight: 500;
-    color: #94a3b8; /* slate-400 */
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    white-space: nowrap;
-    text-transform: uppercase; /* Estilo Monday */
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-}
-.project-table-dark thead th .feather {
-    vertical-align: middle;
-    margin-top: -2px;
-    color: #64748b; /* slate-500 */
-}
-
-/* Linha de Header do Projeto (antigo Grupo) */
-.project-header-row {
-    background-color: #293548; /* Tom ligeiramente mais claro */
-    font-weight: 600;
-    color: white;
-    border-top: 1px solid #334155; /* slate-700 */
-    border-bottom: 1px solid #334155; /* slate-700 */
-    position: sticky; /* Deixa o header do projeto pegajoso */
-    top: 45px; /* Abaixo do header da tabela */
-    z-index: 9;
-}
-.project-header-row:first-child {
-    border-top: none;
-}
-.project-header-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    font-size: 0.95rem;
-}
-.project-toggle {
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-.project-header-row:not(.expanded) .project-toggle {
-    transform: rotate(-90deg);
-}
-.project-priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.project-priority-dot.priority-urgente { background-color: #dc2626; }
-.project-priority-dot.priority-alta { background-color: #f59e0b; }
-.project-priority-dot.priority-media { background-color: var(--accent); }
-.project-priority-dot.priority-baixa { background-color: #6b7280; }
-
-.project-title {
-    flex-grow: 1;
-}
-.project-task-count {
-    color: #94a3b8; /* slate-400 */
-    font-size: 0.8rem;
-    font-weight: 400;
-}
-/* Botão de adicionar tarefa no header do projeto */
-.btn-icon-task {
-    background: transparent;
-    color: #94a3b8; /* slate-400 */
-    padding: 4px;
-    border-radius: 4px;
-    opacity: 0.5;
-    transition: all 0.2s ease;
-}
-.project-header-row:hover .btn-icon-task {
-    opacity: 1;
-}
-.btn-icon-task:hover {
-    background-color: #334155; /* slate-700 */
-    color: white;
-}
-
-/* Linhas de Tarefa */
-.task-data-row {
-    border-bottom: 1px solid #334155; /* slate-700 */
-    transition: background-color 0.15s ease;
-}
-.task-data-row:hover {
-    background-color: #293548; /* Tom do header do projeto */
-}
-.task-data-row td {
-    padding: 10px 16px;
-    vertical-align: middle;
-}
-.task-title-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-left: 42px !important; /* Indentação da tarefa */
-    color: #e2e8f0; /* slate-200 */
-    font-weight: 500;
-    cursor: pointer;
-}
-.task-title-cell .feather {
-    color: #64748b; /* slate-500 */
-    flex-shrink: 0;
-}
-.task-title-cell:hover {
-    color: white;
-}
-
-/* Célula de Pessoa (Responsável) */
-.person-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    border-radius: 6px;
-    padding: 4px;
-    transition: background-color 0.2s ease;
-}
-.person-cell:hover {
-    background-color: #334155; /* slate-700 */
-}
-.person-cell img {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.person-cell span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 500;
-    color: #e2e8f0; /* slate-200 */
-}
-.person-cell.person-unassigned {
-    justify-content: center;
-    color: #64748b; /* slate-500 */
-}
-.person-cell.person-unassigned:hover {
-    color: white;
-}
-
-/* Célula de Status (Interativa) */
-.status-box {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    text-transform: capitalize;
-}
-.status-box:hover {
-    filter: brightness(1.2);
-    transform: scale(1.03);
-}
-.status-box.status-feito { background-color: #059669; } /* emerald-600 */
-.status-box.status-em-andamento { background-color: #f59e0b; } /* amber-500 */
-.status-box.status-parado { background-color: #dc2626; } /* red-600 */
-.status-box.status-planejamento { background-color: #6366f1; } /* indigo-500 */
-.status-box.status-default { background-color: #64748b; } /* slate-500 */
-/* Adicionando os status do Kanban aqui também */
-.status-box.status-a-fazer { background-color: #64748b; } /* slate-500 */
-.status-box.status-concluído { background-color: #059669; } /* emerald-600 */
-
-
-/* Célula de Timeline (Interativa) */
-.timeline-box {
-    position: relative;
-    width: 100%;
-    height: 28px;
-    background-color: #334155; /* slate-700 */
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-.timeline-bar {
-    position: absolute;
-    height: 100%;
-    border-radius: 6px;
-    opacity: 0.7;
-}
-.timeline-text {
-    position: relative;
-    z-index: 1;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-
-/* Célula de Esforço */
-.effort-cell {
-    text-align: center;
-    font-weight: 500;
-    color: #e2e8f0; /* slate-200 */
-}
-
-/* Célula de Status de Conclusão */
-.completion-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 500;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-.completion-status.status-feito-a-tempo { color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
-.completion-status.status-atrasado { color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
-.completion-status.status-na { color: #64748b; background-color: rgba(100, 116, 139, 0.1); }
-
-
-/* Linha "Adicionar Tarefa" (Modo Dark) */
-.add-task-row {
-    border-bottom: 1px solid #334155; /* slate-700 */
-}
-.add-task-row td {
-    padding: 0 !important;
-}
-.add-task-button-dark {
-    cursor: pointer;
-    color: #64748b; /* slate-500 */
-    font-weight: 500;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-    padding: 10px 16px;
-    padding-left: 42px; /* Alinha com as tarefas */
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.add-task-button-dark:hover {
-    background-color: #293548;
-    color: #94a3b8; /* slate-400 */
-}
-
-/* ========================================
-   NOVOS ESTILOS: Modais Pop-up
-   ======================================== */
-
-/* Overlay transparente para fechar ao clicar */
-.modal-overlay-transparent {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 1005;
-}
-
-/* Pop-up de Status (flutuante) */
-.dropdown-menu-popup {
-    display: none; /* Controlado pelo JS */
-    position: absolute;
-    width: 200px;
-    background: #1e293b; /* slate-800 */
-    border: 1px solid #334155; /* slate-700 */
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1010;
-    padding: 8px;
-    animation: popIn 0.2s ease-out;
-}
-.status-option {
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    text-transform: capitalize;
-    margin-bottom: 4px;
-}
-.status-option:last-child {
-    margin-bottom: 0;
-}
-.status-option:hover {
-    filter: brightness(1.2);
-    transform: scale(1.02);
-}
-
-/* ========================================
-   ADIÇÕES E AJUSTES - ESTILO MONDAY.COM
-   (Adicione este bloco ao FINAL do seu style.css)
-   ======================================== */
-
-/* Ajuste na view #listView para ser escura e ocupar tudo */
-#listView {
-    background-color: #0f172a; /* Fundo principal (slate-900) */
-    color: #e2e8f0; /* Texto (slate-200) */
-    /* Remove padding da view-content se houver */
-    padding: 0 !important; 
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Tira o padding do container de H1/Botão que existia antes */
-#listView .container {
-     padding-left: 0 !important;
-     padding-right: 0 !important;
-     max-width: 100% !important;
-     margin: 0 !important;
-}
-
-/* Adiciona padding de volta apenas ao header da view (H1/Botão) */
-#listView .view-header-dark {
-     padding: 1rem 1.5rem; /* 16px 24px */
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
-     border-bottom: 1px solid #334155; /* slate-700 */
-     background-color: #1e293b; /* Fundo (slate-800) */
-     flex-shrink: 0;
-}
-
-#listView .view-header-dark h1 {
-    color: #ffffff;
-    font-size: 1.25rem; /* Menor (20px) */
-    margin: 0;
-}
-
-/* Botão principal (ex: Criar Tarefa) */
-#listView .btn-primary {
-    background-color: #4f46e5; /* Azul Monday */
     border: none;
-    font-size: 0.8rem; /* Menor */
-    padding: 8px 14px; /* Menor */
-    text-transform: none;
-}
-#listView .btn-primary:hover {
-    background-color: #4338ca;
-}
-
-/* Container da Tabela (Fundo mais escuro que a view) */
-.project-table-container {
-    background-color: #0f172a; /* Fundo principal (slate-900) */
-    color: #e2e8f0; /* slate-200 */
-    width: 100%;
-    flex-grow: 1; /* Ocupa o espaço restante */
-    overflow: auto; /* Permite scroll na tabela (vertical e horizontal) */
-    border-top: 1px solid #334155; /* slate-700 */
-    /* Remove estilos antigos se houver */
-    border-bottom: none; 
-}
-
-/* Remove o antigo .project-table-controls */
-.project-table-controls {
-    display: none;
-}
-
-/* Tabela (Sobrescreve/Refina .project-table-dark) */
-.project-table-dark {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem; /* BEM MENOR (13px) */
-}
-
-/* Header da Tabela */
-.project-table-dark thead th {
-    background-color: #0f172a; /* slate-900 */
-    border-bottom: 2px solid #334155; /* slate-700 */
-    padding: 10px 12px; /* Menor padding */
-    text-align: left;
-    font-weight: 500;
-    color: #94a3b8; /* slate-400 */
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    white-space: nowrap;
-    text-transform: none; /* Sem uppercase */
-    font-size: 0.75rem; /* 12px */
-    letter-spacing: 0px;
-}
-.project-table-dark thead th:first-child {
-    padding-left: 10px;
-}
-.project-table-dark thead th .feather {
-    display: none; /* Esconde ícones do header (como na imagem) */
-}
-
-/* Checkbox da Tabela */
-.table-checkbox {
-    background-color: #334155; /* slate-700 */
-    border: 1px solid #64748b; /* slate-500 */
-    border-radius: 4px;
-    width: 14px;
-    height: 14px;
-    vertical-align: middle;
-}
-
-/* Linha de Header do Projeto (Grupo) */
-.project-header-row {
-    background-color: #1e293b; /* slate-800 */
-    font-weight: 600;
-    color: white;
-    border-bottom: 1px solid #334155; /* slate-700 */
-    position: sticky;
-    top: 39px; /* Abaixo do header da tabela (38px + 1px border) */
-    z-index: 9;
-}
-.project-header-content {
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Menor gap */
-    padding: 12px 10px; /* Menor padding */
-    font-size: 0.85rem; /* Menor (14px) */
-}
-.project-toggle {
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    color: #94a3b8; /* slate-400 */
-}
-.project-header-row:not(.expanded) .project-toggle {
-    transform: rotate(-90deg);
-}
-.project-priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.project-priority-dot.priority-urgente { background-color: #dc2626; }
-.project-priority-dot.priority-alta { background-color: #f59e0b; }
-.project-priority-dot.priority-media { background-color: var(--accent); }
-.project-priority-dot.priority-baixa { background-color: #6b7280; }
-.project-task-count {
-    color: #64748b; /* slate-500 */
-    font-size: 0.75rem;
-    font-weight: 400;
-}
-.btn-icon-task {
-    background: transparent;
-    color: #94a3b8; /* slate-400 */
-    padding: 4px;
-    border-radius: 4px;
-    opacity: 0.5;
-    transition: all 0.2s ease;
-}
-.project-header-row:hover .btn-icon-task {
-    opacity: 1;
-}
-.btn-icon-task:hover {
-    background-color: #334155; /* slate-700 */
-    color: white;
-}
-
-/* Linhas de Tarefa */
-.task-data-row {
-    border-bottom: 1px solid #334155; /* slate-700 */
-    transition: background-color 0.15s ease;
-}
-.task-data-row:hover {
-    background-color: #1e293b; /* slate-800 */
-}
-.task-data-row td {
-    padding: 8px 12px; /* Menor padding */
-    vertical-align: middle;
-    height: 36px; /* Altura fixa (menor) */
-}
-.task-title-cell {
-    padding-left: 28px !important; /* Indentação menor */
-    gap: 6px;
-}
-.task-title-cell .feather {
-    color: #64748b; /* slate-500 */
-    width: 14px; height: 14px; /* Ícone menor */
-}
-
-/* Célula de Pessoa (Responsável) */
-.person-cell {
-    gap: 6px;
-    padding: 2px; /* Menor padding */
-}
-.person-cell img {
-    width: 20px; /* Menor */
-    height: 20px; /* Menor */
-}
-.person-cell span {
-    font-size: 0.8rem; /* 13px */
-}
-.person-cell.person-unassigned .feather {
-    width: 16px; height: 16px;
-}
-
-/* Célula de Status (Interativa) */
-.status-box {
-    padding: 4px 8px; /* Menor */
-    border-radius: 4px; /* Menos redondo */
-    font-size: 0.75rem; /* 12px */
-}
-/* Cores (Exemplo da imagem - Verde, Azul, Laranja) */
-.status-box.status-feito { background-color: #10b981; } /* Verde */
-.status-box.status-em-andamento { background-color: #f59e0b; } /* Laranja */
-.status-box.status-parado { background-color: #ef4444; } /* Vermelho */
-.status-box.status-planejamento { background-color: #3b82f6; } /* Azul */
-.status-box.status-a-fazer { background-color: #64748b; } /* Cinza */
-.status-box.status-concluído { background-color: #10b981; } /* Verde */
-.status-box.status-default { background-color: #64748b; } /* Cinza */
-
-/* Célula de Timeline (Interativa) */
-.timeline-box {
-    height: 24px; /* Menor */
-    border-radius: 4px;
-}
-.timeline-text {
-    font-size: 0.7rem; /* 11px */
-}
-
-/* Célula de Esforço */
-.effort-cell {
-    font-size: 0.8rem; /* 13px */
-    text-align: right;
-}
-
-/* Célula de Status de Conclusão */
-.completion-status {
-    gap: 4px;
-    font-size: 0.75rem; /* 12px */
-    padding: 3px 6px;
-    border-radius: 4px;
-}
-.completion-status .feather {
-    width: 14px; height: 14px;
-}
-
-/* Linha "Adicionar Tarefa" (Modo Dark) */
-.add-task-button-dark {
-    padding: 8px 12px; /* Menor */
-    padding-left: 28px; /* Alinha com tarefas */
-    font-size: 0.8rem; /* 13px */
-    gap: 6px;
-}
-.add-task-button-dark .feather {
-    width: 14px; height: 14px;
-}
-
-/* NOVO: Rodapé da Tabela (Adicionar Grupo) */
-.project-table-footer {
-    padding: 10px 1.5rem; /* 24px */
-    background-color: #0f172a; /* slate-900 */
-    border-top: 1px solid #334155; /* slate-700 */
-    position: sticky;
-    bottom: 0;
-    z-index: 8;
-}
-.add-group-button {
-    background: transparent;
-    border: none;
-    color: #64748b; /* slate-500 */
-    font-size: 0.85rem;
-    font-weight: 500;
+    background: var(--secondary);
     padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-.add-group-button:hover {
-    background-color: #1e293b; /* slate-800 */
-    color: #94a3b8; /* slate-400 */
-}
-.add-group-button .feather {
-    width: 14px; height: 14px;
-}
-
-/* Pop-up de Status (flutuante) */
-.dropdown-menu-popup {
-    display: none; /* Controlado pelo JS */
-    position: absolute;
-    width: 200px;
-    background: #1e293b; /* slate-800 */
-    border: 1px solid #334155; /* slate-700 */
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1010;
-    padding: 8px;
-}
-.status-option {
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    text-transform: capitalize;
-    margin-bottom: 4px;
-}
-.status-option:last-child {
-    margin-bottom: 0;
-}
-.status-option:hover {
-    filter: brightness(1.2);
-    transform: scale(1.02);
-}
-/* ========================================
-   ADIÇÕES E AJUSTES - ESTILO MONDAY.COM
-   (Adicione este bloco ao FINAL do seu style.css)
-   ======================================== */
-
-/* Ajuste na view #listView para ser escura e ocupar tudo */
-#listView {
-    background-color: #0f172a; /* Fundo principal (slate-900) */
-    color: #e2e8f0; /* Texto (slate-200) */
-    /* Remove padding da view-content se houver */
-    padding: 0 !important; 
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Tira o padding do container de H1/Botão que existia antes */
-#listView .container {
-     padding-left: 0 !important;
-     padding-right: 0 !important;
-     max-width: 100% !important;
-     margin: 0 !important;
-}
-
-/* Adiciona padding de volta apenas ao header da view (H1/Botão) */
-#listView .view-header-dark {
-     padding: 1rem 1.5rem; /* 16px 24px */
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
-     border-bottom: 1px solid #334155; /* slate-700 */
-     background-color: #1e293b; /* Fundo (slate-800) */
-     flex-shrink: 0;
-}
-
-#listView .view-header-dark h1 {
-    color: #ffffff;
-    font-size: 1.25rem; /* Menor (20px) */
-    margin: 0;
-}
-
-/* Botão principal (ex: Criar Tarefa) */
-#listView .btn-primary {
-    background-color: var(--primary); /* Cor JP */
-    border: none;
-    font-size: 0.8rem; /* Menor */
-    padding: 8px 14px; /* Menor */
-    text-transform: none;
-}
-#listView .btn-primary:hover {
-    filter: brightness(1.1); /* Cor JP */
-}
-
-/* Container da Tabela (Fundo mais escuro que a view) */
-.project-table-container {
-    background-color: #0f172a; /* Fundo principal (slate-900) */
-    color: #e2e8f0; /* slate-200 */
-    width: 100%;
-    flex-grow: 1; /* Ocupa o espaço restante */
-    overflow: auto; /* Permite scroll na tabela (vertical e horizontal) */
-    border-top: 1px solid #334155; /* slate-700 */
-    /* Remove estilos antigos se houver */
-    border-bottom: none; 
-}
-
-/* Remove o antigo .project-table-controls */
-.project-table-controls {
-    display: none;
-}
-
-/* Tabela (Sobrescreve/Refina .project-table-dark) */
-.project-table-dark {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem; /* BEM MENOR (13px) */
-}
-
-/* Header da Tabela */
-.project-table-dark thead th {
-    background-color: #0f172a; /* slate-900 */
-    border-bottom: 2px solid #334155; /* slate-700 */
-    padding: 10px 12px; /* Menor padding */
-    text-align: left;
-    font-weight: 500;
-    color: #94a3b8; /* slate-400 */
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    white-space: nowrap;
-    text-transform: none; /* Sem uppercase */
-    font-size: 0.75rem; /* 12px */
-    letter-spacing: 0px;
-}
-.project-table-dark thead th:first-child {
-    padding-left: 10px;
-}
-.project-table-dark thead th .feather {
-    display: none; /* Esconde ícones do header (como na imagem) */
-}
-
-/* Checkbox da Tabela */
-.table-checkbox {
-    background-color: #334155; /* slate-700 */
-    border: 1px solid #64748b; /* slate-500 */
     border-radius: 4px;
-    width: 14px;
-    height: 14px;
-    vertical-align: middle;
-}
-
-/* Linha de Header do Projeto (Grupo) */
-.project-header-row {
-    background-color: #1e293b; /* slate-800 */
-    font-weight: 600;
-    color: white;
-    border-bottom: 1px solid #334155; /* slate-700 */
-    position: sticky;
-    top: 39px; /* Abaixo do header da tabela (38px + 1px border) */
-    z-index: 9;
-}
-.project-header-content {
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Menor gap */
-    padding: 12px 10px; /* Menor padding */
-    font-size: 0.85rem; /* Menor (14px) */
-}
-.project-toggle {
+    color: #fff;
     cursor: pointer;
-    transition: transform 0.2s ease;
-    color: #94a3b8; /* slate-400 */
+    transition: background-color .2s ease-in-out;
+    font-size: 0.9em;
 }
-.project-header-row:not(.expanded) .project-toggle {
-    transform: rotate(-90deg);
+input[type="file"]::file-selector-button:hover {
+    background: var(--accent);
 }
-.project-priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.project-priority-dot.priority-urgente { background-color: #dc2626; }
-.project-priority-dot.priority-alta { background-color: #f59e0b; }
-.project-priority-dot.priority-media { background-color: var(--accent); }
-.project-priority-dot.priority-baixa { background-color: #6b7280; }
-.project-task-count {
-    color: #64748b; /* slate-500 */
-    font-size: 0.75rem;
-    font-weight: 400;
-}
-.btn-icon-task {
-    background: transparent;
-    color: #94a3b8; /* slate-400 */
-    padding: 4px;
-    border-radius: 4px;
-    opacity: 0.5;
-    transition: all 0.2s ease;
-}
-.project-header-row:hover .btn-icon-task {
-    opacity: 1;
-}
-.btn-icon-task:hover {
-    background-color: #334155; /* slate-700 */
-    color: white;
-}
-
-/* Linhas de Tarefa */
-.task-data-row {
-    border-bottom: 1px solid #334155; /* slate-700 */
-    transition: background-color 0.15s ease;
-}
-.task-data-row:hover {
-    background-color: #334155; /* slate-700 (Hover mais claro) */
-}
-.task-data-row td {
-    padding: 8px 12px; /* Menor padding */
-    vertical-align: middle;
-    height: 36px; /* Altura fixa (menor) */
-}
-.task-title-cell {
-    padding-left: 28px !important; /* Indentação menor */
-    gap: 6px;
-    /* NOVO: Garante que o texto não quebre e mostre reticências */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 250px; /* Limite máximo para a coluna de tarefa */
-}
-.task-title-cell .feather {
-    color: #64748b; /* slate-500 */
-    width: 14px; height: 14px; /* Ícone menor */
-}
-
-/* Célula de Pessoa (Responsável) */
-.person-cell {
-    gap: 6px;
-    padding: 2px; /* Menor padding */
-}
-.person-cell img {
-    width: 20px; /* Menor */
-    height: 20px; /* Menor */
-}
-.person-cell span {
-    font-size: 0.8rem; /* 13px */
-    /* NOVO: Garante que o texto não quebre e mostre reticências */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px; /* Limite máximo para nome */
-}
-.person-cell.person-unassigned .feather {
-    width: 16px; height: 16px;
-}
-
-/* Célula de Status (Interativa) */
-.status-box {
-    padding: 4px 8px; /* Menor */
-    border-radius: 4px; /* Menos redondo */
-    font-size: 0.75rem; /* 12px */
-}
-/* Cores (Exemplo da imagem - Verde, Azul, Laranja) */
-.status-box.status-feito { background-color: var(--primary); } /* Verde (JP) */
-.status-box.status-em-andamento { background-color: #f59e0b; } /* Laranja */
-.status-box.status-parado { background-color: #ef4444; } /* Vermelho */
-.status-box.status-planejamento { background-color: var(--accent); } /* Azul (JP) */
-.status-box.status-a-fazer { background-color: #64748b; } /* Cinza */
-.status-box.status-concluído { background-color: var(--primary); } /* Verde (JP) */
-.status-box.status-default { background-color: #64748b; } /* Cinza */
-
-/* Célula de Timeline (Interativa) */
-.timeline-box {
-    height: 24px; /* Menor */
-    border-radius: 4px;
-}
-.timeline-text {
-    font-size: 0.7rem; /* 11px */
-}
-
-/* NOVO: Célula de Duração */
-.duration-cell {
-    font-size: 0.8rem; /* 13px */
-    text-align: right;
-    color: #cbd5e1; /* slate-300 */
-    padding-right: 20px !important;
-}
-
-/* NOVO: Célula de Dependência */
-.dependency-cell {
-    font-size: 0.8rem; /* 13px */
-}
-/* Estilo para a tag de dependência (requer JS) */
-.dependency-tag {
-    background-color: var(--accent); /* Azul (JP) */
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem; /* 12px */
-    font-weight: 500;
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 130px; /* Limite da célula */
-}
-.dependency-cell-empty {
-    color: #64748b; /* slate-500 */
-    text-align: center;
-    font-size: 1.1rem;
-}
-
-/* Célula de Esforço (Previsto e Utilizado) */
-.effort-cell {
-    font-size: 0.8rem; /* 13px */
-    text-align: right;
-    color: #cbd5e1; /* slate-300 */
-    padding-right: 20px !important;
-}
-
-/* NOVO: Célula de Data */
-.date-cell {
-    font-size: 0.8rem; /* 13px */
-    color: #cbd5e1; /* slate-300 */
-    font-weight: 500;
-}
-
-/* Célula de Status de Conclusão */
-.completion-status {
-    gap: 4px;
-    font-size: 0.75rem; /* 12px */
-    padding: 3px 6px;
-    border-radius: 4px;
-}
-.completion-status .feather {
-    width: 14px; height: 14px;
-}
-
-/* Linha "Adicionar Tarefa" (Modo Dark) */
-.add-task-button-dark {
-    padding: 8px 12px; /* Menor */
-    padding-left: 28px; /* Alinha com tarefas */
-    font-size: 0.8rem; /* 13px */
-    gap: 6px;
-}
-.add-task-button-dark .feather {
-    width: 14px; height: 14px;
-}
-
-/* NOVO: Rodapé da Tabela (Adicionar Grupo) */
-.project-table-footer {
-    padding: 10px 1.5rem; /* 24px */
-    background-color: #0f172a; /* slate-900 */
-    border-top: 1px solid #334155; /* slate-700 */
-    position: sticky;
-    bottom: 0;
-    z-index: 8;
-}
-.add-group-button {
-    background: transparent;
-    border: none;
-    color: #64748b; /* slate-500 */
-    font-size: 0.85rem;
-    font-weight: 500;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-.add-group-button:hover {
-    background-color: #1e293b; /* slate-800 */
-    color: #94a3b8; /* slate-400 */
-}
-.add-group-button .feather {
-    width: 14px; height: 14px;
-}
-
-/* Pop-up de Status (flutuante) */
-.dropdown-menu-popup {
-    display: none; /* Controlado pelo JS */
-    position: absolute;
-    width: 200px;
-    background: #1e293b; /* slate-800 */
-    border: 1px solid #334155; /* slate-700 */
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1010;
-    padding: 8px;
-}
-.status-option {
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    text-transform: capitalize;
-    margin-bottom: 4px;
-}
-.status-option:last-child {
-    margin-bottom: 0;
-}
-.status-option:hover {
-    filter: brightness(1.2);
-    transform: scale(1.02);
-}
-
-
