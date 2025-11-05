@@ -1938,11 +1938,11 @@ async function loadProjectListView(forceReload = false) {
                 }
                 
                 tbody.appendChild(createProjectHeaderRow(project));
-                tbody.appendChild(createProjectSummaryRow(project));
+                
                 
                 if (project.tarefas && project.tarefas.length > 0) {
                     project.tarefas.forEach(task => {
-                        tbody.appendChild(createTaskDataRow(task));
+                       tbody.appendChild(createTaskDataRowMonday(task));
                     });
                 }
                 tbody.appendChild(createAddTaskRow(project.id));
@@ -1958,7 +1958,7 @@ async function loadProjectListView(forceReload = false) {
             };
             tbody.appendChild(createProjectHeaderRow(noGroupProject));
             tasksWithoutGroup.forEach(task => {
-                tbody.appendChild(createTaskDataRow(task));
+                tbody.appendChild(createTaskDataRowMonday(task));
             });
             tbody.appendChild(createAddTaskRow(null)); 
         }
@@ -1980,26 +1980,130 @@ function createProjectHeaderRow(project) {
     tr.className = 'project-header-row expanded'; 
     tr.dataset.projectId = project.id;
     tr.onclick = (e) => {
-        if (e.target.closest('.btn-icon-task') || e.target.closest('.table-checkbox')) return;
-        toggleProjectGroup(project.id);
+        // Impede que o clique em um botão feche o grupo
+        if (e.target.closest('.btn-icon-task') || e.target.closest('a')) return;
+        
+        // Use a função de toggle estilo Monday
+        toggleProjectGroupMonday(project.id);
     };
 
-    const taskCount = project.tarefas?.length || 0;
-    const priority = project.prioridade || 'baixa';
+    const tasks = project.tarefas || [];
+    const totalTasks = tasks.length;
+    let totalDuracao = 0;
+    const statusCounts = {};
+    let totalEsforcoPrevisto = 0;
+    let totalEsforcoUtilizado = 0;
+    let minStartDate = null;
+    let maxEndDate = null;
 
-    tr.innerHTML = `
-        <td colspan="12">
+    if (totalTasks > 0) {
+        tasks.forEach(task => {
+            // 1. Calcular Timeline/Duração
+            let taskStart = task.data_inicio ? new Date(task.data_inicio).getTime() : null;
+            let taskEnd = task.data_entrega ? new Date(task.data_entrega).getTime() : null;
+
+            if (taskStart) {
+                if (minStartDate === null || taskStart < minStartDate) {
+                    minStartDate = taskStart;
+                }
+            }
+            if (taskEnd) {
+                if (maxEndDate === null || taskEnd > maxEndDate) {
+                    maxEndDate = taskEnd;
+                }
+            }
+            
+            // 2. Contar Status
+            const statusName = task.status ? task.status.nome : 'A Fazer';
+            statusCounts[statusName] = (statusCounts[statusName] || 0) + 1;
+
+            // 3. Somar Esforços
+            totalEsforcoPrevisto += task.esforco_previsto || 0;
+            totalEsforcoUtilizado += task.esforco_utilizado || 0;
+        });
+    }
+
+    // --- 1. Célula de Checkbox (Vazia) ---
+    // Corresponde a th style="width: 40px;"
+    const cellCheckbox = `<td></td>`; 
+
+    // --- 2. Célula de Título (com Nome, Toggle, etc.) ---
+    // Corresponde a th style="min-width: 250px;"
+    const priority = project.prioridade || 'baixa';
+    const cellTitle = `
+        <td class="project-title-cell">
             <div class="project-header-content">
                 <i data-feather="chevron-down" class="h-5 w-5 project-toggle"></i>
                 <span class="project-priority-dot priority-${priority}" title="Prioridade: ${priority}"></span>
                 <span class="project-title">${escapeHTML(project.nome)}</span>
-                <span class="project-task-count">(${taskCount} ${taskCount === 1 ? 'Tarefa' : 'Tarefas'})</span>
+                <span class="project-task-count">(${totalTasks} ${totalTasks === 1 ? 'Tarefa' : 'Tarefas'})</span>
                 <button class="btn-icon-task" title="Adicionar tarefa a este projeto" onclick="event.stopPropagation(); openTaskModal(null, null, '${project.id === 'no-group' ? '' : project.id}')">
                     <i data-feather="plus" class="h-4 w-4"></i>
                 </button>
             </div>
-        </td>
-    `;
+        </td>`;
+
+    // --- 3. Célula de Responsável (Vazia) ---
+    // Corresponde a th style="width: 150px;"
+    const cellResp = `<td></td>`;
+
+    // --- 4. Célula de Duração (Calculada) ---
+    // Corresponde a th style="width: 100px;"
+    let duracaoHtml = '-';
+    if (minStartDate && maxEndDate) {
+        const diffTime = Math.abs(maxEndDate - minStartDate);
+        // Adiciona 1 para incluir o dia de início
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+        duracaoHtml = `${diffDays}d`;
+    }
+    const cellDuracao = `<td class="summary-value">${duracaoHtml}</td>`;
+
+    // --- 5. Célula de Status (Barra) ---
+    // Corresponde a th style="width: 140px;"
+    let statusBarHtml = '<div class="status-summary-bar-container">';
+    if (totalTasks > 0) {
+        // Itera sobre as colunas DE ORDEM para a barra ficar na ordem certa
+        for (const col of currentColumns) {
+            const count = statusCounts[col.nome] || 0;
+            if (count > 0) {
+                 const statusSlug = col.nome.toLowerCase().replace(/ /g, '-');
+                 const widthPercent = (count / totalTasks) * 100;
+                 statusBarHtml += `<div class="status-summary-bar-segment status-${statusSlug}" style="width: ${widthPercent}%;" title="${col.nome}: ${count}"></div>`;
+            }
+        }
+    }
+    statusBarHtml += '</div>';
+    const cellStatus = `<td>${statusBarHtml}</td>`;
+
+    // --- 6. Célula de Dependente (Vazia) ---
+    // Corresponde a th style="width: 150px;"
+    const cellDependente = `<td></td>`;
+
+    // --- 7. Célula de Esforço Previsto ---
+    // Corresponde a th style="width: 120px;"
+    const cellEsforcoPrev = `<td class="summary-value">${totalEsforcoPrevisto > 0 ? totalEsforcoPrevisto + 'h' : '-'}</td>`;
+
+    // --- 8. Célula de Esforço Utilizado ---
+    // Corresponde a th style="width: 120px;"
+    const cellEsforcoUtil = `<td class="summary-value">${totalEsforcoUtilizado > 0 ? totalEsforcoUtilizado + 'h' : '-'}</td>`;
+
+    // --- 9. Célula "More" (Vazia) ---
+    // Corresponde a th style="width: 50px;"
+    const cellMore = `<td></td>`;
+    
+    // --- Montagem Final ---
+    // A ordem DEVE bater com a ordem dos <TH> no app.html
+    tr.innerHTML = 
+        cellCheckbox +
+        cellTitle +
+        cellResp +
+        cellDuracao +
+        cellStatus +
+        cellDependente +
+        cellEsforcoPrev +
+        cellEsforcoUtil +
+        cellMore;
+
     return tr;
 }
 
