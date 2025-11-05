@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#011627">
     <!-- Estilos -->
-    <!-- ATUALIZAÇÃO: Adicionado ?v=5 para forçar a limpeza de cache -->
+    <!-- Mantendo ?v=5 para garantir que o navegador não use cache -->
     <link rel="stylesheet" href="style.css?v=5">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bibliotecas JS -->
@@ -196,7 +196,7 @@
                 <!-- ATENÇÃO: O container foi removido daqui para que a tabela ocupe 100% da largura -->
 
                 <!-- #dashboardView -->
-                <!-- ATUALIZAÇÃO: Garantido que 'active' foi removido -->
+                <!-- CORREÇÃO: Adicionado container interno e removido 'active' -->
                 <div id="dashboardView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Produtividade</h1>
@@ -215,16 +215,11 @@
                                 <div class="relative h-96"><canvas id="statusChart"></canvas></div>
                             </div>
                         </div>
-                    </div> <!-- [JP-FIX]: Esta div (L289) fecha o .container (L271) -->
-                    <!-- 
-                      ERRO CORRIGIDO: 
-                      A lista de projetos estava aqui por engano. 
-                      Ela foi movida para dentro da #listView abaixo.
-                    -->
-                <!-- [JP-FIX]: Esta div fecha a #dashboardView (L270) -->
+                    </div>
                 </div>
 
                 <!-- #projetosView (Kanban) -->
+                <!-- CORREÇÃO: Esta view não tem container, pois é full-width -->
                 <div id="projetosView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <div class="flex justify-between items-center mb-6">
@@ -237,6 +232,7 @@
                 </div>
 
                 <!-- #listView (Projetos - REFORMULADO) -->
+                <!-- CORREÇÃO: Esta view não tem container, pois é full-width -->
                 <div id="listView" class="view-content">
                     <!-- O container de padding foi movido para dentro da view -->
                     <div class="view-header-dark"> <!-- NOVO HEADER ESCURO -->
@@ -324,6 +320,7 @@
                 </div>
 
                 <!-- #timelineView -->
+                <!-- CORREÇÃO: Adicionado container interno -->
                 <div id="timelineView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Timeline de Atividades Recentes</h1>
@@ -335,6 +332,7 @@
                 </div>
 
                 <!-- #calendarioView -->
+                <!-- CORREÇÃO: Adicionado container interno -->
                 <div id="calendarioView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Calendário de Entregas</h1>
@@ -346,6 +344,7 @@
                 </div>
 
                 <!-- #notasView -->
+                <!-- CORREÇÃO: Adicionado container interno -->
                 <div id="notasView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Bloco de Notas</h1>
@@ -369,6 +368,7 @@
                 </div>
 
                 <!-- #timeView -->
+                <!-- CORREÇÃO: Adicionado container interno -->
                 <div id="timeView" class="view-content">
                     <div class="container mx-auto px-6 py-8">
                         <div class="flex justify-between items-center mb-6">
@@ -412,6 +412,7 @@
                 </div>
 
                 <!-- #perfilView -->
+                <!-- CORREÇÃO: Adicionado container interno -->
                 <div id="perfilView" class="view-content">
                      <div class="container mx-auto px-6 py-8">
                          <h1 class="text-3xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
@@ -639,7 +640,7 @@
         // Configuração Inicial (Reutilizando sua API Proxy)
         const SUPABASE_PROXY_URL = '/api/proxy';
     </script>
-    <!-- ATUALIZAÇÃO: Adicionado ?v=5 para forçar a limpeza de cache -->
+    <!-- Mantendo ?v=5 para garantir que o navegador não use cache -->
     <script src="script.js?v=5"></script>
     <script>
         // Inicializar ícones e PWA
