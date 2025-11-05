@@ -1606,3 +1606,171 @@ input[type="file"]::file-selector-button:hover {
     height: 18px; /* Mais compacta que a do resumo antigo */
     border-radius: 4px;
 }
+/* --- Estilos do Modal --- */
+
+/* O fundo escuro (overlay) */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Quando o modal está aberto (via JS) */
+.modal-open {
+    display: flex; /* Mude para flex para centralizar */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Overlay escuro */
+}
+
+/* O conteúdo principal do modal */
+.modal-content {
+    position: relative;
+    background-color: #2C2C3A; /* Cor de fundo escura (do seu exemplo) */
+    color: #E0E0E0; /* Texto claro */
+    border-radius: 8px;
+    width: 400px; /* Largura do modal */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    font-family: Arial, sans-serif;
+    overflow: hidden; /* Para conter os cantos arredondados */
+}
+
+/* --- Partes Internas do Modal --- */
+
+.modal-header {
+    padding: 16px;
+    border-bottom: 1px solid #444;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 100%;
+    background-color: #1E1E28;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: white;
+    font-size: 14px;
+}
+
+.search-input::placeholder {
+    color: #888;
+}
+
+.info-icon {
+    margin-left: 10px;
+    color: #888;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 16px;
+}
+
+.suggested-people h4 {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    color: #AAA;
+    font-weight: normal;
+}
+
+.person-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.person-item:hover {
+    background-color: #3A3A4A;
+}
+
+.person-avatar {
+    width: 28px;
+    height: 28px;
+    background-color: #555;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+.modal-options {
+    margin-top: 16px;
+    border-top: 1px solid #444;
+    padding-top: 16px;
+}
+
+.option-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 8px;
+    text-decoration: none;
+    color: #E0E0E0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.option-link:hover {
+    background-color: #3A3A4A;
+}
+
+.option-link .icon {
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.modal-footer {
+    padding: 16px;
+    background-color: #22222E; /* Um pouco mais escuro */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.notification-toggle {
+    display: flex;
+    align-items: center;
+    color: #BBB;
+}
+
+.notification-toggle .icon {
+    margin-right: 8px;
+    color: #8A91F7; /* Cor azul/roxa do ícone */
+}
+
+.silence-btn {
+    background-color: #3A3A4A;
+    border: 1px solid #555;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.silence-btn:hover {
+    background-color: #4A4A5A;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+}
