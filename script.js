@@ -2311,3 +2311,336 @@ function createProjectSummaryRow(project) {
         <td class="summary-cell"></td> `;
     return tr;
 }
+
+// ===================================================
+// MELHORIAS PARA FUNCIONALIDADE ESTILO MONDAY.COM
+// Adicione estas funções ao final do seu script.js
+// ===================================================
+
+/**
+ * Cria uma linha de dados de tarefa com visual melhorado estilo Monday
+ */
+function createTaskDataRowMonday(task) {
+    const tr = document.createElement('tr');
+    tr.className = 'task-data-row';
+    tr.dataset.taskId = task.id;
+    tr.dataset.projectId = task.grupo_id || 'no-group';
+    
+    // 1. CHECKBOX
+    const checkboxHtml = `
+        <td style="width: 40px; text-align: center;">
+            <input type="checkbox" class="table-checkbox" onclick="event.stopPropagation(); toggleTaskSelection('${task.id}');" />
+        </td>`;
+
+    // 2. TÍTULO com hover effect
+    const taskTitleHtml = `
+        <td class="task-title-cell" onclick='openTaskModal(${JSON.stringify(task)})' style="min-width: 250px;">
+            <i data-feather="file-text" class="h-4 w-4"></i>
+            <span style="flex: 1;">${escapeHTML(task.titulo)}</span>
+        </td>`;
+
+    // 3. RESPONSÁVEL com avatar melhorado
+    let assigneeHtml = '';
+    if (task.assignee) {
+        assigneeHtml = `
+        <div class="person-cell" onclick="event.stopPropagation(); openAssigneeModal('${task.id}')">
+            <img src="${escapeHTML(task.assignee.profile_picture_url || 'https://placehold.co/24x24/00D4AA/023047?text=' + task.assignee.nome.charAt(0))}" 
+                 alt="${escapeHTML(task.assignee.nome)}"
+                 title="${escapeHTML(task.assignee.nome)}">
+            <span>${escapeHTML(task.assignee.nome)}</span>
+        </div>`;
+    } else {
+        assigneeHtml = `
+        <div class="person-cell person-unassigned" onclick="event.stopPropagation(); openAssigneeModal('${task.id}')">
+            <i data-feather="user-plus" class="h-5 w-5"></i>
+            <span style="font-size: 0.7rem;">Atribuir</span>
+        </div>`;
+    }
+    const assigneeCell = `<td style="width: 150px;">${assigneeHtml}</td>`;
+
+    // 4. DURAÇÃO (calculada)
+    let duracao = '-';
+    let duracaoDias = 0;
+    if (task.data_inicio && task.data_entrega) {
+        const start = new Date(task.data_inicio);
+        const end = new Date(task.data_entrega);
+        duracaoDias = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
+        duracao = `${duracaoDias}d`;
+    }
+    const duracaoCell = `<td class="duration-cell" style="width: 80px;">${duracao}</td>`;
+
+    // 5. STATUS com cores vibrantes
+    const statusName = task.status ? task.status.nome : 'A Fazer';
+    const statusSlug = statusName.toLowerCase().replace(/ /g, '-');
+    
+    const statusHtml = `
+        <div class="status-box status-${statusSlug}" onclick="event.stopPropagation(); openStatusModal(event, '${task.id}', '${statusSlug}')">
+            ${escapeHTML(statusName)}
+        </div>`;
+    const statusCell = `<td style="width: 140px;">${statusHtml}</td>`;
+
+    // 6. DEPENDÊNCIA (exemplo fixo - você pode tornar dinâmico)
+    let dependenteHtml = '<span class="dependency-cell-empty">-</span>';
+    // Aqui você pode adicionar lógica real de dependências
+    const dependenteCell = `<td class="dependency-cell" style="width: 120px;">${dependenteHtml}</td>`;
+
+    // 7. ESFORÇO PREVISTO
+    const esforcoPrevisto = task.esforco_previsto ? `${task.esforco_previsto}h` : '-';
+    const esforcoPrevistoCell = `<td class="effort-cell" style="width: 120px;">${esforcoPrevisto}</td>`;
+
+    // 8. ESFORÇO UTILIZADO (com indicador de progresso)
+    let esforcoUtilizadoHtml = '-';
+    if (task.esforco_utilizado) {
+        const percentual = task.esforco_previsto ? 
+            Math.round((task.esforco_utilizado / task.esforco_previsto) * 100) : 0;
+        const cor = percentual > 100 ? '#e2445c' : (percentual > 80 ? '#fdab3d' : '#00c875');
+        esforcoUtilizadoHtml = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span>${task.esforco_utilizado}h</span>
+                ${task.esforco_previsto ? `<span style="color: ${cor}; font-size: 0.7rem;">(${percentual}%)</span>` : ''}
+            </div>`;
+    }
+    const esforcoUtilizadoCell = `<td class="effort-cell" style="width: 120px;">${esforcoUtilizadoHtml}</td>`;
+
+    // 9. MENU DE AÇÕES
+    const moreCell = `
+        <td style="width: 50px; text-align: center;">
+            <button class="btn-icon-task" onclick="event.stopPropagation(); openTaskMenu('${task.id}');">
+                <i data-feather="more-horizontal" class="h-4 w-4"></i>
+            </button>
+        </td>`;
+
+    // MONTAGEM FINAL
+    tr.innerHTML = 
+        checkboxHtml +
+        taskTitleHtml +
+        assigneeCell +
+        duracaoCell +
+        statusCell +
+        dependenteCell +
+        esforcoPrevistoCell +
+        esforcoUtilizadoCell +
+        moreCell;
+
+    return tr;
+}
+
+/**
+ * Cria linha de resumo do grupo com métricas visuais
+ */
+function createProjectSummaryRowMonday(project) {
+    const tr = document.createElement('tr');
+    tr.className = 'project-summary-row';
+    tr.dataset.projectId = project.id;
+    tr.style.display = 'none'; // Escondido por padrão
+
+    const tasks = project.tarefas || [];
+    const totalTasks = tasks.length;
+
+    if (totalTasks === 0) {
+        tr.innerHTML = `<td colspan="9" class="summary-cell" style="text-align: center; color: #64748b;">Nenhuma tarefa neste projeto</td>`;
+        return tr;
+    }
+
+    // CÁLCULOS
+    let totalDuracao = 0;
+    let totalEsforcoPrevisto = 0;
+    let totalEsforcoUtilizado = 0;
+    const statusCounts = {};
+
+    tasks.forEach(task => {
+        // Duração
+        if (task.data_inicio && task.data_entrega) {
+            const start = new Date(task.data_inicio);
+            const end = new Date(task.data_entrega);
+            totalDuracao += Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
+        }
+        
+        // Status
+        const statusName = task.status ? task.status.nome : 'A Fazer';
+        statusCounts[statusName] = (statusCounts[statusName] || 0) + 1;
+
+        // Esforços
+        totalEsforcoPrevisto += task.esforco_previsto || 0;
+        totalEsforcoUtilizado += task.esforco_utilizado || 0;
+    });
+
+    // BARRA DE STATUS COLORIDA
+    let statusBarHtml = '<div class="status-summary-bar-container">';
+    for (const [statusName, count] of Object.entries(statusCounts)) {
+        const statusSlug = statusName.toLowerCase().replace(/ /g, '-');
+        const widthPercent = (count / totalTasks) * 100;
+        statusBarHtml += `
+            <div class="status-summary-bar-segment status-${statusSlug}" 
+                 style="width: ${widthPercent}%;" 
+                 title="${statusName}: ${count} ${count > 1 ? 'tarefas' : 'tarefa'}">
+            </div>`;
+    }
+    statusBarHtml += '</div>';
+
+    // PROGRESSO DE ESFORÇO
+    const esforcoPercent = totalEsforcoPrevisto > 0 ? 
+        Math.round((totalEsforcoUtilizado / totalEsforcoPrevisto) * 100) : 0;
+    const esforcoColor = esforcoPercent > 100 ? '#e2445c' : 
+                        (esforcoPercent > 80 ? '#fdab3d' : '#00c875');
+
+    // MONTAGEM
+    tr.innerHTML = `
+        <td class="summary-cell"></td>
+        <td class="summary-cell" colspan="2" style="font-weight: 700; color: #94a3b8;">
+            Total: ${totalTasks} ${totalTasks === 1 ? 'tarefa' : 'tarefas'}
+        </td>
+        <td class="summary-cell" style="text-align: center; font-weight: 600;">
+            ${totalDuracao > 0 ? totalDuracao + 'd' : '-'}
+        </td>
+        <td class="summary-cell">${statusBarHtml}</td>
+        <td class="summary-cell"></td>
+        <td class="summary-cell" style="text-align: center; font-weight: 600;">
+            ${totalEsforcoPrevisto > 0 ? totalEsforcoPrevisto + 'h' : '-'}
+        </td>
+        <td class="summary-cell" style="text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span style="font-weight: 600;">${totalEsforcoUtilizado > 0 ? totalEsforcoUtilizado + 'h' : '-'}</span>
+                ${totalEsforcoPrevisto > 0 ? `<span style="color: ${esforcoColor}; font-size: 0.7rem; font-weight: 700;">(${esforcoPercent}%)</span>` : ''}
+            </div>
+        </td>
+        <td class="summary-cell"></td>
+    `;
+
+    return tr;
+}
+
+/**
+ * Toggle de seleção de tarefas (para ações em lote)
+ */
+const selectedTasks = new Set();
+
+function toggleTaskSelection(taskId) {
+    if (selectedTasks.has(taskId)) {
+        selectedTasks.delete(taskId);
+    } else {
+        selectedTasks.add(taskId);
+    }
+    console.log('Tarefas selecionadas:', Array.from(selectedTasks));
+    // Aqui você pode adicionar UI para ações em lote
+}
+
+/**
+ * Menu de contexto da tarefa
+ */
+function openTaskMenu(taskId) {
+    console.log('Abrir menu para tarefa:', taskId);
+    // Implementar menu de contexto com opções:
+    // - Editar, Duplicar, Mover, Arquivar, Excluir
+    showNotification('Menu de tarefa em desenvolvimento', 'info');
+}
+
+/**
+ * Melhorias no toggle do grupo (com animação)
+ */
+function toggleProjectGroupMonday(projectId) {
+    const headerRow = document.querySelector(`.project-header-row[data-project-id="${projectId}"]`);
+    const taskRows = document.querySelectorAll(`.task-data-row[data-project-id="${projectId}"]`);
+    const addRow = document.querySelector(`.add-task-row[data-project-id="${projectId}"]`);
+    const summaryRow = document.querySelector(`.project-summary-row[data-project-id="${projectId}"]`);
+
+    const isExpanded = headerRow.classList.contains('expanded');
+
+    if (isExpanded) {
+        // COLAPSAR
+        headerRow.classList.remove('expanded');
+        taskRows.forEach((row, index) => {
+            setTimeout(() => {
+                row.style.opacity = '0';
+                row.style.transform = 'translateY(-10px)';
+                setTimeout(() => row.style.display = 'none', 150);
+            }, index * 20);
+        });
+        if (addRow) {
+            setTimeout(() => {
+                addRow.style.opacity = '0';
+                setTimeout(() => addRow.style.display = 'none', 150);
+            }, taskRows.length * 20);
+        }
+        if (summaryRow) {
+            setTimeout(() => {
+                summaryRow.style.display = 'table-row';
+                summaryRow.style.opacity = '0';
+                setTimeout(() => summaryRow.style.opacity = '1', 50);
+            }, 200);
+        }
+    } else {
+        // EXPANDIR
+        headerRow.classList.add('expanded');
+        if (summaryRow) {
+            summaryRow.style.opacity = '0';
+            setTimeout(() => summaryRow.style.display = 'none', 150);
+        }
+        taskRows.forEach((row, index) => {
+            row.style.display = 'table-row';
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 30);
+        });
+        if (addRow) {
+            addRow.style.display = 'table-row';
+            addRow.style.opacity = '0';
+            setTimeout(() => addRow.style.opacity = '1', taskRows.length * 30);
+        }
+    }
+}
+
+/**
+ * Atualiza o progresso visual da timeline
+ */
+function updateTaskTimeline(taskId, startDate, endDate) {
+    const taskRow = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (!taskRow) return;
+
+    const timelineBox = taskRow.querySelector('.timeline-box');
+    if (!timelineBox) return;
+
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const today = new Date().getTime();
+    
+    const totalDuration = end - start;
+    const elapsed = today - start;
+    const progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+
+    const bar = timelineBox.querySelector('.timeline-bar');
+    if (bar) {
+        bar.style.width = `${progress}%`;
+        
+        // Cor baseada no progresso e status
+        const statusBox = taskRow.querySelector('.status-box');
+        const isDone = statusBox && (statusBox.classList.contains('status-concluído') || 
+                                     statusBox.classList.contains('status-feito'));
+        
+        if (isDone) {
+            bar.style.backgroundColor = '#00c875';
+        } else if (progress > 100) {
+            bar.style.backgroundColor = '#e2445c';
+        } else if (progress > 80) {
+            bar.style.backgroundColor = '#fdab3d';
+        } else {
+            bar.style.backgroundColor = '#579bfc';
+        }
+    }
+}
+
+// Adicionar transições CSS suaves
+const style = document.createElement('style');
+style.textContent = `
+    .task-data-row {
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    
+    .project-summary-row {
+        transition: opacity 0.2s ease;
+    }
+`;
+document.head.appendChild(style);
